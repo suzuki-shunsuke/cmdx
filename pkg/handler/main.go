@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -10,6 +11,29 @@ import (
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
+)
+
+const (
+	configurationFileTemplate = `---
+commands:
+- name: hello
+  # short: h
+  description: hello command
+  flags:
+	# - name: source
+  #   short: s
+  #   description: source file path
+  #   default: .drone.jsonnet
+  #   required: true
+  args:
+	# - name: name
+  #   description: source file path
+  #   required: true
+  #   env: NAME
+  environment:
+    FOO: foo
+  script: "echo $FOO"
+`
 )
 
 type (
@@ -158,6 +182,13 @@ func setAppCommands(app *cli.App) {
 }
 
 func createConfigFile(p string) error {
+	if _, err := os.Stat(p); err == nil {
+		// If the configuration file already exists, do nothing.
+		return nil
+	}
+	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0644); err != nil {
+		return errors.Wrap(err, "failed to create the configuration file: "+p)
+	}
 	return nil
 }
 
