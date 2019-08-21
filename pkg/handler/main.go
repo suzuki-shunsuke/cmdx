@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"text/template"
 
 	"gopkg.in/yaml.v2"
 
@@ -85,7 +87,9 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Commands))
 	for i, cmd := range cfg.Commands {
 		flags := make([]cli.Flag, len(cmd.Flags))
+		vars := map[string]string{}
 		for j, flag := range cmd.Flags {
+			vars[flag.Name] = ""
 			flags[j] = cli.StringFlag{
 				Name:     flag.Name,
 				Usage:    flag.Description,
@@ -94,13 +98,22 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 				Required: flag.Required,
 			}
 		}
+
 		cmds[i] = cli.Command{
 			Name:        cmd.Name,
 			ShortName:   cmd.Short,
 			Description: cmd.Description,
 			Flags:       flags,
 			Action: func(c *cli.Context) error {
-				command := exec.Command("sh", "-c", cmd.Script)
+				for k := range vars {
+					vars[k] = c.String(k)
+				}
+				scr, err := renderTemplate(cmd.Script, vars)
+				if err != nil {
+					return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
+				}
+
+				command := exec.Command("sh", "-c", scr)
 				command.Stdout = os.Stdout
 				command.Stderr = os.Stderr
 				envs := make([]string, len(cmd.Environment))
@@ -110,7 +123,7 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 					i++
 				}
 				command.Env = append(os.Environ(), envs...)
-				fmt.Println("+ " + cmd.Script)
+				fmt.Println("+ " + scr)
 				if err := command.Run(); err != nil {
 					return err
 				}
@@ -119,6 +132,16 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 		}
 	}
 	app.Commands = cmds
+}
+
+func renderTemplate(base string, data interface{}) (string, error) {
+	tmpl, err := template.New("command").Parse(base)
+	if err != nil {
+		return "", err
+	}
+	buf := bytes.NewBufferString("")
+	err = tmpl.Execute(buf, data)
+	return buf.String(), err
 }
 
 func readConfig(cfgFilePath string, cfg *Config) error {
