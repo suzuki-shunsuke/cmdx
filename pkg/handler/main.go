@@ -213,7 +213,9 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 			}
 
 			command.Env = append(os.Environ(), envs...)
-			fmt.Fprintln(os.Stderr, "+ "+scr)
+			if !c.GlobalBool("quiet") {
+				fmt.Fprintln(os.Stderr, "+ "+scr)
+			}
 			if err := command.Run(); err != nil {
 				return err
 			}
@@ -277,6 +279,10 @@ func setAppFlags(app *cli.App) {
 		cli.BoolFlag{
 			Name:  "help, h",
 			Usage: "show help",
+		},
+		cli.BoolFlag{
+			Name:  "quiet, q",
+			Usage: "don't output the executed command",
 		},
 	}
 }
