@@ -134,14 +134,25 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 					}
 					args := c.Args()
 					n := c.NArg()
+					envs := os.Environ()
 					for i, arg := range cmd.Args {
 						if i >= n {
+							if arg.Default != "" {
+								vars[arg.Name] = arg.Default
+								if arg.Env != "" {
+									envs = append(envs, arg.Env+"="+arg.Default)
+								}
+								continue
+							}
 							if arg.Required {
 								return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 							}
-							break
+							continue
 						}
 						vars[arg.Name] = args[i]
+						if arg.Env != "" {
+							envs = append(envs, arg.Env+"="+args[i])
+						}
 					}
 					extraArgs := []string{}
 					for i, arg := range args {
@@ -164,7 +175,6 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 					command := exec.Command("sh", "-c", scr)
 					command.Stdout = os.Stdout
 					command.Stderr = os.Stderr
-					envs := os.Environ()
 					for k, v := range cmd.Environment {
 						envs = append(envs, k+"="+v)
 					}
