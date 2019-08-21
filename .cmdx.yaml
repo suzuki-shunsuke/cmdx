@@ -20,7 +20,10 @@ tasks:
 - name: release
   description: release the new version
   usage: release the new version
-  script: bash scripts/release.sh
+  script: "bash scripts/release.sh {{.version}}"
+  args:
+  - name: version
+    required: true
 - name: durl
   description: check dead links
   usage: check dead links
