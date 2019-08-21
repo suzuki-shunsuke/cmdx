@@ -103,6 +103,11 @@ func Main() error {
 func setupApp(app *cli.App) {
 	app.Name = "cmdx"
 	app.Version = domain.Version
+	app.Authors = []cli.Author{
+		{
+			Name: "Shunsuke Suzuki",
+		},
+	}
 	app.Usage = "task runner"
 	setAppFlags(app)
 	setAppCommands(app)
@@ -257,7 +262,7 @@ func setAppFlags(app *cli.App) {
 		},
 		cli.StringFlag{
 			Name:  "name, n",
-			Usage: "configuration file name",
+			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
 		},
 		cli.BoolFlag{
 			Name:  "init, i",
@@ -279,7 +284,7 @@ func setAppCommands(app *cli.App) {
 		{
 			Name:      "help",
 			Aliases:   []string{"h"},
-			Usage:     "Shows a list of commands or help for one command",
+			Usage:     "show help",
 			ArgsUsage: "[command]",
 			Action: func(c *cli.Context) error {
 				err := func() error {
