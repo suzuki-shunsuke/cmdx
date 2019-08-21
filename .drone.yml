@@ -1,5 +1,13 @@
 ---
 kind: pipeline
+name: durl
+steps:
+- name: durl
+  image: quay.io/suzuki_shunsuke/durl:1.0.0
+  commands:
+  - sh scripts/durl.sh
+---
+kind: pipeline
 name: build
 volumes:
 - name: gopath
@@ -69,11 +77,3 @@ steps:
     event:
     - pull_request
     - push
-# ---
-# kind: pipeline
-# name: durl
-# steps:
-# - name: durl
-#   image: quay.io/suzuki_shunsuke/durl:1.0.0
-#   commands:
-#   - sh scripts/durl.sh
