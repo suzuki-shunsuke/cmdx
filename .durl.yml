@@ -1,0 +1,10 @@
+---
+# configuration file of durl, which is a CLI tool to check whether dead urls are included in files.
+# https://github.com/suzuki-shunsuke/durl
+ignore_urls:
+- https://github.com/suzuki-shunsuke/durl
+ignore_hosts: []
+http_method: head,get
+max_request_count: 10
+max_failed_request_count: 5
+http_request_timeout: 10
