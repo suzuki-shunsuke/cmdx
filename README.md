@@ -5,7 +5,7 @@ Task runner.
 ## Project Status
 
 This project status is alpha.
-The API is unstable and the test and document are poor.
+The API is unstable and the test are poor.
 
 ## Alternative
 
