@@ -28,6 +28,10 @@ commands:
   #   description: source file path
   #   default: .drone.jsonnet
   #   required: true
+  # - name: force
+  #   short: f
+  #   usage: force
+  #   type: bool
   args:
 	# - name: name
   #   usage: source file path
@@ -62,6 +66,7 @@ type (
 		Default  string
 		Binding  string
 		Env      string
+		Type     string
 		Required bool
 	}
 
@@ -89,19 +94,29 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Commands))
 	for i, cmd := range cfg.Commands {
 		flags := make([]cli.Flag, len(cmd.Flags))
-		vars := map[string]string{}
+		vars := map[string]interface{}{}
 		for j, flag := range cmd.Flags {
 			vars[flag.Name] = ""
 			name := flag.Name
 			if flag.Short != "" {
 				name += ", " + flag.Short
 			}
-			flags[j] = cli.StringFlag{
-				Name:     name,
-				Usage:    flag.Usage,
-				Value:    flag.Default,
-				EnvVar:   flag.Env,
-				Required: flag.Required,
+			switch flag.Type {
+			case "bool":
+				flags[j] = cli.BoolFlag{
+					Name:     name,
+					Usage:    flag.Usage,
+					EnvVar:   flag.Env,
+					Required: flag.Required,
+				}
+			default:
+				flags[j] = cli.StringFlag{
+					Name:     name,
+					Usage:    flag.Usage,
+					Value:    flag.Default,
+					EnvVar:   flag.Env,
+					Required: flag.Required,
+				}
 			}
 		}
 
@@ -113,8 +128,8 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 			Flags:       flags,
 			Action: func(c *cli.Context) error {
 				err := func() error {
-					for k := range vars {
-						vars[k] = c.String(k)
+					for _, flag := range cmd.Flags {
+						vars[flag.Name] = c.Generic(flag.Name)
 					}
 					args := c.Args()
 					n := c.NArg()
