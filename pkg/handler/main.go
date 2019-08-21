@@ -213,7 +213,7 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 			}
 
 			command.Env = append(os.Environ(), envs...)
-			fmt.Println("+ " + scr)
+			fmt.Fprintln(os.Stderr, "+ "+scr)
 			if err := command.Run(); err != nil {
 				return err
 			}
