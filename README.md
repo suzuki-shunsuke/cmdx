@@ -16,6 +16,7 @@ The API is unstable and the test are poor.
 
 * Make
 * [npm scripts](https://docs.npmjs.com/misc/scripts)
+* [Task](https://taskfile.dev)
 * [tj/robo](https://github.com/tj/robo)
 * [mumoshu/variant](https://github.com/mumoshu/variant)
 
