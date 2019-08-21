@@ -310,7 +310,7 @@ func setAppCommands(app *cli.App) {
 						return err
 					}
 					if err := validateConfig(&cfg); err != nil {
-						return err
+						return errors.Wrap(err, "please fix the configuration file")
 					}
 					app := cli.NewApp()
 					setupApp(app)
@@ -327,7 +327,12 @@ func setAppCommands(app *cli.App) {
 }
 
 func validateConfig(cfg *Config) error {
+	taskNames := make(map[string]struct{}, len(cfg.Tasks))
 	for _, task := range cfg.Tasks {
+		if _, ok := taskNames[task.Name]; ok {
+			return errors.New(`the task name duplicates: "` + task.Name + `"`)
+		}
+		taskNames[task.Name] = struct{}{}
 		for _, flag := range task.Flags {
 			if len(flag.Short) > 1 {
 				return fmt.Errorf(
@@ -387,7 +392,7 @@ func mainAction(c *cli.Context) error {
 		return err
 	}
 	if err := validateConfig(&cfg); err != nil {
-		return err
+		return errors.Wrap(err, "please fix the configuration file")
 	}
 
 	if listFlag {
