@@ -16,10 +16,10 @@ The API is unstable and the test and document are poor.
 
 ## Overview
 
-cmdx is the project specific task runner.
-Using cmdx you can manage tasks for your project such as test, build, format, lint, and release.
+`cmdx` is the project specific task runner.
+Using `cmdx` you can manage tasks for your project such as test, build, format, lint, and release.
 
-For example, This is the tasks for cmdx itself.
+For example, This is the tasks for `cmdx` itself.
 
 ```console
 $ cmdx -l
@@ -42,12 +42,12 @@ DESCRIPTION:
    release the new version
 ```
 
-You can make the simple shell script rich with cmdx
+You can make the simple shell script rich with `cmdx`
 
-* cmdx supports the parse of flag and positional arguments
-* cmdx provides the useful help messages
+* `cmdx` supports the parse of flag and positional arguments
+* `cmdx` provides the useful help messages
 
-cmdx searches the configuration file from the current directory to the root directory recursively and run the task at the directory where the configuration file exists so the result of task doesn't depend on the directory you run the task.
+`cmdx` searches the configuration file from the current directory to the root directory recursively and run the task at the directory where the configuration file exists so the result of task doesn't depend on the directory you run `cmdx`.
 
 ## Install
 
@@ -62,25 +62,80 @@ $ cmdx --init
 $ cat .cmdx.yaml
 ```
 
-Edit the configuration file.
+Edit the configuration file and register the task `hello`.
 
 ```console
 $ vi .cmdx.yaml
 $ cat .cmdx.yaml
+---
+tasks:
+- name: hello
+  description: hello command
+  usage: hello command
+  flags:
+  - name: source
+    short: s
+    usage: source file path
+    required: true
+    env: NAME
+  - name: switch
+    type: bool
+  args:
+  - name: name
+    usage: name
+    default: bb
+  environment:
+    FOO: foo
+  script: "echo hello {{.source}} $NAME {{if .switch}}on{{else}}off{{end}} {{.name}} $FOO" # use Go's text/template
 ```
+
+Output the help.
 
 ```console
 $ cmdx help
+NAME:
+   cmdx - task runner
+
+USAGE:
+   cmdx [global options] command [command options] [arguments...]
+
+VERSION:
+   0.1.0-0
+
+AUTHOR:
+   Shunsuke Suzuki
+
+COMMANDS:
+   hello     hello command
+   help, h   Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --config value, -c value  configuration file path
+   --name value, -n value    configuration file name. The configuration file is searched from the current directory to the root directory recursively
+   --init, -i                create the configuration file
+   --list, -l                list tasks
+   --help, -h                show help
+   --version, -v             print the version
 ```
 
-Run the task
+List tasks.
+
 
 ```console
-$ cmdx hello
---target is required!
+$ cmdx -l
+hello - hello command
+```
 
-$ echo $?
-1
+Run the task `hello`.
+
+```console
+$ cmdx hello -s README
++ echo hello README $NAME off bb $FOO
+hello README README off bb foo
+
+$ cmdx hello -s README --switch
++ echo hello README $NAME on bb $FOO
+hello README README on bb foo
 ```
 
 ```console
