@@ -310,7 +310,7 @@ func setAppCommands(app *cli.App) {
 						return err
 					}
 					if err := validateConfig(&cfg); err != nil {
-						return err
+						return errors.Wrap(err, "please fix the configuration file")
 					}
 					app := cli.NewApp()
 					setupApp(app)
@@ -327,13 +327,26 @@ func setAppCommands(app *cli.App) {
 }
 
 func validateConfig(cfg *Config) error {
+	taskNames := make(map[string]struct{}, len(cfg.Tasks))
 	for _, task := range cfg.Tasks {
+		if _, ok := taskNames[task.Name]; ok {
+			return errors.New(`the task name duplicates: "` + task.Name + `"`)
+		}
+		taskNames[task.Name] = struct{}{}
+		flagNames := make(map[string]struct{}, len(task.Flags))
 		for _, flag := range task.Flags {
 			if len(flag.Short) > 1 {
 				return fmt.Errorf(
 					"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
 					task.Name, flag.Name, flag.Short)
 			}
+			if _, ok := flagNames[flag.Name]; ok {
+				return fmt.Errorf(
+					`the flag name duplicates: task: "%s", flag: "%s"`,
+					task.Name, flag.Name)
+			}
+			flagNames[flag.Name] = struct{}{}
+
 			switch flag.Type {
 			case "":
 			case "bool":
@@ -343,6 +356,15 @@ func validateConfig(cfg *Config) error {
 					"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
 					task.Name, flag.Name, flag.Type)
 			}
+		}
+		argNames := make(map[string]struct{}, len(task.Args))
+		for _, arg := range task.Args {
+			if _, ok := argNames[arg.Name]; ok {
+				return fmt.Errorf(
+					`the positional argument name duplicates: task: "%s", arg: "%s"`,
+					task.Name, arg.Name)
+			}
+			argNames[arg.Name] = struct{}{}
 		}
 	}
 	return nil
@@ -387,7 +409,7 @@ func mainAction(c *cli.Context) error {
 		return err
 	}
 	if err := validateConfig(&cfg); err != nil {
-		return err
+		return errors.Wrap(err, "please fix the configuration file")
 	}
 
 	if listFlag {
