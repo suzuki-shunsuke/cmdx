@@ -1,0 +1,79 @@
+---
+kind: pipeline
+name: build
+volumes:
+- name: gopath
+  temp: {}
+steps:
+- name: download go modules
+  image: &image_go golang:1.12.9
+  commands:
+  - go mod download
+  volumes: &volumes
+  - name: gopath
+    path: /go
+  environment:
+    GOPATH: /go
+- name: golangci-lint
+  image: golangci/golangci-lint:v1.17.1
+  commands:
+  - golangci-lint run
+  environment:
+    GOPATH: /go
+  volumes: *volumes
+- name: codecov
+  image: *image_go
+  commands:
+  # bash and cgo seem to be required
+  - bash scripts/codecov-test.sh
+  - curl -s https://codecov.io/bash > /tmp/codecov.sh
+  - test "$LOCAL" = "true" -o "$DRONE_BUILD_EVENT" = "pull_request" || bash /tmp/codecov.sh
+  environment:
+    GOPATH: /go
+    CODECOV_TOKEN:
+      from_secret: codecov_token
+  volumes: *volumes
+- name: fetch tags
+  image: plugins/git
+  commands:
+  - git fetch --tags
+- name: release
+  image: &goreleaser goreleaser/goreleaser:v0.116.0
+  commands:
+  - goreleaser release
+  environment:
+    GOPATH: /go
+    GITHUB_TOKEN:
+      from_secret: github_token
+  volumes: *volumes
+  when:
+    event:
+    - tag
+- name: tag dummy
+  image: plugins/git
+  commands:
+  # bash not found
+  - sh scripts/tag-dummy.sh
+  when:
+    event:
+    - pull_request
+    - push
+- name: release/pr
+  image: *goreleaser
+  commands:
+  - goreleaser release --skip-publish
+  environment:
+    GOPATH: /go
+  volumes: *volumes
+  when:
+    event:
+    - pull_request
+    - push
+# ---
+# kind: pipeline
+# name: durl
+# steps:
+# - name: durl
+#   image: quay.io/suzuki_shunsuke/durl:1.0.0
+#   commands:
+#   - sh scripts/durl.sh

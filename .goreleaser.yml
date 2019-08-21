@@ -1,0 +1,12 @@
+---
+builds:
+- binary: cmdx
+  main: cmd/cmdx/main.go
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - windows
+  - darwin
+  - linux
+  goarch:
+  - amd64

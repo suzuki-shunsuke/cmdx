@@ -1,0 +1,33 @@
+---
+tasks:
+- name: test
+  short: t
+  description: test
+  usage: test
+  script: go test ./... -covermode=atomic
+- name: fmt
+  description: format the go code
+  usage: format the go code
+  script: bash scripts/fmt.sh
+- name: vet
+  description: go vet
+  usage: go vet
+  script: go vet ./...
+- name: lint
+  description: lint the go code
+  usage: lint the go code
+  script: golangci-lint run
+- name: release
+  description: release the new version
+  usage: release the new version
+  script: bash scripts/release.sh
+- name: durl
+  description: check dead links
+  usage: check dead links
+  script: bash scripts/durl.sh
+- name: ci-local
+  description: run the Drone pipeline at localhost
+  usage: run the Drone pipeline at localhost
+  script: time drone exec --pipeline build --event pull_request
+  environment:
+    LOCAL: "true"
