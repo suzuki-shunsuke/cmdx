@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
+
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
 const (
@@ -83,8 +85,7 @@ type (
 func Main() error {
 	app := cli.NewApp()
 	app.HideHelp = true
-	setAppFlags(app)
-	setAppCommands(app)
+	setupApp(app)
 
 	app.Action = func(c *cli.Context) error {
 		err := mainAction(c)
@@ -98,6 +99,14 @@ func Main() error {
 	}
 
 	return app.Run(os.Args)
+}
+
+func setupApp(app *cli.App) {
+	app.Name = "cmdx"
+	app.Version = domain.Version
+	app.Usage = "task runner"
+	setAppFlags(app)
+	setAppCommands(app)
 }
 
 func updateAppWithConfig(app *cli.App, cfg *Config) {
@@ -276,8 +285,7 @@ func setAppCommands(app *cli.App) {
 						return err
 					}
 					app := cli.NewApp()
-					setAppFlags(app)
-					setAppCommands(app)
+					setupApp(app)
 					updateAppWithConfig(app, &cfg)
 					return app.Run(os.Args)
 				}()
