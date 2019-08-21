@@ -67,7 +67,6 @@ type (
 		Short    string
 		Usage    string
 		Default  string
-		Binding  string
 		Env      string
 		Type     string
 		Required bool
@@ -264,6 +263,14 @@ func setAppFlags(app *cli.App) {
 			Name:  "init, i",
 			Usage: "create the configuration file",
 		},
+		cli.BoolFlag{
+			Name:  "list, l",
+			Usage: "list commands",
+		},
+		cli.BoolFlag{
+			Name:  "help, h",
+			Usage: "show help",
+		},
 	}
 }
 
@@ -343,6 +350,7 @@ func mainAction(c *cli.Context) error {
 	cfg := Config{}
 	cfgFilePath := c.GlobalString("config")
 	initFlag := c.GlobalBool("init")
+	listFlag := c.GlobalBool("list")
 	cfgFileName := c.GlobalString("name")
 	if initFlag {
 		if cfgFilePath != "" {
@@ -368,9 +376,18 @@ func mainAction(c *cli.Context) error {
 	if err := validateConfig(&cfg); err != nil {
 		return err
 	}
+
+	if listFlag {
+		arr := make([]string, len(cfg.Commands))
+		for i, cmd := range cfg.Commands {
+			arr[i] = cmd.Name + " - " + cmd.Usage
+		}
+		fmt.Println(strings.Join(arr, "\n"))
+		return nil
+	}
+
 	app := cli.NewApp()
-	setAppFlags(app)
-	setAppCommands(app)
+	setupApp(app)
 	updateAppWithConfig(app, &cfg)
 	return app.Run(os.Args)
 }
