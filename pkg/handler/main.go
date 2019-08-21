@@ -5,49 +5,11 @@ import (
 	"os"
 	"os/exec"
 
-	//	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
-)
-
-const (
-	helpTemplate = `
-NAME:
-   cmdx - task runner
-
-USAGE:
-   cmdx [global options] command [command options] [arguments...]
-
-VERSION:
-   0.1.0
-
-AUTHOR:
-   suzuki-shunsuke https://github.com/suzuki-shunsuke
-
-COMMANDS:
-     help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --help, -h     show help
-   --version, -v  print the version
-`
-
-	tasksHelpTemplate = `
-init - create a configuration file if it doesn't exist
-`
-
-	taskHelpTemplate = `
-init - create a configuration file if it doesn't exist
-
-Positional arguments:
-
-Options:
-	--target, -t the target file path (required, default: "")
-
-`
 )
 
 type (
@@ -85,22 +47,6 @@ type (
 )
 
 func Main() error {
-	// cmdx help -h --help
-	// cmdx help hello
-	// cmdx hello --help
-	// cmdx -i --init
-	// cmdx -c cmdx.yaml hello
-	// app := kingpin.New("cmdx", "A command-line chat application.")
-	// initFlag := app.Flag("init", "create the configuration file").Bool()
-	// cfgFilePath := app.Flag("config", "the configuration file path").String()
-	// cfgFileName := app.Flag("name", "the configuration file name").String()
-	// helpCommand := app.Command("help", "Show this help")
-
-	// cmdName := kingpin.MustParse(app.Parse(os.Args[1:]))
-	// if *cfgFilePath != "" && *cfgFileName != "" {
-	// 	return errors.New("the both --config and --name can't be used at the same time")
-	// }
-
 	app := cli.NewApp()
 	app.HideHelp = true
 	setAppFlags(app)
@@ -109,35 +55,6 @@ func Main() error {
 	app.Action = mainAction
 
 	return app.Run(os.Args)
-
-	//	cfg := Config{}
-	//	if *cfgFilePath != "" {
-	//		app := cli.NewApp()
-	//		cmds := make([]cli.Command, 0, len(cfg.Commands))
-	//		for i, cmd := range cfg.Commands {
-	//			flags := make([]cli.Flag, len(cmd.Flags))
-	//			for i, flag := range cmd.Flags {
-	//				flags[i] = cli.StringFlag{
-	//					Name:   flag.Name,
-	//					Usage:  flag.Description,
-	//					Value:  flag.Default,
-	//					EnvVar: flag.Env,
-	//				}
-	//			}
-	//			cmds[i] = cli.Command{
-	//				Name:        cmd.Name,
-	//				ShortName:   cmd.Short,
-	//				Description: cmd.Description,
-	//				Flags:       flags,
-	//			}
-	//		}
-	//		app.Commands = cmds
-	//	}
-	//	switch cmdName {
-	//	case helpCommand.FullCommand():
-	//	}
-
-	// return nil
 }
 
 func updateAppWithConfig(app *cli.App, cfg *Config) {
