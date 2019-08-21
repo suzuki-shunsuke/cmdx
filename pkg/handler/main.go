@@ -24,12 +24,13 @@ commands:
   flags:
 	# - name: source
   #   short: s
+  #   usage: source file path
   #   description: source file path
   #   default: .drone.jsonnet
   #   required: true
   args:
 	# - name: name
-  #   description: source file path
+  #   usage: source file path
   #   required: true
   #   env: NAME
   environment:
@@ -47,6 +48,7 @@ type (
 		Name        string
 		Short       string
 		Description string
+		Usage       string
 		Flags       []Flag
 		Args        []Arg
 		Environment map[string]string
@@ -54,21 +56,21 @@ type (
 	}
 
 	Flag struct {
-		Name        string
-		Short       string
-		Description string
-		Default     string
-		Binding     string
-		Env         string
-		Required    bool
+		Name     string
+		Short    string
+		Usage    string
+		Default  string
+		Binding  string
+		Env      string
+		Required bool
 	}
 
 	Arg struct {
-		Name        string
-		Description string
-		Default     string
-		Env         string
-		Required    bool
+		Name     string
+		Usage    string
+		Default  string
+		Env      string
+		Required bool
 	}
 )
 
@@ -96,7 +98,7 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 			}
 			flags[j] = cli.StringFlag{
 				Name:     name,
-				Usage:    flag.Description,
+				Usage:    flag.Usage,
 				Value:    flag.Default,
 				EnvVar:   flag.Env,
 				Required: flag.Required,
@@ -106,37 +108,55 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 		cmds[i] = cli.Command{
 			Name:        cmd.Name,
 			ShortName:   cmd.Short,
+			Usage:       cmd.Usage,
 			Description: cmd.Description,
 			Flags:       flags,
 			Action: func(c *cli.Context) error {
-				for k := range vars {
-					vars[k] = c.String(k)
-				}
-				scr, err := renderTemplate(cmd.Script, vars)
-				if err != nil {
-					return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
-				}
-
-				command := exec.Command("sh", "-c", scr)
-				command.Stdout = os.Stdout
-				command.Stderr = os.Stderr
-				envs := os.Environ()
-				for k, v := range cmd.Environment {
-					envs = append(envs, k+"="+v)
-				}
-
-				for _, flag := range cmd.Flags {
-					if flag.Env != "" {
-						envs = append(envs, flag.Env+"="+c.String(flag.Name))
+				err := func() error {
+					for k := range vars {
+						vars[k] = c.String(k)
 					}
-				}
+					args := c.Args()
+					n := c.NArg()
+					for i, arg := range cmd.Args {
+						if i >= n {
+							if arg.Required {
+								return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+							}
+							break
+						}
+						vars[arg.Name] = args[i]
+					}
+					scr, err := renderTemplate(cmd.Script, vars)
+					if err != nil {
+						return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
+					}
 
-				command.Env = append(os.Environ(), envs...)
-				fmt.Println("+ " + scr)
-				if err := command.Run(); err != nil {
+					command := exec.Command("sh", "-c", scr)
+					command.Stdout = os.Stdout
+					command.Stderr = os.Stderr
+					envs := os.Environ()
+					for k, v := range cmd.Environment {
+						envs = append(envs, k+"="+v)
+					}
+
+					for _, flag := range cmd.Flags {
+						if flag.Env != "" {
+							envs = append(envs, flag.Env+"="+c.String(flag.Name))
+						}
+					}
+
+					command.Env = append(os.Environ(), envs...)
+					fmt.Println("+ " + scr)
+					if err := command.Run(); err != nil {
+						return err
+					}
+					return nil
+				}()
+				if _, ok := err.(*cli.ExitError); ok {
 					return err
 				}
-				return nil
+				return cliutil.ConvErrToExitError(err)
 			},
 		}
 	}
@@ -190,24 +210,30 @@ func setAppCommands(app *cli.App) {
 			Usage:     "Shows a list of commands or help for one command",
 			ArgsUsage: "[command]",
 			Action: func(c *cli.Context) error {
-				cfg := Config{}
-				cfgFilePath := c.GlobalString("config")
-				cfgFileName := c.GlobalString("name")
-				if cfgFilePath == "" {
-					var err error
-					cfgFilePath, err = getConfigFilePath(cfgFileName)
-					if err != nil {
+				err := func() error {
+					cfg := Config{}
+					cfgFilePath := c.GlobalString("config")
+					cfgFileName := c.GlobalString("name")
+					if cfgFilePath == "" {
+						var err error
+						cfgFilePath, err = getConfigFilePath(cfgFileName)
+						if err != nil {
+							return err
+						}
+					}
+					if err := readConfig(cfgFilePath, &cfg); err != nil {
 						return err
 					}
-				}
-				if err := readConfig(cfgFilePath, &cfg); err != nil {
+					app := cli.NewApp()
+					setAppFlags(app)
+					setAppCommands(app)
+					updateAppWithConfig(app, &cfg)
+					return app.Run(os.Args)
+				}()
+				if _, ok := err.(*cli.ExitError); ok {
 					return err
 				}
-				app := cli.NewApp()
-				setAppFlags(app)
-				setAppCommands(app)
-				updateAppWithConfig(app, &cfg)
-				return app.Run(os.Args)
+				return cliutil.ConvErrToExitError(err)
 			},
 		},
 	}
