@@ -46,6 +46,8 @@ tasks:
     FOO: foo
   script: "echo $FOO"
 `
+
+	appUsage = "task runner"
 )
 
 type (
@@ -110,7 +112,7 @@ func setupApp(app *cli.App) {
 			Name: "Shunsuke Suzuki",
 		},
 	}
-	app.Usage = "task runner"
+	app.Usage = appUsage
 	setAppFlags(app)
 	setAppCommands(app)
 }
