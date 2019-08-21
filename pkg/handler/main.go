@@ -109,113 +109,121 @@ func setupApp(app *cli.App) {
 	setAppCommands(app)
 }
 
+func newCommandWithConfig(app *cli.App, cfg *Config, cmd Command) cli.Command {
+	flags := make([]cli.Flag, len(cmd.Flags))
+	vars := map[string]interface{}{}
+	for j, flag := range cmd.Flags {
+		vars[flag.Name] = ""
+		name := flag.Name
+		if flag.Short != "" {
+			name += ", " + flag.Short
+		}
+		switch flag.Type {
+		case "bool":
+			flags[j] = cli.BoolFlag{
+				Name:     name,
+				Usage:    flag.Usage,
+				EnvVar:   flag.Env,
+				Required: flag.Required,
+			}
+		default:
+			flags[j] = cli.StringFlag{
+				Name:     name,
+				Usage:    flag.Usage,
+				Value:    flag.Default,
+				EnvVar:   flag.Env,
+				Required: flag.Required,
+			}
+		}
+	}
+
+	return cli.Command{
+		Name:        cmd.Name,
+		ShortName:   cmd.Short,
+		Usage:       cmd.Usage,
+		Description: cmd.Description,
+		Flags:       flags,
+		Action:      newCommandAction(cmd, vars),
+	}
+}
+
+func newCommandAction(cmd Command, vars map[string]interface{}) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		err := func() error {
+			for _, flag := range cmd.Flags {
+				vars[flag.Name] = c.Generic(flag.Name)
+			}
+			args := c.Args()
+			n := c.NArg()
+			envs := os.Environ()
+			for i, arg := range cmd.Args {
+				if i >= n {
+					if arg.Default != "" {
+						vars[arg.Name] = arg.Default
+						if arg.Env != "" {
+							envs = append(envs, arg.Env+"="+arg.Default)
+						}
+						continue
+					}
+					if arg.Required {
+						return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+					}
+					continue
+				}
+				vars[arg.Name] = args[i]
+				if arg.Env != "" {
+					envs = append(envs, arg.Env+"="+args[i])
+				}
+			}
+			extraArgs := []string{}
+			for i, arg := range args {
+				if i < len(cmd.Args) {
+					continue
+				}
+				extraArgs = append(extraArgs, arg)
+			}
+			vars["_builtin"] = map[string]interface{}{
+				"args":            extraArgs,
+				"args_string":     strings.Join(extraArgs, " "),
+				"all_args":        c.Args(),
+				"all_args_string": strings.Join(c.Args(), " "),
+			}
+			scr, err := renderTemplate(cmd.Script, vars)
+			if err != nil {
+				return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
+			}
+
+			command := exec.Command("sh", "-c", scr)
+			command.Stdout = os.Stdout
+			command.Stderr = os.Stderr
+			for k, v := range cmd.Environment {
+				envs = append(envs, k+"="+v)
+			}
+
+			for _, flag := range cmd.Flags {
+				if flag.Env != "" {
+					envs = append(envs, flag.Env+"="+c.String(flag.Name))
+				}
+			}
+
+			command.Env = append(os.Environ(), envs...)
+			fmt.Println("+ " + scr)
+			if err := command.Run(); err != nil {
+				return err
+			}
+			return nil
+		}()
+		if _, ok := err.(*cli.ExitError); ok {
+			return err
+		}
+		return cliutil.ConvErrToExitError(err)
+	}
+}
+
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Commands))
 	for i, cmd := range cfg.Commands {
-		flags := make([]cli.Flag, len(cmd.Flags))
-		vars := map[string]interface{}{}
-		for j, flag := range cmd.Flags {
-			vars[flag.Name] = ""
-			name := flag.Name
-			if flag.Short != "" {
-				name += ", " + flag.Short
-			}
-			switch flag.Type {
-			case "bool":
-				flags[j] = cli.BoolFlag{
-					Name:     name,
-					Usage:    flag.Usage,
-					EnvVar:   flag.Env,
-					Required: flag.Required,
-				}
-			default:
-				flags[j] = cli.StringFlag{
-					Name:     name,
-					Usage:    flag.Usage,
-					Value:    flag.Default,
-					EnvVar:   flag.Env,
-					Required: flag.Required,
-				}
-			}
-		}
-
-		cmds[i] = cli.Command{
-			Name:        cmd.Name,
-			ShortName:   cmd.Short,
-			Usage:       cmd.Usage,
-			Description: cmd.Description,
-			Flags:       flags,
-			Action: func(c *cli.Context) error {
-				err := func() error {
-					for _, flag := range cmd.Flags {
-						vars[flag.Name] = c.Generic(flag.Name)
-					}
-					args := c.Args()
-					n := c.NArg()
-					envs := os.Environ()
-					for i, arg := range cmd.Args {
-						if i >= n {
-							if arg.Default != "" {
-								vars[arg.Name] = arg.Default
-								if arg.Env != "" {
-									envs = append(envs, arg.Env+"="+arg.Default)
-								}
-								continue
-							}
-							if arg.Required {
-								return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
-							}
-							continue
-						}
-						vars[arg.Name] = args[i]
-						if arg.Env != "" {
-							envs = append(envs, arg.Env+"="+args[i])
-						}
-					}
-					extraArgs := []string{}
-					for i, arg := range args {
-						if i < len(cmd.Args) {
-							continue
-						}
-						extraArgs = append(extraArgs, arg)
-					}
-					vars["_builtin"] = map[string]interface{}{
-						"args":            extraArgs,
-						"args_string":     strings.Join(extraArgs, " "),
-						"all_args":        c.Args(),
-						"all_args_string": strings.Join(c.Args(), " "),
-					}
-					scr, err := renderTemplate(cmd.Script, vars)
-					if err != nil {
-						return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
-					}
-
-					command := exec.Command("sh", "-c", scr)
-					command.Stdout = os.Stdout
-					command.Stderr = os.Stderr
-					for k, v := range cmd.Environment {
-						envs = append(envs, k+"="+v)
-					}
-
-					for _, flag := range cmd.Flags {
-						if flag.Env != "" {
-							envs = append(envs, flag.Env+"="+c.String(flag.Name))
-						}
-					}
-
-					command.Env = append(os.Environ(), envs...)
-					fmt.Println("+ " + scr)
-					if err := command.Run(); err != nil {
-						return err
-					}
-					return nil
-				}()
-				if _, ok := err.(*cli.ExitError); ok {
-					return err
-				}
-				return cliutil.ConvErrToExitError(err)
-			},
-		}
+		cmds[i] = newCommandWithConfig(app, cfg, cmd)
 	}
 	app.Commands = cmds
 }
