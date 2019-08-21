@@ -86,7 +86,16 @@ func Main() error {
 	setAppFlags(app)
 	setAppCommands(app)
 
-	app.Action = mainAction
+	app.Action = func(c *cli.Context) error {
+		err := mainAction(c)
+		if err == nil {
+			return nil
+		}
+		if _, ok := err.(*cli.ExitError); ok {
+			return err
+		}
+		return cliutil.ConvErrToExitError(err)
+	}
 
 	return app.Run(os.Args)
 }
@@ -263,6 +272,9 @@ func setAppCommands(app *cli.App) {
 					if err := readConfig(cfgFilePath, &cfg); err != nil {
 						return err
 					}
+					if err := validateConfig(&cfg); err != nil {
+						return err
+					}
 					app := cli.NewApp()
 					setAppFlags(app)
 					setAppCommands(app)
@@ -276,6 +288,28 @@ func setAppCommands(app *cli.App) {
 			},
 		},
 	}
+}
+
+func validateConfig(cfg *Config) error {
+	for _, cmd := range cfg.Commands {
+		for _, flag := range cmd.Flags {
+			if len(flag.Short) > 1 {
+				return fmt.Errorf(
+					"The length of command.short should be 0 or 1. command: %s, flag: %s, short: %s",
+					cmd.Name, flag.Name, flag.Short)
+			}
+			switch flag.Type {
+			case "":
+			case "bool":
+			case "string":
+			default:
+				return fmt.Errorf(
+					"The flag type should be either '' or 'string' or 'bool'. command: %s, flag: %s, flag.type: %s",
+					cmd.Name, flag.Name, flag.Type)
+			}
+		}
+	}
+	return nil
 }
 
 func createConfigFile(p string) error {
@@ -313,6 +347,9 @@ func mainAction(c *cli.Context) error {
 	}
 
 	if err := readConfig(cfgFilePath, &cfg); err != nil {
+		return err
+	}
+	if err := validateConfig(&cfg); err != nil {
 		return err
 	}
 	app := cli.NewApp()
