@@ -20,6 +20,8 @@ import (
 
 const (
 	configurationFileTemplate = `---
+# the configuration file of cmdx, which is a task runner.
+# https://github.com/suzuki-shunsuke/cmdx
 tasks:
 - name: hello
   # short: h
