@@ -357,6 +357,15 @@ func validateConfig(cfg *Config) error {
 					task.Name, flag.Name, flag.Type)
 			}
 		}
+		argNames := make(map[string]struct{}, len(task.Args))
+		for _, arg := range task.Args {
+			if _, ok := argNames[arg.Name]; ok {
+				return fmt.Errorf(
+					`the positional argument name duplicates: task: "%s", arg: "%s"`,
+					task.Name, arg.Name)
+			}
+			argNames[arg.Name] = struct{}{}
+		}
 	}
 	return nil
 }
