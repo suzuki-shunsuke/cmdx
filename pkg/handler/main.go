@@ -20,10 +20,10 @@ import (
 
 const (
 	configurationFileTemplate = `---
-commands:
+tasks:
 - name: hello
   # short: h
-  description: hello command
+  description: hello task
   flags:
 	# - name: source
   #   short: s
@@ -48,10 +48,10 @@ commands:
 
 type (
 	Config struct {
-		Commands []Command
+		Tasks []Task
 	}
 
-	Command struct {
+	Task struct {
 		Name        string
 		Short       string
 		Description string
@@ -108,10 +108,10 @@ func setupApp(app *cli.App) {
 	setAppCommands(app)
 }
 
-func newCommandWithConfig(app *cli.App, cfg *Config, cmd Command) cli.Command {
-	flags := make([]cli.Flag, len(cmd.Flags))
+func newCommandWithConfig(app *cli.App, cfg *Config, task Task) cli.Command {
+	flags := make([]cli.Flag, len(task.Flags))
 	vars := map[string]interface{}{}
-	for j, flag := range cmd.Flags {
+	for j, flag := range task.Flags {
 		vars[flag.Name] = ""
 		name := flag.Name
 		if flag.Short != "" {
@@ -137,25 +137,25 @@ func newCommandWithConfig(app *cli.App, cfg *Config, cmd Command) cli.Command {
 	}
 
 	return cli.Command{
-		Name:        cmd.Name,
-		ShortName:   cmd.Short,
-		Usage:       cmd.Usage,
-		Description: cmd.Description,
+		Name:        task.Name,
+		ShortName:   task.Short,
+		Usage:       task.Usage,
+		Description: task.Description,
 		Flags:       flags,
-		Action:      newCommandAction(cmd, vars),
+		Action:      newCommandAction(task, vars),
 	}
 }
 
-func newCommandAction(cmd Command, vars map[string]interface{}) func(*cli.Context) error {
+func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		err := func() error {
-			for _, flag := range cmd.Flags {
+			for _, flag := range task.Flags {
 				vars[flag.Name] = c.Generic(flag.Name)
 			}
 			args := c.Args()
 			n := c.NArg()
 			envs := os.Environ()
-			for i, arg := range cmd.Args {
+			for i, arg := range task.Args {
 				if i >= n {
 					if arg.Default != "" {
 						vars[arg.Name] = arg.Default
@@ -176,7 +176,7 @@ func newCommandAction(cmd Command, vars map[string]interface{}) func(*cli.Contex
 			}
 			extraArgs := []string{}
 			for i, arg := range args {
-				if i < len(cmd.Args) {
+				if i < len(task.Args) {
 					continue
 				}
 				extraArgs = append(extraArgs, arg)
@@ -187,19 +187,19 @@ func newCommandAction(cmd Command, vars map[string]interface{}) func(*cli.Contex
 				"all_args":        c.Args(),
 				"all_args_string": strings.Join(c.Args(), " "),
 			}
-			scr, err := renderTemplate(cmd.Script, vars)
+			scr, err := renderTemplate(task.Script, vars)
 			if err != nil {
-				return errors.Wrap(err, "failed to parse the script: "+cmd.Script)
+				return errors.Wrap(err, "failed to parse the script: "+task.Script)
 			}
 
 			command := exec.Command("sh", "-c", scr)
 			command.Stdout = os.Stdout
 			command.Stderr = os.Stderr
-			for k, v := range cmd.Environment {
+			for k, v := range task.Environment {
 				envs = append(envs, k+"="+v)
 			}
 
-			for _, flag := range cmd.Flags {
+			for _, flag := range task.Flags {
 				if flag.Env != "" {
 					envs = append(envs, flag.Env+"="+c.String(flag.Name))
 				}
@@ -220,9 +220,9 @@ func newCommandAction(cmd Command, vars map[string]interface{}) func(*cli.Contex
 }
 
 func updateAppWithConfig(app *cli.App, cfg *Config) {
-	cmds := make([]cli.Command, len(cfg.Commands))
-	for i, cmd := range cfg.Commands {
-		cmds[i] = newCommandWithConfig(app, cfg, cmd)
+	cmds := make([]cli.Command, len(cfg.Tasks))
+	for i, task := range cfg.Tasks {
+		cmds[i] = newCommandWithConfig(app, cfg, task)
 	}
 	app.Commands = cmds
 }
@@ -265,7 +265,7 @@ func setAppFlags(app *cli.App) {
 		},
 		cli.BoolFlag{
 			Name:  "list, l",
-			Usage: "list commands",
+			Usage: "list tasks",
 		},
 		cli.BoolFlag{
 			Name:  "help, h",
@@ -314,12 +314,12 @@ func setAppCommands(app *cli.App) {
 }
 
 func validateConfig(cfg *Config) error {
-	for _, cmd := range cfg.Commands {
-		for _, flag := range cmd.Flags {
+	for _, task := range cfg.Tasks {
+		for _, flag := range task.Flags {
 			if len(flag.Short) > 1 {
 				return fmt.Errorf(
-					"The length of command.short should be 0 or 1. command: %s, flag: %s, short: %s",
-					cmd.Name, flag.Name, flag.Short)
+					"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
+					task.Name, flag.Name, flag.Short)
 			}
 			switch flag.Type {
 			case "":
@@ -327,8 +327,8 @@ func validateConfig(cfg *Config) error {
 			case "string":
 			default:
 				return fmt.Errorf(
-					"The flag type should be either '' or 'string' or 'bool'. command: %s, flag: %s, flag.type: %s",
-					cmd.Name, flag.Name, flag.Type)
+					"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
+					task.Name, flag.Name, flag.Type)
 			}
 		}
 	}
@@ -378,9 +378,9 @@ func mainAction(c *cli.Context) error {
 	}
 
 	if listFlag {
-		arr := make([]string, len(cfg.Commands))
-		for i, cmd := range cfg.Commands {
-			arr[i] = cmd.Name + " - " + cmd.Usage
+		arr := make([]string, len(cfg.Tasks))
+		for i, task := range cfg.Tasks {
+			arr[i] = task.Name + " - " + task.Usage
 		}
 		fmt.Println(strings.Join(arr, "\n"))
 		return nil
