@@ -343,18 +343,29 @@ func validateConfig(cfg *Config) error {
 		}
 
 		flagNames := make(map[string]struct{}, len(task.Flags))
+		flagShortNames := make(map[string]struct{}, len(task.Flags))
 		for _, flag := range task.Flags {
 			if len(flag.Short) > 1 {
 				return fmt.Errorf(
 					"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
 					task.Name, flag.Name, flag.Short)
 			}
+
 			if _, ok := flagNames[flag.Name]; ok {
 				return fmt.Errorf(
 					`the flag name duplicates: task: "%s", flag: "%s"`,
 					task.Name, flag.Name)
 			}
 			flagNames[flag.Name] = struct{}{}
+
+			if flag.Short != "" {
+				if _, ok := flagShortNames[flag.Short]; ok {
+					return fmt.Errorf(
+						`the flag short name duplicates: task: "%s", flag.short: "%s"`,
+						task.Name, flag.Short)
+				}
+				flagShortNames[flag.Short] = struct{}{}
+			}
 
 			switch flag.Type {
 			case "":
