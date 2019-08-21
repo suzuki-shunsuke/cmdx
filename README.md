@@ -39,10 +39,10 @@ ci-local - run the Drone pipeline at localhost
 
 $ cmdx help release
 NAME:
-   main release - release the new version
+   cmdx release - release the new version
 
 USAGE:
-   main release [arguments...]
+   cmdx release [arguments...]
 
 DESCRIPTION:
    release the new version
