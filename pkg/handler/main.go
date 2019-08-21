@@ -116,12 +116,17 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 				command := exec.Command("sh", "-c", scr)
 				command.Stdout = os.Stdout
 				command.Stderr = os.Stderr
-				envs := make([]string, len(cmd.Environment))
-				i := 0
+				envs := os.Environ()
 				for k, v := range cmd.Environment {
-					envs[i] = k + "=" + v
-					i++
+					envs = append(envs, k+"="+v)
 				}
+
+				for _, flag := range cmd.Flags {
+					if flag.Env != "" {
+						envs = append(envs, flag.Env+"="+c.String(flag.Name))
+					}
+				}
+
 				command.Env = append(os.Environ(), envs...)
 				fmt.Println("+ " + scr)
 				if err := command.Run(); err != nil {
