@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"text/template"
 
 	"gopkg.in/yaml.v2"
@@ -141,6 +142,19 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 							break
 						}
 						vars[arg.Name] = args[i]
+					}
+					extraArgs := []string{}
+					for i, arg := range args {
+						if i < len(cmd.Args) {
+							continue
+						}
+						extraArgs = append(extraArgs, arg)
+					}
+					vars["_builtin"] = map[string]interface{}{
+						"args":            extraArgs,
+						"args_string":     strings.Join(extraArgs, " "),
+						"all_args":        c.Args(),
+						"all_args_string": strings.Join(c.Args(), " "),
 					}
 					scr, err := renderTemplate(cmd.Script, vars)
 					if err != nil {
