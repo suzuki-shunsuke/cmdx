@@ -328,11 +328,20 @@ func setAppCommands(app *cli.App) {
 
 func validateConfig(cfg *Config) error {
 	taskNames := make(map[string]struct{}, len(cfg.Tasks))
+	taskShortNames := make(map[string]struct{}, len(cfg.Tasks))
 	for _, task := range cfg.Tasks {
 		if _, ok := taskNames[task.Name]; ok {
 			return errors.New(`the task name duplicates: "` + task.Name + `"`)
 		}
 		taskNames[task.Name] = struct{}{}
+
+		if task.Short != "" {
+			if _, ok := taskShortNames[task.Short]; ok {
+				return errors.New(`the task short name duplicates: "` + task.Short + `"`)
+			}
+			taskShortNames[task.Short] = struct{}{}
+		}
+
 		flagNames := make(map[string]struct{}, len(task.Flags))
 		for _, flag := range task.Flags {
 			if len(flag.Short) > 1 {
