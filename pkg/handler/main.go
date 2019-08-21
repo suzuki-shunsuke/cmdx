@@ -90,8 +90,12 @@ func updateAppWithConfig(app *cli.App, cfg *Config) {
 		vars := map[string]string{}
 		for j, flag := range cmd.Flags {
 			vars[flag.Name] = ""
+			name := flag.Name
+			if flag.Short != "" {
+				name += ", " + flag.Short
+			}
 			flags[j] = cli.StringFlag{
-				Name:     flag.Name,
+				Name:     name,
 				Usage:    flag.Description,
 				Value:    flag.Default,
 				EnvVar:   flag.Env,
