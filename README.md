@@ -50,8 +50,8 @@ DESCRIPTION:
 
 You can make the simple shell script rich with `cmdx`
 
-* `cmdx` supports the parse of flag and positional arguments
-* `cmdx` provides the useful help messages
+* `cmdx` supports the parse of the flag and positional arguments
+* `cmdx` provides useful help messages
 
 `cmdx` searches the configuration file from the current directory to the root directory recursively and run the task at the directory where the configuration file exists so the result of task doesn't depend on the directory you run `cmdx`.
 
@@ -179,7 +179,7 @@ arg.required | bool | whether the argument is required | false | false
 
 `task.script` is the task command.
 This is parsed by Golang's [text/template](https://golang.org/pkg/text/template/) package.
-The value of the flag and positional argument can be refered by the argument name.
+The value of the flag and positional argument can be referred by the argument name.
 
 For example,
 
