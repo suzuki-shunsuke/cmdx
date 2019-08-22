@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/urfave/cli"
 )
 
 func validateUniqueName(name string, names map[string]struct{}) bool {
@@ -98,6 +99,19 @@ func validateConfig(cfg *Config) error {
 		if err := validateTask(task); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func validateFlagRequired(c *cli.Context, flags []Flag) error {
+	for _, flag := range flags {
+		if !flag.Required {
+			continue
+		}
+		if c.IsSet(flag.Name) {
+			continue
+		}
+		return errors.New(`the flag "` + flag.Name + `" is required`)
 	}
 	return nil
 }

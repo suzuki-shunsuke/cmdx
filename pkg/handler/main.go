@@ -139,18 +139,16 @@ func newFlag(flag Flag) cli.Flag {
 	switch flag.Type {
 	case boolFlagType:
 		return cli.BoolFlag{
-			Name:     name,
-			Usage:    flag.Usage,
-			EnvVar:   flag.Env,
-			Required: flag.Required,
+			Name:   name,
+			Usage:  flag.Usage,
+			EnvVar: flag.Env,
 		}
 	default:
 		return cli.StringFlag{
-			Name:     name,
-			Usage:    flag.Usage,
-			Value:    flag.Default,
-			EnvVar:   flag.Env,
-			Required: flag.Required,
+			Name:   name,
+			Usage:  flag.Usage,
+			Value:  flag.Default,
+			EnvVar: flag.Env,
 		}
 	}
 }
@@ -234,6 +232,10 @@ func newCommandAction(task Task) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
+
+		if err := validateFlagRequired(c, task.Flags); err != nil {
+			return err
+		}
 
 		vars := map[string]interface{}{}
 
