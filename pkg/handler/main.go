@@ -159,7 +159,7 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func newCommandWithConfig(task Task) cli.Command {
+func convertTaskToCommand(task Task) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
@@ -274,7 +274,7 @@ func runScript(script string, envs []string, quiet bool) error {
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = newCommandWithConfig(task)
+		cmds[i] = convertTaskToCommand(task)
 	}
 	app.Commands = cmds
 }

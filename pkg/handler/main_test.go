@@ -81,7 +81,7 @@ func Test_newFlag(t *testing.T) {
 	}
 }
 
-func Test_newCommandWithConfig(t *testing.T) {
+func Test_convertTaskToCommand(t *testing.T) {
 	data := []struct {
 		title string
 		task  Task
@@ -131,7 +131,7 @@ func Test_newCommandWithConfig(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			cmd := newCommandWithConfig(d.task)
+			cmd := convertTaskToCommand(d.task)
 			assert.Equal(t, d.exp.Name, cmd.Name)
 			assert.Equal(t, d.exp.ShortName, cmd.ShortName)
 			assert.Equal(t, d.exp.Usage, cmd.Usage)
