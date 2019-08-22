@@ -46,6 +46,8 @@ tasks:
     FOO: foo
   script: "echo $FOO"
 `
+
+	appUsage = "task runner"
 )
 
 type (
@@ -110,37 +112,41 @@ func setupApp(app *cli.App) {
 			Name: "Shunsuke Suzuki",
 		},
 	}
-	app.Usage = "task runner"
+	app.Usage = appUsage
 	setAppFlags(app)
 	setAppCommands(app)
 }
 
-func newCommandWithConfig(app *cli.App, cfg *Config, task Task) cli.Command {
+func newFlag(flag Flag) cli.Flag {
+	name := flag.Name
+	if flag.Short != "" {
+		name += ", " + flag.Short
+	}
+	switch flag.Type {
+	case "bool":
+		return cli.BoolFlag{
+			Name:     name,
+			Usage:    flag.Usage,
+			EnvVar:   flag.Env,
+			Required: flag.Required,
+		}
+	default:
+		return cli.StringFlag{
+			Name:     name,
+			Usage:    flag.Usage,
+			Value:    flag.Default,
+			EnvVar:   flag.Env,
+			Required: flag.Required,
+		}
+	}
+}
+
+func newCommandWithConfig(task Task) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	vars := map[string]interface{}{}
 	for j, flag := range task.Flags {
 		vars[flag.Name] = ""
-		name := flag.Name
-		if flag.Short != "" {
-			name += ", " + flag.Short
-		}
-		switch flag.Type {
-		case "bool":
-			flags[j] = cli.BoolFlag{
-				Name:     name,
-				Usage:    flag.Usage,
-				EnvVar:   flag.Env,
-				Required: flag.Required,
-			}
-		default:
-			flags[j] = cli.StringFlag{
-				Name:     name,
-				Usage:    flag.Usage,
-				Value:    flag.Default,
-				EnvVar:   flag.Env,
-				Required: flag.Required,
-			}
-		}
+		flags[j] = newFlag(flag)
 	}
 
 	return cli.Command{
@@ -231,7 +237,7 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = newCommandWithConfig(app, cfg, task)
+		cmds[i] = newCommandWithConfig(task)
 	}
 	app.Commands = cmds
 }
