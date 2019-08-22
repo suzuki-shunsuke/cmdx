@@ -90,16 +90,7 @@ func Main() error {
 	app.HideHelp = true
 	setupApp(app)
 
-	app.Action = func(c *cli.Context) error {
-		err := mainAction(c)
-		if err == nil {
-			return nil
-		}
-		if _, ok := err.(*cli.ExitError); ok {
-			return err
-		}
-		return cliutil.ConvErrToExitError(err)
-	}
+	app.Action = wrapAction(mainAction)
 
 	return app.Run(os.Args)
 }
@@ -155,82 +146,76 @@ func newCommandWithConfig(task Task) cli.Command {
 		Usage:       task.Usage,
 		Description: task.Description,
 		Flags:       flags,
-		Action:      newCommandAction(task, vars),
+		Action:      wrapAction(newCommandAction(task, vars)),
 	}
 }
 
 func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		err := func() error {
-			for _, flag := range task.Flags {
-				vars[flag.Name] = c.Generic(flag.Name)
-			}
-			args := c.Args()
-			n := c.NArg()
-			envs := os.Environ()
-			for i, arg := range task.Args {
-				if i >= n {
-					if arg.Default != "" {
-						vars[arg.Name] = arg.Default
-						if arg.Env != "" {
-							envs = append(envs, arg.Env+"="+arg.Default)
-						}
-						continue
-					}
-					if arg.Required {
-						return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+		for _, flag := range task.Flags {
+			vars[flag.Name] = c.Generic(flag.Name)
+		}
+		args := c.Args()
+		n := c.NArg()
+		envs := os.Environ()
+		for i, arg := range task.Args {
+			if i >= n {
+				if arg.Default != "" {
+					vars[arg.Name] = arg.Default
+					if arg.Env != "" {
+						envs = append(envs, arg.Env+"="+arg.Default)
 					}
 					continue
 				}
-				vars[arg.Name] = args[i]
-				if arg.Env != "" {
-					envs = append(envs, arg.Env+"="+args[i])
+				if arg.Required {
+					return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 				}
+				continue
 			}
-			extraArgs := []string{}
-			for i, arg := range args {
-				if i < len(task.Args) {
-					continue
-				}
-				extraArgs = append(extraArgs, arg)
+			vars[arg.Name] = args[i]
+			if arg.Env != "" {
+				envs = append(envs, arg.Env+"="+args[i])
 			}
-			vars["_builtin"] = map[string]interface{}{
-				"args":            extraArgs,
-				"args_string":     strings.Join(extraArgs, " "),
-				"all_args":        c.Args(),
-				"all_args_string": strings.Join(c.Args(), " "),
+		}
+		extraArgs := []string{}
+		for i, arg := range args {
+			if i < len(task.Args) {
+				continue
 			}
-			scr, err := renderTemplate(task.Script, vars)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse the script: "+task.Script)
-			}
+			extraArgs = append(extraArgs, arg)
+		}
+		vars["_builtin"] = map[string]interface{}{
+			"args":            extraArgs,
+			"args_string":     strings.Join(extraArgs, " "),
+			"all_args":        c.Args(),
+			"all_args_string": strings.Join(c.Args(), " "),
+		}
+		scr, err := renderTemplate(task.Script, vars)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse the script: "+task.Script)
+		}
 
-			command := exec.Command("sh", "-c", scr)
-			command.Stdout = os.Stdout
-			command.Stderr = os.Stderr
-			for k, v := range task.Environment {
-				envs = append(envs, k+"="+v)
-			}
+		command := exec.Command("sh", "-c", scr)
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
+		for k, v := range task.Environment {
+			envs = append(envs, k+"="+v)
+		}
 
-			for _, flag := range task.Flags {
-				if flag.Env != "" {
-					envs = append(envs, flag.Env+"="+c.String(flag.Name))
-				}
+		for _, flag := range task.Flags {
+			if flag.Env != "" {
+				envs = append(envs, flag.Env+"="+c.String(flag.Name))
 			}
+		}
 
-			command.Env = append(os.Environ(), envs...)
-			if !c.GlobalBool("quiet") {
-				fmt.Fprintln(os.Stderr, "+ "+scr)
-			}
-			if err := command.Run(); err != nil {
-				return err
-			}
-			return nil
-		}()
-		if _, ok := err.(*cli.ExitError); ok {
+		command.Env = append(os.Environ(), envs...)
+		if !c.GlobalBool("quiet") {
+			fmt.Fprintln(os.Stderr, "+ "+scr)
+		}
+		if err := command.Run(); err != nil {
 			return err
 		}
-		return cliutil.ConvErrToExitError(err)
+		return nil
 	}
 }
 
@@ -293,6 +278,42 @@ func setAppFlags(app *cli.App) {
 	}
 }
 
+func wrapAction(f func(c *cli.Context) error) func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		err := f(c)
+		if err == nil {
+			return nil
+		}
+		if _, ok := err.(*cli.ExitError); ok {
+			return err
+		}
+		return cliutil.ConvErrToExitError(err)
+	}
+}
+
+func helpCommand(c *cli.Context) error {
+	cfg := Config{}
+	cfgFilePath := c.GlobalString("config")
+	cfgFileName := c.GlobalString("name")
+	if cfgFilePath == "" {
+		var err error
+		cfgFilePath, err = getConfigFilePath(cfgFileName)
+		if err != nil {
+			return err
+		}
+	}
+	if err := readConfig(cfgFilePath, &cfg); err != nil {
+		return err
+	}
+	if err := validateConfig(&cfg); err != nil {
+		return errors.Wrap(err, "please fix the configuration file")
+	}
+	app := cli.NewApp()
+	setupApp(app)
+	updateAppWithConfig(app, &cfg)
+	return app.Run(os.Args)
+}
+
 func setAppCommands(app *cli.App) {
 	app.Commands = []cli.Command{
 		{
@@ -300,34 +321,7 @@ func setAppCommands(app *cli.App) {
 			Aliases:   []string{"h"},
 			Usage:     "show help",
 			ArgsUsage: "[command]",
-			Action: func(c *cli.Context) error {
-				err := func() error {
-					cfg := Config{}
-					cfgFilePath := c.GlobalString("config")
-					cfgFileName := c.GlobalString("name")
-					if cfgFilePath == "" {
-						var err error
-						cfgFilePath, err = getConfigFilePath(cfgFileName)
-						if err != nil {
-							return err
-						}
-					}
-					if err := readConfig(cfgFilePath, &cfg); err != nil {
-						return err
-					}
-					if err := validateConfig(&cfg); err != nil {
-						return errors.Wrap(err, "please fix the configuration file")
-					}
-					app := cli.NewApp()
-					setupApp(app)
-					updateAppWithConfig(app, &cfg)
-					return app.Run(os.Args)
-				}()
-				if _, ok := err.(*cli.ExitError); ok {
-					return err
-				}
-				return cliutil.ConvErrToExitError(err)
-			},
+			Action:    wrapAction(helpCommand),
 		},
 	}
 }
