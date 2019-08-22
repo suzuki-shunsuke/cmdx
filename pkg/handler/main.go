@@ -293,33 +293,40 @@ func setAppFlags(app *cli.App) {
 	}
 }
 
-func helpCommand(c *cli.Context) error {
-	err := func() error {
-		cfg := Config{}
-		cfgFilePath := c.GlobalString("config")
-		cfgFileName := c.GlobalString("name")
-		if cfgFilePath == "" {
-			var err error
-			cfgFilePath, err = getConfigFilePath(cfgFileName)
-			if err != nil {
-				return err
-			}
+func wrapAction(f func(c *cli.Context) error) func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		err := f(c)
+		if err == nil {
+			return nil
 		}
-		if err := readConfig(cfgFilePath, &cfg); err != nil {
+		if _, ok := err.(*cli.ExitError); ok {
 			return err
 		}
-		if err := validateConfig(&cfg); err != nil {
-			return errors.Wrap(err, "please fix the configuration file")
+		return cliutil.ConvErrToExitError(err)
+	}
+}
+
+func helpCommand(c *cli.Context) error {
+	cfg := Config{}
+	cfgFilePath := c.GlobalString("config")
+	cfgFileName := c.GlobalString("name")
+	if cfgFilePath == "" {
+		var err error
+		cfgFilePath, err = getConfigFilePath(cfgFileName)
+		if err != nil {
+			return err
 		}
-		app := cli.NewApp()
-		setupApp(app)
-		updateAppWithConfig(app, &cfg)
-		return app.Run(os.Args)
-	}()
-	if _, ok := err.(*cli.ExitError); ok {
+	}
+	if err := readConfig(cfgFilePath, &cfg); err != nil {
 		return err
 	}
-	return cliutil.ConvErrToExitError(err)
+	if err := validateConfig(&cfg); err != nil {
+		return errors.Wrap(err, "please fix the configuration file")
+	}
+	app := cli.NewApp()
+	setupApp(app)
+	updateAppWithConfig(app, &cfg)
+	return app.Run(os.Args)
 }
 
 func setAppCommands(app *cli.App) {
@@ -329,7 +336,7 @@ func setAppCommands(app *cli.App) {
 			Aliases:   []string{"h"},
 			Usage:     "show help",
 			ArgsUsage: "[command]",
-			Action:    helpCommand,
+			Action:    wrapAction(helpCommand),
 		},
 	}
 }
