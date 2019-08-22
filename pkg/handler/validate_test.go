@@ -82,3 +82,80 @@ func Test_validateConfig(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateFlag(t *testing.T) {
+	data := []struct {
+		title      string
+		flag       Flag
+		names      map[string]struct{}
+		shortNames map[string]struct{}
+		isErr      bool
+	}{
+		{
+			title: "name is required",
+			isErr: true,
+		},
+		{
+			title: "short name is too long",
+			flag: Flag{
+				Name:  "foo",
+				Short: "foo",
+			},
+			isErr: true,
+		},
+		{
+			title: "flag name duplicates",
+			flag: Flag{
+				Name: "foo",
+			},
+			names: map[string]struct{}{
+				"foo": {},
+			},
+			isErr: true,
+		},
+		{
+			title: "flag short name duplicates",
+			flag: Flag{
+				Name:  "foo",
+				Short: "f",
+			},
+			shortNames: map[string]struct{}{
+				"f": {},
+			},
+			isErr: true,
+		},
+		{
+			title: "invalid flag type",
+			flag: Flag{
+				Name: "foo",
+				Type: "f",
+			},
+			isErr: true,
+		},
+		{
+			title: "normal",
+			flag: Flag{
+				Name: "foo",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			if d.names == nil {
+				d.names = map[string]struct{}{}
+			}
+			if d.shortNames == nil {
+				d.shortNames = map[string]struct{}{}
+			}
+			err := validateFlag("task-name", d.flag, d.names, d.shortNames)
+			if err == nil {
+				assert.False(t, d.isErr)
+				return
+			}
+			if d.isErr {
+				return
+			}
+			assert.NotNil(t, err)
+		})
+	}
+}
