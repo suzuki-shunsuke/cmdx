@@ -3,7 +3,8 @@
 # https://github.com/suzuki-shunsuke/durl
 ignore_urls:
 - https://github.com/suzuki-shunsuke/durl
-ignore_hosts: []
+ignore_hosts:
+- goreportcard.com
 http_method: head,get
 max_request_count: 10
 max_failed_request_count: 5
