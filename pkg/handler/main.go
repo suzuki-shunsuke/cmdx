@@ -133,16 +133,6 @@ func setupApp(app *cli.App) {
 			Usage: "don't output the executed command",
 		},
 	}
-
-	app.Commands = []cli.Command{
-		{
-			Name:      "help",
-			Aliases:   []string{"h"},
-			Usage:     "show help",
-			ArgsUsage: "[command]",
-			Action:    cliutil.WrapAction(helpCommand),
-		},
-	}
 }
 
 func newFlag(flag Flag) cli.Flag {
@@ -309,29 +299,6 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 		return errors.Wrap(err, "failed to read the configuration file: "+cfgFilePath)
 	}
 	return nil
-}
-
-func helpCommand(c *cli.Context) error {
-	cfg := Config{}
-	cfgFilePath := c.GlobalString("config")
-	cfgFileName := c.GlobalString("name")
-	if cfgFilePath == "" {
-		var err error
-		cfgFilePath, err = getConfigFilePath(cfgFileName)
-		if err != nil {
-			return err
-		}
-	}
-	if err := readConfig(cfgFilePath, &cfg); err != nil {
-		return err
-	}
-	if err := validateConfig(&cfg); err != nil {
-		return errors.Wrap(err, "please fix the configuration file")
-	}
-	app := cli.NewApp()
-	setupApp(app)
-	updateAppWithConfig(app, &cfg)
-	return app.Run(os.Args)
 }
 
 func createConfigFile(p string) error {
