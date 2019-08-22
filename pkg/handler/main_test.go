@@ -67,10 +67,9 @@ func Test_newFlag(t *testing.T) {
 				Required: true,
 			},
 			exp: cli.StringFlag{
-				Name:     "foo",
-				Usage:    "usage",
-				EnvVar:   "FOO",
-				Required: true,
+				Name:   "foo",
+				Usage:  "usage",
+				EnvVar: "FOO",
 			},
 		},
 	}
