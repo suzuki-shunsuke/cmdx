@@ -351,6 +351,18 @@ func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[stri
 	return nil
 }
 
+func validateArg(taskName string, arg Arg, argNames map[string]struct{}) error {
+	if arg.Name == "" {
+		return errors.New("the positional argument name is required: task: " + taskName)
+	}
+	if !validateUniqueName(arg.Name, argNames) {
+		return fmt.Errorf(
+			`the positional argument name duplicates: task: "%s", arg: "%s"`,
+			taskName, arg.Name)
+	}
+	return nil
+}
+
 func validateTask(task Task) error {
 	if task.Name == "" {
 		return errors.New("the task name is required")
@@ -364,13 +376,8 @@ func validateTask(task Task) error {
 	}
 	argNames := make(map[string]struct{}, len(task.Args))
 	for _, arg := range task.Args {
-		if arg.Name == "" {
-			return errors.New("the positional argument name is required: task: " + task.Name)
-		}
-		if !validateUniqueName(arg.Name, argNames) {
-			return fmt.Errorf(
-				`the positional argument name duplicates: task: "%s", arg: "%s"`,
-				task.Name, arg.Name)
+		if err := validateArg(task.Name, arg, argNames); err != nil {
+			return err
 		}
 	}
 	return nil
