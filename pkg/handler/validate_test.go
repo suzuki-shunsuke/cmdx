@@ -159,3 +159,49 @@ func Test_validateFlag(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateArg(t *testing.T) {
+	data := []struct {
+		title string
+		arg   Arg
+		names map[string]struct{}
+		isErr bool
+	}{
+		{
+			title: "name is required",
+			isErr: true,
+		},
+		{
+			title: "arg name duplicates",
+			arg: Arg{
+				Name: "foo",
+			},
+			names: map[string]struct{}{
+				"foo": {},
+			},
+			isErr: true,
+		},
+		{
+			title: "normal",
+			arg: Arg{
+				Name: "foo",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			if d.names == nil {
+				d.names = map[string]struct{}{}
+			}
+			err := validateArg("task-name", d.arg, d.names)
+			if err == nil {
+				assert.False(t, d.isErr)
+				return
+			}
+			if d.isErr {
+				return
+			}
+			assert.NotNil(t, err)
+		})
+	}
+}
