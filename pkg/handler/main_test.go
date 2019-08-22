@@ -80,3 +80,63 @@ func Test_newFlag(t *testing.T) {
 		})
 	}
 }
+
+func Test_newCommandWithConfig(t *testing.T) {
+	data := []struct {
+		title string
+		task  Task
+		exp   cli.Command
+	}{
+		{
+			title: "no flag",
+			task: Task{
+				Name:        "test",
+				Short:       "t",
+				Usage:       "usage",
+				Description: "description",
+			},
+			exp: cli.Command{
+				Name:        "test",
+				ShortName:   "t",
+				Usage:       "usage",
+				Description: "description",
+				Flags:       []cli.Flag{},
+			},
+		},
+		{
+			title: "flag",
+			task: Task{
+				Name:        "test",
+				Short:       "t",
+				Usage:       "usage",
+				Description: "description",
+				Flags: []Flag{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			exp: cli.Command{
+				Name:        "test",
+				ShortName:   "t",
+				Usage:       "usage",
+				Description: "description",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name: "foo",
+					},
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			cmd := newCommandWithConfig(d.task)
+			assert.Equal(t, d.exp.Name, cmd.Name)
+			assert.Equal(t, d.exp.ShortName, cmd.ShortName)
+			assert.Equal(t, d.exp.Usage, cmd.Usage)
+			assert.Equal(t, d.exp.Flags, cmd.Flags)
+			assert.Equal(t, d.exp.Description, cmd.Description)
+		})
+	}
+}

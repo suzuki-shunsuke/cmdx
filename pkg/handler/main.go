@@ -141,7 +141,7 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func newCommandWithConfig(app *cli.App, cfg *Config, task Task) cli.Command {
+func newCommandWithConfig(task Task) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	vars := map[string]interface{}{}
 	for j, flag := range task.Flags {
@@ -237,7 +237,7 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = newCommandWithConfig(app, cfg, task)
+		cmds[i] = newCommandWithConfig(task)
 	}
 	app.Commands = cmds
 }
