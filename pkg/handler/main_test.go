@@ -244,7 +244,6 @@ func Test_validateConfig(t *testing.T) {
 				return
 			}
 			assert.NotNil(t, err)
-			return
 		})
 	}
 }
