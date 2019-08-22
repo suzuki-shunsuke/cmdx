@@ -169,9 +169,7 @@ func newFlag(flag Flag) cli.Flag {
 
 func newCommandWithConfig(task Task) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
-	vars := map[string]interface{}{}
 	for j, flag := range task.Flags {
-		vars[flag.Name] = ""
 		flags[j] = newFlag(flag)
 	}
 
@@ -181,7 +179,7 @@ func newCommandWithConfig(task Task) cli.Command {
 		Usage:       task.Usage,
 		Description: task.Description,
 		Flags:       flags,
-		Action:      cliutil.WrapAction(newCommandAction(task, vars)),
+		Action:      cliutil.WrapAction(newCommandAction(task)),
 	}
 }
 
@@ -226,14 +224,12 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 	return envs, nil
 }
 
-func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context) error {
+func newCommandAction(task Task) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
 
-		for _, flag := range task.Flags {
-			vars[flag.Name] = c.Generic(flag.Name)
-		}
+		vars := map[string]interface{}{}
 
 		envs, err := updateVarsAndEnvsByArgs(
 			task.Args, c.Args(), os.Environ(), vars)
@@ -241,19 +237,20 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 			return err
 		}
 
-		scr, err := renderTemplate(task.Script, vars)
-		if err != nil {
-			return errors.Wrap(err, "failed to parse the script: "+task.Script)
+		for _, flag := range task.Flags {
+			vars[flag.Name] = c.Generic(flag.Name)
+			if flag.Env != "" {
+				envs = append(envs, flag.Env+"="+c.String(flag.Name))
+			}
 		}
 
 		for k, v := range task.Environment {
 			envs = append(envs, k+"="+v)
 		}
 
-		for _, flag := range task.Flags {
-			if flag.Env != "" {
-				envs = append(envs, flag.Env+"="+c.String(flag.Name))
-			}
+		scr, err := renderTemplate(task.Script, vars)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse the script: "+task.Script)
 		}
 
 		return runScript(scr, envs, c.GlobalBool("quiet"))
