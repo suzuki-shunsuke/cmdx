@@ -30,6 +30,7 @@ For example, This is the tasks for `cmdx` itself.
 
 ```console
 $ cmdx -l
+coverage - test a package
 test - test
 fmt - format the go code
 vet - go vet
