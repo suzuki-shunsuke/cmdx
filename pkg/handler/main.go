@@ -160,14 +160,31 @@ func convertTaskToCommand(task Task) cli.Command {
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
 	}
+	help := ""
+	if len(task.Args) != 0 {
+		argHelps := make([]string, len(task.Args))
+		argNames := make([]string, len(task.Args))
+		for i, arg := range task.Args {
+			h := "   " + arg.Name
+			if arg.Usage != "" {
+				h += "  " + arg.Usage
+			}
+			argHelps[i] = h
+			argNames[i] = "<" + arg.Name + ">"
+		}
+		help = strings.Replace(
+			cli.CommandHelpTemplate, "[arguments...]", strings.Join(argNames, " "), 1) + `ARGUMENTS:
+` + strings.Join(argHelps, "\n")
+	}
 
 	return cli.Command{
-		Name:        task.Name,
-		ShortName:   task.Short,
-		Usage:       task.Usage,
-		Description: task.Description,
-		Flags:       flags,
-		Action:      cliutil.WrapAction(newCommandAction(task)),
+		Name:               task.Name,
+		ShortName:          task.Short,
+		Usage:              task.Usage,
+		Description:        task.Description,
+		Flags:              flags,
+		Action:             cliutil.WrapAction(newCommandAction(task)),
+		CustomHelpTemplate: help,
 	}
 }
 
