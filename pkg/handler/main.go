@@ -90,16 +90,7 @@ func Main() error {
 	app.HideHelp = true
 	setupApp(app)
 
-	app.Action = func(c *cli.Context) error {
-		err := mainAction(c)
-		if err == nil {
-			return nil
-		}
-		if _, ok := err.(*cli.ExitError); ok {
-			return err
-		}
-		return cliutil.ConvErrToExitError(err)
-	}
+	app.Action = wrapAction(mainAction)
 
 	return app.Run(os.Args)
 }
