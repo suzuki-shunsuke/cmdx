@@ -90,7 +90,7 @@ func Main() error {
 	app.HideHelp = true
 	setupApp(app)
 
-	app.Action = wrapAction(mainAction)
+	app.Action = cliutil.WrapAction(mainAction)
 
 	return app.Run(os.Args)
 }
@@ -146,7 +146,7 @@ func newCommandWithConfig(task Task) cli.Command {
 		Usage:       task.Usage,
 		Description: task.Description,
 		Flags:       flags,
-		Action:      wrapAction(newCommandAction(task, vars)),
+		Action:      cliutil.WrapAction(newCommandAction(task, vars)),
 	}
 }
 
@@ -278,19 +278,6 @@ func setAppFlags(app *cli.App) {
 	}
 }
 
-func wrapAction(f func(c *cli.Context) error) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
-		err := f(c)
-		if err == nil {
-			return nil
-		}
-		if _, ok := err.(*cli.ExitError); ok {
-			return err
-		}
-		return cliutil.ConvErrToExitError(err)
-	}
-}
-
 func helpCommand(c *cli.Context) error {
 	cfg := Config{}
 	cfgFilePath := c.GlobalString("config")
@@ -321,70 +308,95 @@ func setAppCommands(app *cli.App) {
 			Aliases:   []string{"h"},
 			Usage:     "show help",
 			ArgsUsage: "[command]",
-			Action:    wrapAction(helpCommand),
+			Action:    cliutil.WrapAction(helpCommand),
 		},
 	}
+}
+
+func validateUniqueName(name string, names map[string]struct{}) bool {
+	if _, ok := names[name]; ok {
+		return false
+	}
+	names[name] = struct{}{}
+	return true
+}
+
+func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[string]struct{}) error {
+	if flag.Name == "" {
+		return errors.New("the flag name is required: task: " + taskName)
+	}
+	if len(flag.Short) > 1 {
+		return fmt.Errorf(
+			"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
+			taskName, flag.Name, flag.Short)
+	}
+
+	if !validateUniqueName(flag.Name, flagNames) {
+		return fmt.Errorf(
+			`the flag name duplicates: task: "%s", flag: "%s"`,
+			taskName, flag.Name)
+	}
+
+	if flag.Short != "" {
+		if !validateUniqueName(flag.Short, flagShortNames) {
+			return fmt.Errorf(
+				`the flag short name duplicates: task: "%s", flag.short: "%s"`,
+				taskName, flag.Short)
+		}
+	}
+
+	switch flag.Type {
+	case "":
+	case "bool":
+	case "string":
+	default:
+		return fmt.Errorf(
+			"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
+			taskName, flag.Name, flag.Type)
+	}
+	return nil
+}
+
+func validateTask(task Task) error {
+	if task.Name == "" {
+		return errors.New("the task name is required")
+	}
+	flagNames := make(map[string]struct{}, len(task.Flags))
+	flagShortNames := make(map[string]struct{}, len(task.Flags))
+	for _, flag := range task.Flags {
+		if err := validateFlag(task.Name, flag, flagNames, flagShortNames); err != nil {
+			return err
+		}
+	}
+	argNames := make(map[string]struct{}, len(task.Args))
+	for _, arg := range task.Args {
+		if arg.Name == "" {
+			return errors.New("the positional argument name is required: task: " + task.Name)
+		}
+		if !validateUniqueName(arg.Name, argNames) {
+			return fmt.Errorf(
+				`the positional argument name duplicates: task: "%s", arg: "%s"`,
+				task.Name, arg.Name)
+		}
+	}
+	return nil
 }
 
 func validateConfig(cfg *Config) error {
 	taskNames := make(map[string]struct{}, len(cfg.Tasks))
 	taskShortNames := make(map[string]struct{}, len(cfg.Tasks))
 	for _, task := range cfg.Tasks {
-		if _, ok := taskNames[task.Name]; ok {
+		if !validateUniqueName(task.Name, taskNames) {
 			return errors.New(`the task name duplicates: "` + task.Name + `"`)
 		}
-		taskNames[task.Name] = struct{}{}
 
 		if task.Short != "" {
-			if _, ok := taskShortNames[task.Short]; ok {
+			if !validateUniqueName(task.Short, taskShortNames) {
 				return errors.New(`the task short name duplicates: "` + task.Short + `"`)
 			}
-			taskShortNames[task.Short] = struct{}{}
 		}
-
-		flagNames := make(map[string]struct{}, len(task.Flags))
-		flagShortNames := make(map[string]struct{}, len(task.Flags))
-		for _, flag := range task.Flags {
-			if len(flag.Short) > 1 {
-				return fmt.Errorf(
-					"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
-					task.Name, flag.Name, flag.Short)
-			}
-
-			if _, ok := flagNames[flag.Name]; ok {
-				return fmt.Errorf(
-					`the flag name duplicates: task: "%s", flag: "%s"`,
-					task.Name, flag.Name)
-			}
-			flagNames[flag.Name] = struct{}{}
-
-			if flag.Short != "" {
-				if _, ok := flagShortNames[flag.Short]; ok {
-					return fmt.Errorf(
-						`the flag short name duplicates: task: "%s", flag.short: "%s"`,
-						task.Name, flag.Short)
-				}
-				flagShortNames[flag.Short] = struct{}{}
-			}
-
-			switch flag.Type {
-			case "":
-			case "bool":
-			case "string":
-			default:
-				return fmt.Errorf(
-					"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
-					task.Name, flag.Name, flag.Type)
-			}
-		}
-		argNames := make(map[string]struct{}, len(task.Args))
-		for _, arg := range task.Args {
-			if _, ok := argNames[arg.Name]; ok {
-				return fmt.Errorf(
-					`the positional argument name duplicates: task: "%s", arg: "%s"`,
-					task.Name, arg.Name)
-			}
-			argNames[arg.Name] = struct{}{}
+		if err := validateTask(task); err != nil {
+			return err
 		}
 	}
 	return nil
