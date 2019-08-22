@@ -321,38 +321,45 @@ func validateUniqueName(name string, names map[string]struct{}) bool {
 	return true
 }
 
+func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[string]struct{}) error {
+	if len(flag.Short) > 1 {
+		return fmt.Errorf(
+			"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
+			taskName, flag.Name, flag.Short)
+	}
+
+	if !validateUniqueName(flag.Name, flagNames) {
+		return fmt.Errorf(
+			`the flag name duplicates: task: "%s", flag: "%s"`,
+			taskName, flag.Name)
+	}
+
+	if flag.Short != "" {
+		if !validateUniqueName(flag.Short, flagShortNames) {
+			return fmt.Errorf(
+				`the flag short name duplicates: task: "%s", flag.short: "%s"`,
+				taskName, flag.Short)
+		}
+	}
+
+	switch flag.Type {
+	case "":
+	case "bool":
+	case "string":
+	default:
+		return fmt.Errorf(
+			"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
+			taskName, flag.Name, flag.Type)
+	}
+	return nil
+}
+
 func validateTask(task Task) error {
 	flagNames := make(map[string]struct{}, len(task.Flags))
 	flagShortNames := make(map[string]struct{}, len(task.Flags))
 	for _, flag := range task.Flags {
-		if len(flag.Short) > 1 {
-			return fmt.Errorf(
-				"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
-				task.Name, flag.Name, flag.Short)
-		}
-
-		if !validateUniqueName(flag.Name, flagNames) {
-			return fmt.Errorf(
-				`the flag name duplicates: task: "%s", flag: "%s"`,
-				task.Name, flag.Name)
-		}
-
-		if flag.Short != "" {
-			if !validateUniqueName(flag.Short, flagShortNames) {
-				return fmt.Errorf(
-					`the flag short name duplicates: task: "%s", flag.short: "%s"`,
-					task.Name, flag.Short)
-			}
-		}
-
-		switch flag.Type {
-		case "":
-		case "bool":
-		case "string":
-		default:
-			return fmt.Errorf(
-				"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
-				task.Name, flag.Name, flag.Type)
+		if err := validateFlag(task.Name, flag, flagNames, flagShortNames); err != nil {
+			return err
 		}
 	}
 	argNames := make(map[string]struct{}, len(task.Args))
