@@ -1,6 +1,7 @@
 # cmdx
 
 [![Build Status](https://cloud.drone.io/api/badges/suzuki-shunsuke/cmdx/status.svg)](https://cloud.drone.io/suzuki-shunsuke/cmdx)
+[![codecov](https://codecov.io/gh/suzuki-shunsuke/cmdx/branch/master/graph/badge.svg)](https://codecov.io/gh/suzuki-shunsuke/cmdx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/suzuki-shunsuke/cmdx)](https://goreportcard.com/report/github.com/suzuki-shunsuke/cmdx)
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/cmdx.svg)](https://github.com/suzuki-shunsuke/cmdx)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/master/LICENSE)
