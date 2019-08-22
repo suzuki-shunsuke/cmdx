@@ -90,7 +90,7 @@ func Main() error {
 	app.HideHelp = true
 	setupApp(app)
 
-	app.Action = wrapAction(mainAction)
+	app.Action = cliutil.WrapAction(mainAction)
 
 	return app.Run(os.Args)
 }
@@ -146,7 +146,7 @@ func newCommandWithConfig(task Task) cli.Command {
 		Usage:       task.Usage,
 		Description: task.Description,
 		Flags:       flags,
-		Action:      wrapAction(newCommandAction(task, vars)),
+		Action:      cliutil.WrapAction(newCommandAction(task, vars)),
 	}
 }
 
@@ -278,19 +278,6 @@ func setAppFlags(app *cli.App) {
 	}
 }
 
-func wrapAction(f func(c *cli.Context) error) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
-		err := f(c)
-		if err == nil {
-			return nil
-		}
-		if _, ok := err.(*cli.ExitError); ok {
-			return err
-		}
-		return cliutil.ConvErrToExitError(err)
-	}
-}
-
 func helpCommand(c *cli.Context) error {
 	cfg := Config{}
 	cfgFilePath := c.GlobalString("config")
@@ -321,7 +308,7 @@ func setAppCommands(app *cli.App) {
 			Aliases:   []string{"h"},
 			Usage:     "show help",
 			ArgsUsage: "[command]",
-			Action:    wrapAction(helpCommand),
+			Action:    cliutil.WrapAction(helpCommand),
 		},
 	}
 }
