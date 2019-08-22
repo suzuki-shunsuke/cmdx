@@ -23,10 +23,11 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 	return nil
 }
 
-func runScript(script string, envs []string, quiet bool) error {
+func runScript(script, wd string, envs []string, quiet bool) error {
 	cmd := exec.Command("sh", "-c", script)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Dir = wd
 
 	cmd.Env = append(os.Environ(), envs...)
 	if !quiet {
