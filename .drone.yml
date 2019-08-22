@@ -1,6 +1,8 @@
 ---
 kind: pipeline
 name: durl
+clone:
+  depth: 1
 steps:
 - name: durl
   image: quay.io/suzuki_shunsuke/durl:1.0.0
@@ -9,6 +11,8 @@ steps:
 ---
 kind: pipeline
 name: build
+clone:
+  depth: 1
 volumes:
 - name: gopath
   temp: {}
