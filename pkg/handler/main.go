@@ -185,54 +185,67 @@ func newCommandWithConfig(task Task) cli.Command {
 	}
 }
 
+func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map[string]interface{}) ([]string, error) {
+	n := len(cArgs)
+
+	for i, arg := range args {
+		if i < n {
+			vars[arg.Name] = cArgs[i]
+			if arg.Env != "" {
+				envs = append(envs, arg.Env+"="+cArgs[i])
+			}
+			continue
+		}
+		// the positional argument isn't given
+		if arg.Default != "" {
+			vars[arg.Name] = arg.Default
+			if arg.Env != "" {
+				envs = append(envs, arg.Env+"="+arg.Default)
+			}
+			continue
+		}
+		if arg.Required {
+			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+		}
+	}
+
+	extraArgs := []string{}
+	for i, arg := range cArgs {
+		if i < len(args) {
+			continue
+		}
+		extraArgs = append(extraArgs, arg)
+	}
+
+	vars["_builtin"] = map[string]interface{}{
+		"args":            extraArgs,
+		"args_string":     strings.Join(extraArgs, " "),
+		"all_args":        cArgs,
+		"all_args_string": strings.Join(cArgs, " "),
+	}
+	return envs, nil
+}
+
 func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context) error {
 	return func(c *cli.Context) error {
+		// create vars and envs
+		// run command
+
 		for _, flag := range task.Flags {
 			vars[flag.Name] = c.Generic(flag.Name)
 		}
-		args := c.Args()
-		n := c.NArg()
-		envs := os.Environ()
-		for i, arg := range task.Args {
-			if i >= n {
-				if arg.Default != "" {
-					vars[arg.Name] = arg.Default
-					if arg.Env != "" {
-						envs = append(envs, arg.Env+"="+arg.Default)
-					}
-					continue
-				}
-				if arg.Required {
-					return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
-				}
-				continue
-			}
-			vars[arg.Name] = args[i]
-			if arg.Env != "" {
-				envs = append(envs, arg.Env+"="+args[i])
-			}
+
+		envs, err := updateVarsAndEnvsByArgs(
+			task.Args, c.Args(), os.Environ(), vars)
+		if err != nil {
+			return err
 		}
-		extraArgs := []string{}
-		for i, arg := range args {
-			if i < len(task.Args) {
-				continue
-			}
-			extraArgs = append(extraArgs, arg)
-		}
-		vars["_builtin"] = map[string]interface{}{
-			"args":            extraArgs,
-			"args_string":     strings.Join(extraArgs, " "),
-			"all_args":        c.Args(),
-			"all_args_string": strings.Join(c.Args(), " "),
-		}
+
 		scr, err := renderTemplate(task.Script, vars)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse the script: "+task.Script)
 		}
 
-		command := exec.Command("sh", "-c", scr)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
 		for k, v := range task.Environment {
 			envs = append(envs, k+"="+v)
 		}
@@ -243,15 +256,23 @@ func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context)
 			}
 		}
 
-		command.Env = append(os.Environ(), envs...)
-		if !c.GlobalBool("quiet") {
-			fmt.Fprintln(os.Stderr, "+ "+scr)
-		}
-		if err := command.Run(); err != nil {
-			return err
-		}
-		return nil
+		return runScript(scr, envs, c.GlobalBool("quiet"))
 	}
+}
+
+func runScript(script string, envs []string, quiet bool) error {
+	cmd := exec.Command("sh", "-c", script)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	cmd.Env = append(os.Environ(), envs...)
+	if !quiet {
+		fmt.Fprintln(os.Stderr, "+ "+script)
+	}
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateAppWithConfig(app *cli.App, cfg *Config) {
