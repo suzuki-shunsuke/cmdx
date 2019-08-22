@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -153,7 +154,7 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func convertTaskToCommand(task Task) cli.Command {
+func convertTaskToCommand(task Task, wd string) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
@@ -181,7 +182,7 @@ func convertTaskToCommand(task Task) cli.Command {
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             cliutil.WrapAction(newCommandAction(task)),
+		Action:             cliutil.WrapAction(newCommandAction(task, wd)),
 		CustomHelpTemplate: help,
 	}
 }
@@ -228,7 +229,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 	return envs, nil
 }
 
-func newCommandAction(task Task) func(*cli.Context) error {
+func newCommandAction(task Task, wd string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
@@ -268,14 +269,14 @@ func newCommandAction(task Task) func(*cli.Context) error {
 			return errors.Wrap(err, "failed to parse the script: "+task.Script)
 		}
 
-		return runScript(scr, envs, c.GlobalBool("quiet"))
+		return runScript(scr, wd, envs, c.GlobalBool("quiet"))
 	}
 }
 
-func updateAppWithConfig(app *cli.App, cfg *Config) {
+func updateAppWithConfig(app *cli.App, cfg *Config, wd string) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = convertTaskToCommand(task)
+		cmds[i] = convertTaskToCommand(task, wd)
 	}
 	app.Commands = cmds
 }
@@ -332,7 +333,7 @@ func mainAction(c *cli.Context) error {
 
 	app := cli.NewApp()
 	setupApp(app)
-	updateAppWithConfig(app, &cfg)
+	updateAppWithConfig(app, &cfg, filepath.Dir(cfgFilePath))
 	return app.Run(os.Args)
 }
 

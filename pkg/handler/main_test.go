@@ -130,7 +130,7 @@ func Test_convertTaskToCommand(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			cmd := convertTaskToCommand(d.task)
+			cmd := convertTaskToCommand(d.task, "")
 			assert.Equal(t, d.exp.Name, cmd.Name)
 			assert.Equal(t, d.exp.ShortName, cmd.ShortName)
 			assert.Equal(t, d.exp.Usage, cmd.Usage)
