@@ -19,6 +19,8 @@ import (
 )
 
 const (
+	boolFlagType = "bool"
+
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
 # https://github.com/suzuki-shunsuke/cmdx
@@ -131,16 +133,6 @@ func setupApp(app *cli.App) {
 			Usage: "don't output the executed command",
 		},
 	}
-
-	app.Commands = []cli.Command{
-		{
-			Name:      "help",
-			Aliases:   []string{"h"},
-			Usage:     "show help",
-			ArgsUsage: "[command]",
-			Action:    cliutil.WrapAction(helpCommand),
-		},
-	}
 }
 
 func newFlag(flag Flag) cli.Flag {
@@ -149,7 +141,7 @@ func newFlag(flag Flag) cli.Flag {
 		name += ", " + flag.Short
 	}
 	switch flag.Type {
-	case "bool":
+	case boolFlagType:
 		return cli.BoolFlag{
 			Name:     name,
 			Usage:    flag.Usage,
@@ -167,11 +159,9 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func newCommandWithConfig(task Task) cli.Command {
+func convertTaskToCommand(task Task) cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
-	vars := map[string]interface{}{}
 	for j, flag := range task.Flags {
-		vars[flag.Name] = ""
 		flags[j] = newFlag(flag)
 	}
 
@@ -181,83 +171,110 @@ func newCommandWithConfig(task Task) cli.Command {
 		Usage:       task.Usage,
 		Description: task.Description,
 		Flags:       flags,
-		Action:      cliutil.WrapAction(newCommandAction(task, vars)),
+		Action:      cliutil.WrapAction(newCommandAction(task)),
 	}
 }
 
-func newCommandAction(task Task, vars map[string]interface{}) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		for _, flag := range task.Flags {
-			vars[flag.Name] = c.Generic(flag.Name)
-		}
-		args := c.Args()
-		n := c.NArg()
-		envs := os.Environ()
-		for i, arg := range task.Args {
-			if i >= n {
-				if arg.Default != "" {
-					vars[arg.Name] = arg.Default
-					if arg.Env != "" {
-						envs = append(envs, arg.Env+"="+arg.Default)
-					}
-					continue
-				}
-				if arg.Required {
-					return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
-				}
-				continue
-			}
-			vars[arg.Name] = args[i]
+func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map[string]interface{}) ([]string, error) {
+	n := len(cArgs)
+
+	for i, arg := range args {
+		if i < n {
+			vars[arg.Name] = cArgs[i]
 			if arg.Env != "" {
-				envs = append(envs, arg.Env+"="+args[i])
+				envs = append(envs, arg.Env+"="+cArgs[i])
 			}
+			continue
 		}
-		extraArgs := []string{}
-		for i, arg := range args {
-			if i < len(task.Args) {
-				continue
+		// the positional argument isn't given
+		if arg.Default != "" {
+			vars[arg.Name] = arg.Default
+			if arg.Env != "" {
+				envs = append(envs, arg.Env+"="+arg.Default)
 			}
-			extraArgs = append(extraArgs, arg)
+			continue
 		}
-		vars["_builtin"] = map[string]interface{}{
-			"args":            extraArgs,
-			"args_string":     strings.Join(extraArgs, " "),
-			"all_args":        c.Args(),
-			"all_args_string": strings.Join(c.Args(), " "),
+		if arg.Required {
+			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 		}
-		scr, err := renderTemplate(task.Script, vars)
-		if err != nil {
-			return errors.Wrap(err, "failed to parse the script: "+task.Script)
-		}
+	}
 
-		command := exec.Command("sh", "-c", scr)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
-		for k, v := range task.Environment {
-			envs = append(envs, k+"="+v)
+	extraArgs := []string{}
+	for i, arg := range cArgs {
+		if i < len(args) {
+			continue
+		}
+		extraArgs = append(extraArgs, arg)
+	}
+
+	vars["_builtin"] = map[string]interface{}{
+		"args":            extraArgs,
+		"args_string":     strings.Join(extraArgs, " "),
+		"all_args":        cArgs,
+		"all_args_string": strings.Join(cArgs, " "),
+	}
+	return envs, nil
+}
+
+func newCommandAction(task Task) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		// create vars and envs
+		// run command
+
+		vars := map[string]interface{}{}
+
+		envs, err := updateVarsAndEnvsByArgs(
+			task.Args, c.Args(), os.Environ(), vars)
+		if err != nil {
+			return err
 		}
 
 		for _, flag := range task.Flags {
+			switch flag.Type {
+			case boolFlagType:
+				// don't ues c.Generic if flag.Type == "bool"
+				// the value in the template is treated as false
+				vars[flag.Name] = c.Bool(flag.Name)
+			default:
+				vars[flag.Name] = c.String(flag.Name)
+			}
 			if flag.Env != "" {
 				envs = append(envs, flag.Env+"="+c.String(flag.Name))
 			}
 		}
 
-		command.Env = append(os.Environ(), envs...)
-		if !c.GlobalBool("quiet") {
-			fmt.Fprintln(os.Stderr, "+ "+scr)
+		for k, v := range task.Environment {
+			envs = append(envs, k+"="+v)
 		}
-		if err := command.Run(); err != nil {
-			return err
+
+		scr, err := renderTemplate(task.Script, vars)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse the script: "+task.Script)
 		}
-		return nil
+
+		return runScript(scr, envs, c.GlobalBool("quiet"))
 	}
+}
+
+func runScript(script string, envs []string, quiet bool) error {
+	cmd := exec.Command("sh", "-c", script)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	cmd.Env = append(os.Environ(), envs...)
+	if !quiet {
+		fmt.Fprintln(os.Stderr, "+ "+script)
+	}
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = newCommandWithConfig(task)
+		cmds[i] = convertTaskToCommand(task)
 	}
 	app.Commands = cmds
 }
@@ -282,29 +299,6 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 		return errors.Wrap(err, "failed to read the configuration file: "+cfgFilePath)
 	}
 	return nil
-}
-
-func helpCommand(c *cli.Context) error {
-	cfg := Config{}
-	cfgFilePath := c.GlobalString("config")
-	cfgFileName := c.GlobalString("name")
-	if cfgFilePath == "" {
-		var err error
-		cfgFilePath, err = getConfigFilePath(cfgFileName)
-		if err != nil {
-			return err
-		}
-	}
-	if err := readConfig(cfgFilePath, &cfg); err != nil {
-		return err
-	}
-	if err := validateConfig(&cfg); err != nil {
-		return errors.Wrap(err, "please fix the configuration file")
-	}
-	app := cli.NewApp()
-	setupApp(app)
-	updateAppWithConfig(app, &cfg)
-	return app.Run(os.Args)
 }
 
 func createConfigFile(p string) error {
