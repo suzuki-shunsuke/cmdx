@@ -238,7 +238,14 @@ func newCommandAction(task Task) func(*cli.Context) error {
 		}
 
 		for _, flag := range task.Flags {
-			vars[flag.Name] = c.Generic(flag.Name)
+			switch flag.Type {
+			case "bool":
+				// don't ues c.Generic if flag.Type == "bool"
+				// the value in the template is treated as false
+				vars[flag.Name] = c.Bool(flag.Name)
+			default:
+				vars[flag.Name] = c.String(flag.Name)
+			}
 			if flag.Env != "" {
 				envs = append(envs, flag.Env+"="+c.String(flag.Name))
 			}
