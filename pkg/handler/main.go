@@ -355,6 +355,9 @@ func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[stri
 }
 
 func validateTask(task Task) error {
+	if task.Name == "" {
+		return errors.New("the task name is required")
+	}
 	flagNames := make(map[string]struct{}, len(task.Flags))
 	flagShortNames := make(map[string]struct{}, len(task.Flags))
 	for _, flag := range task.Flags {
