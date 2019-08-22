@@ -170,3 +170,30 @@ func Test_renderTemplate(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateConfig(t *testing.T) {
+	data := []struct {
+		title string
+		cfg   *Config
+		isErr bool
+	}{
+		{
+			title: "no args and flags",
+			cfg:   &Config{},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			err := validateConfig(d.cfg)
+			if err == nil {
+				assert.False(t, d.isErr)
+				return
+			}
+			if d.isErr {
+				return
+			}
+			assert.NotNil(t, err)
+			return
+		})
+	}
+}
