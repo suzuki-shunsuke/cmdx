@@ -205,3 +205,55 @@ func Test_validateArg(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateTask(t *testing.T) {
+	data := []struct {
+		title string
+		task  Task
+		isErr bool
+	}{
+		{
+			title: "name is required",
+			isErr: true,
+		},
+		{
+			title: "invalid flag",
+			task: Task{
+				Name: "foo",
+				Flags: []Flag{
+					{},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "invalid arg",
+			task: Task{
+				Name: "foo",
+				Args: []Arg{
+					{},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "normal",
+			task: Task{
+				Name: "foo",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			err := validateTask(d.task)
+			if err == nil {
+				assert.False(t, d.isErr)
+				return
+			}
+			if d.isErr {
+				return
+			}
+			assert.NotNil(t, err)
+		})
+	}
+}
