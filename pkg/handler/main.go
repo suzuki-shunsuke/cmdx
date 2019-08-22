@@ -104,8 +104,43 @@ func setupApp(app *cli.App) {
 		},
 	}
 	app.Usage = appUsage
-	setAppFlags(app)
-	setAppCommands(app)
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Usage: "configuration file path",
+		},
+		cli.StringFlag{
+			Name:  "name, n",
+			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
+		},
+		cli.BoolFlag{
+			Name:  "init, i",
+			Usage: "create the configuration file",
+		},
+		cli.BoolFlag{
+			Name:  "list, l",
+			Usage: "list tasks",
+		},
+		cli.BoolFlag{
+			Name:  "help, h",
+			Usage: "show help",
+		},
+		cli.BoolFlag{
+			Name:  "quiet, q",
+			Usage: "don't output the executed command",
+		},
+	}
+
+	app.Commands = []cli.Command{
+		{
+			Name:      "help",
+			Aliases:   []string{"h"},
+			Usage:     "show help",
+			ArgsUsage: "[command]",
+			Action:    cliutil.WrapAction(helpCommand),
+		},
+	}
 }
 
 func newFlag(flag Flag) cli.Flag {
@@ -249,35 +284,6 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 	return nil
 }
 
-func setAppFlags(app *cli.App) {
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Usage: "configuration file path",
-		},
-		cli.StringFlag{
-			Name:  "name, n",
-			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
-		},
-		cli.BoolFlag{
-			Name:  "init, i",
-			Usage: "create the configuration file",
-		},
-		cli.BoolFlag{
-			Name:  "list, l",
-			Usage: "list tasks",
-		},
-		cli.BoolFlag{
-			Name:  "help, h",
-			Usage: "show help",
-		},
-		cli.BoolFlag{
-			Name:  "quiet, q",
-			Usage: "don't output the executed command",
-		},
-	}
-}
-
 func helpCommand(c *cli.Context) error {
 	cfg := Config{}
 	cfgFilePath := c.GlobalString("config")
@@ -299,18 +305,6 @@ func helpCommand(c *cli.Context) error {
 	setupApp(app)
 	updateAppWithConfig(app, &cfg)
 	return app.Run(os.Args)
-}
-
-func setAppCommands(app *cli.App) {
-	app.Commands = []cli.Command{
-		{
-			Name:      "help",
-			Aliases:   []string{"h"},
-			Usage:     "show help",
-			ArgsUsage: "[command]",
-			Action:    cliutil.WrapAction(helpCommand),
-		},
-	}
 }
 
 func validateUniqueName(name string, names map[string]struct{}) bool {
