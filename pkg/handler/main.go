@@ -193,6 +193,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 		if arg.Required {
 			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 		}
+		vars[arg.Name] = ""
 	}
 
 	extraArgs := []string{}

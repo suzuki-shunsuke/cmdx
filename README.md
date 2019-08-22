@@ -189,6 +189,9 @@ For example,
 script: "echo {{.source}}"
 ```
 
+If the positional argument is optional and the argument isn't passed and the default value isn't set,
+the value is an empty string `""`.
+
 And some special variables are defined.
 
 name | type | description
