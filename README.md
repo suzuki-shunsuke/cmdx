@@ -30,6 +30,7 @@ For example, This is the tasks for `cmdx` itself.
 
 ```console
 $ cmdx -l
+coverage - test a package
 test - test
 fmt - format the go code
 vet - go vet
@@ -107,7 +108,7 @@ USAGE:
    cmdx [global options] command [command options] [arguments...]
 
 VERSION:
-   0.1.0-0
+   0.2.2
 
 AUTHOR:
    Shunsuke Suzuki
@@ -188,6 +189,9 @@ For example,
 # refer the value of the argument "source"
 script: "echo {{.source}}"
 ```
+
+If the positional argument is optional and the argument isn't passed and the default value isn't set,
+the value is an empty string `""`.
 
 And some special variables are defined.
 

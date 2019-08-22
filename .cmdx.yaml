@@ -1,5 +1,12 @@
 ---
 tasks:
+- name: coverage
+  short: c
+  description: test a package
+  usage: test a package
+  script: "bash scripts/coverage.sh {{.path}}"
+  args:
+  - name: path
 - name: test
   short: t
   description: test

@@ -3,13 +3,9 @@ package handler
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 	"text/template"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
@@ -197,6 +193,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 		if arg.Required {
 			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 		}
+		vars[arg.Name] = ""
 	}
 
 	extraArgs := []string{}
@@ -256,21 +253,6 @@ func newCommandAction(task Task) func(*cli.Context) error {
 	}
 }
 
-func runScript(script string, envs []string, quiet bool) error {
-	cmd := exec.Command("sh", "-c", script)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	cmd.Env = append(os.Environ(), envs...)
-	if !quiet {
-		fmt.Fprintln(os.Stderr, "+ "+script)
-	}
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func updateAppWithConfig(app *cli.App, cfg *Config) {
 	cmds := make([]cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
@@ -287,29 +269,6 @@ func renderTemplate(base string, data interface{}) (string, error) {
 	buf := bytes.NewBufferString("")
 	err = tmpl.Execute(buf, data)
 	return buf.String(), err
-}
-
-func readConfig(cfgFilePath string, cfg *Config) error {
-	f, err := os.Open(cfgFilePath)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the configuration file: "+cfgFilePath)
-	}
-	defer f.Close()
-	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		return errors.Wrap(err, "failed to read the configuration file: "+cfgFilePath)
-	}
-	return nil
-}
-
-func createConfigFile(p string) error {
-	if _, err := os.Stat(p); err == nil {
-		// If the configuration file already exists, do nothing.
-		return nil
-	}
-	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0644); err != nil {
-		return errors.Wrap(err, "failed to create the configuration file: "+p)
-	}
-	return nil
 }
 
 func mainAction(c *cli.Context) error {
