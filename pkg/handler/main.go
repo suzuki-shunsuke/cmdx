@@ -322,6 +322,9 @@ func validateUniqueName(name string, names map[string]struct{}) bool {
 }
 
 func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[string]struct{}) error {
+	if flag.Name == "" {
+		return errors.New("the flag name is required: task: " + taskName)
+	}
 	if len(flag.Short) > 1 {
 		return fmt.Errorf(
 			"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
