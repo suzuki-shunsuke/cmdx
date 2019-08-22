@@ -370,6 +370,9 @@ func validateTask(task Task) error {
 	}
 	argNames := make(map[string]struct{}, len(task.Args))
 	for _, arg := range task.Args {
+		if arg.Name == "" {
+			return errors.New("the positional argument name is required: task: " + task.Name)
+		}
 		if !validateUniqueName(arg.Name, argNames) {
 			return fmt.Errorf(
 				`the positional argument name duplicates: task: "%s", arg: "%s"`,
