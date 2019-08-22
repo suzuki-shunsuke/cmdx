@@ -19,6 +19,8 @@ import (
 )
 
 const (
+	boolFlagType = "bool"
+
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
 # https://github.com/suzuki-shunsuke/cmdx
@@ -149,7 +151,7 @@ func newFlag(flag Flag) cli.Flag {
 		name += ", " + flag.Short
 	}
 	switch flag.Type {
-	case "bool":
+	case boolFlagType:
 		return cli.BoolFlag{
 			Name:     name,
 			Usage:    flag.Usage,
@@ -239,7 +241,7 @@ func newCommandAction(task Task) func(*cli.Context) error {
 
 		for _, flag := range task.Flags {
 			switch flag.Type {
-			case "bool":
+			case boolFlagType:
 				// don't ues c.Generic if flag.Type == "bool"
 				// the value in the template is treated as false
 				vars[flag.Name] = c.Bool(flag.Name)
