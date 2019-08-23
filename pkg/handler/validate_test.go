@@ -79,6 +79,55 @@ func Test_validateConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			title: "task name duplicates",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Script: "pwd",
+					},
+					{
+						Name:   "foo",
+						Script: "pwd",
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "task short name duplicates",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Short:  "f",
+						Script: "pwd",
+					},
+					{
+						Name:   "bar",
+						Short:  "f",
+						Script: "pwd",
+					},
+				},
+			},
+			isErr: true,
+		},
+		{
+			title: "invalid task",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:  "foo",
+						Short: "f",
+						Args: []Arg{
+							{},
+						},
+					},
+				},
+			},
+			isErr: true,
+		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
