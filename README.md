@@ -85,7 +85,8 @@ tasks:
     short: s
     usage: source file path
     required: true
-    env: NAME
+    bind_envs:
+    - NAME
   - name: switch
     type: bool
   args:
@@ -155,6 +156,7 @@ target: foo
 
 path | type | description | required | default
 --- | --- | --- | --- | ---
+.bind_envs | []string | default environment variable binding | false | []
 .tasks | []task | the list of tasks | true |
 task.name | string | the task name | true |
 task.short | string | the task short name | false |
@@ -162,20 +164,66 @@ task.description | string | the task description | false | ""
 task.usage | string | the task usage | false | ""
 task.flags | []flag | the task flag arguments | false | []
 task.args | []arg | the task positional arguments | false | []
+task.bind_envs | []string | task level environment variable binding | false | []
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `sh -c` | true |
 flag.name | string | the flag name | true |
 flag.short | string | the flag short name | false |
 flag.usage | string | the flag usage | false | ""
 flag.default | string | the flag argument's default value | false | ""
-flag.env | string | the environment variable name which the flag value is set | false |
+flag.bind_envs | []string | flag level environment variable binding | false | []
 flag.type | string | the flag type. Either "string" or "bool" | false | "string"
 flag.required | bool | whether the flag argument is required | false | false
 arg.name | string | the positional argument name | true |
 arg.usage | string | the positional argument usage | false | ""
 arg.default | string | the positional argument's default value | false | ""
-arg.env | string | the environment variable name which the argument value is set | false |
+arg.bind_envs | []string | the positional argument level environment variable binding | false | []
 arg.required | bool | whether the argument is required | false | false
+
+### bind_envs
+
+`cmdx` supports the bidirectional binding between the variable and the environment variable.
+
+Let's see the following configuration.
+
+```yaml
+args:
+- name: source
+  bind_envs:
+  - "foo"
+```
+
+By the above configuration, if the environment variable "FOO" is set then the variable "source" is set to the value of the environment variable "FOO".
+And if the positional argument "source" is set and the environment variable "FOO" isn't set, the environment variable "FOO" is set to the value of the variable "source".
+
+The element of `bind_envs` is parsed by Golang's text/template and the argument name is referred by `{{.name}}`.
+
+`bind_envs` can be defined at the following levels.
+
+1. flag or arg level
+2. task level
+3. root level
+
+The priority is `flag or arg level` > `task level` > `root level`.
+
+```yaml
+---
+bind_envs:
+- "{{.name}}"
+tasks:
+- name: foo
+  bind_envs:
+  - "{{.name}}"
+  args:
+  - name: source
+    bind_envs:
+    - "{{.name}}"
+  flags:
+  - name: id
+    bind_envs:
+    - "{{.name}}"
+```
+
 
 ### script
 
@@ -218,7 +266,8 @@ tasks:
   - name: id
     description: id
     required: true
-    env: USER_ID
+    bind_envs:
+    - USER_ID
   environment:
     TOKEN: "*****"
   script: "bash scripts/hello.sh ${source}"
