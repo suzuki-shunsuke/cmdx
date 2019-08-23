@@ -31,11 +31,11 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "bool",
 			flag: Flag{
-				Name:  "foo",
-				Short: "f",
-				Usage: "usage",
-				Envs:  []string{"FOO"},
-				Type:  "bool",
+				Name:     "foo",
+				Short:    "f",
+				Usage:    "usage",
+				BindEnvs: []string{"FOO"},
+				Type:     "bool",
 			},
 			exp: cli.BoolFlag{
 				Name:   "foo, f",
@@ -46,10 +46,10 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "string",
 			flag: Flag{
-				Name:    "foo",
-				Usage:   "usage",
-				Default: "default value",
-				Envs:    []string{"FOO"},
+				Name:     "foo",
+				Usage:    "usage",
+				Default:  "default value",
+				BindEnvs: []string{"FOO"},
 			},
 			exp: cli.StringFlag{
 				Name:   "foo",
@@ -63,7 +63,7 @@ func Test_newFlag(t *testing.T) {
 			flag: Flag{
 				Name:     "foo",
 				Usage:    "usage",
-				Envs:     []string{"FOO"},
+				BindEnvs: []string{"FOO"},
 				Required: true,
 			},
 			exp: cli.StringFlag{

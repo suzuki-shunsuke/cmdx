@@ -40,7 +40,8 @@ tasks:
 	# - name: name
   #   usage: source file path
   #   required: true
-  #   env: NAME
+  #   bind_envs:
+	#   - NAME
   environment:
     FOO: foo
   script: "echo $FOO"
@@ -51,7 +52,8 @@ tasks:
 
 type (
 	Config struct {
-		Tasks []Task
+		Tasks    []Task
+		BindEnvs []string `yaml:"bind_envs"`
 	}
 
 	Task struct {
@@ -61,6 +63,7 @@ type (
 		Usage       string
 		Flags       []Flag
 		Args        []Arg
+		BindEnvs    []string `yaml:"bind_envs"`
 		Environment map[string]string
 		Script      string
 	}
@@ -70,7 +73,7 @@ type (
 		Short    string
 		Usage    string
 		Default  string
-		Envs     []string
+		BindEnvs []string `yaml:"bind_envs"`
 		Type     string
 		Required bool
 	}
@@ -79,7 +82,7 @@ type (
 		Name     string
 		Usage    string
 		Default  string
-		Envs     []string
+		BindEnvs []string `yaml:"bind_envs"`
 		Required bool
 	}
 )
@@ -141,7 +144,7 @@ func newFlag(flag Flag) cli.Flag {
 	if flag.Short != "" {
 		name += ", " + flag.Short
 	}
-	env := strings.Join(flag.Envs, ",")
+	env := strings.Join(flag.BindEnvs, ",")
 	switch flag.Type {
 	case boolFlagType:
 		return cli.BoolFlag{
@@ -199,7 +202,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
-			for _, env := range arg.Envs {
+			for _, env := range arg.BindEnvs {
 				envs = append(envs, env+"="+val)
 			}
 			continue
@@ -207,7 +210,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 		// the positional argument isn't given
 		if arg.Default != "" {
 			vars[arg.Name] = arg.Default
-			for _, env := range arg.Envs {
+			for _, env := range arg.BindEnvs {
 				envs = append(envs, env+"="+arg.Default)
 			}
 			continue
@@ -261,7 +264,7 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 			default:
 				vars[flag.Name] = c.String(flag.Name)
 			}
-			for _, env := range flag.Envs {
+			for _, env := range flag.BindEnvs {
 				envs = append(envs, env+"="+c.String(flag.Name))
 			}
 		}
@@ -364,21 +367,30 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
+		if len(task.BindEnvs) == 0 && len(cfg.BindEnvs) != 0 {
+			task.BindEnvs = cfg.BindEnvs
+		}
 		for j, flag := range task.Flags {
-			envs, err := setupEnvs(flag.Envs, flag.Name)
+			if len(flag.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
+				flag.BindEnvs = task.BindEnvs
+			}
+			envs, err := setupEnvs(flag.BindEnvs, flag.Name)
 			if err != nil {
 				return err
 			}
-			flag.Envs = envs
+			flag.BindEnvs = envs
 			task.Flags[j] = flag
 		}
 
 		for j, arg := range task.Args {
-			envs, err := setupEnvs(arg.Envs, arg.Name)
+			if len(arg.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
+				arg.BindEnvs = task.BindEnvs
+			}
+			envs, err := setupEnvs(arg.BindEnvs, arg.Name)
 			if err != nil {
 				return err
 			}
-			arg.Envs = envs
+			arg.BindEnvs = envs
 			task.Args[j] = arg
 		}
 		cfg.Tasks[i] = task
