@@ -129,6 +129,10 @@ func setupApp(app *cli.App) {
 			Name:  "quiet, q",
 			Usage: "don't output the executed command",
 		},
+		cli.BoolFlag{
+			Name:  "dry-run, d",
+			Usage: "output the script but don't run it actually",
+		},
 	}
 }
 
@@ -269,7 +273,8 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 			return errors.Wrap(err, "failed to parse the script: "+task.Script)
 		}
 
-		return runScript(scr, wd, envs, c.GlobalBool("quiet"))
+		return runScript(
+			scr, wd, envs, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
 	}
 }
 
