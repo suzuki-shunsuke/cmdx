@@ -64,8 +64,20 @@ func Test_validateConfig(t *testing.T) {
 		isErr bool
 	}{
 		{
-			title: "no args and flags",
+			title: "no task",
 			cfg:   &Config{},
+		},
+		{
+			title: "normal",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Short:  "f",
+						Script: "pwd",
+					},
+				},
+			},
 		},
 	}
 	for _, d := range data {
