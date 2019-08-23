@@ -1,5 +1,10 @@
 ---
 tasks:
+- name: init
+  short: i
+  script: bash scripts/githook.sh
+  description: setup git hooks
+  usage: setup git hooks
 - name: coverage
   short: c
   description: test a package
