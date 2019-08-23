@@ -169,3 +169,96 @@ func Test_renderTemplate(t *testing.T) {
 		})
 	}
 }
+
+func Test_updateVarsAndEnvsByArgs(t *testing.T) {
+	data := []struct {
+		title   string
+		args    []Arg
+		cArgs   []string
+		vars    map[string]interface{}
+		isErr   bool
+		expVars map[string]interface{}
+		expEnvs []string
+	}{
+		{
+			title: "args and cArgs is empty",
+			expVars: map[string]interface{}{
+				"_builtin": map[string]interface{}{
+					"args":            []string{},
+					"args_string":     "",
+					"all_args":        []string{},
+					"all_args_string": "",
+				},
+			},
+			expEnvs: []string{},
+		},
+		{
+			title: "normal",
+			args: []Arg{
+				{
+					Name:     "foo",
+					BindEnvs: []string{"FOO"},
+				},
+				{
+					Name:     "bar",
+					BindEnvs: []string{"BAR"},
+					Default:  "bar-value",
+				},
+			},
+			cArgs: []string{
+				"foo-value",
+			},
+			expVars: map[string]interface{}{
+				"foo": "foo-value",
+				"bar": "bar-value",
+				"_builtin": map[string]interface{}{
+					"args":            []string{},
+					"args_string":     "",
+					"all_args":        []string{"foo-value"},
+					"all_args_string": "foo-value",
+				},
+			},
+			expEnvs: []string{"FOO=foo-value", "BAR=bar-value"},
+		},
+		{
+			title: "required",
+			args: []Arg{
+				{
+					Name:     "foo",
+					Required: true,
+				},
+			},
+			isErr: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			if d.vars == nil {
+				d.vars = map[string]interface{}{}
+			}
+			if d.args == nil {
+				d.args = []Arg{}
+			}
+			if d.cArgs == nil {
+				d.cArgs = []string{}
+			}
+			envs, err := updateVarsAndEnvsByArgs(d.args, d.cArgs, d.vars)
+			if err != nil {
+				if d.isErr {
+					return
+				}
+				assert.NotNil(t, err)
+				return
+			}
+			assert.False(t, d.isErr)
+			assert.Equal(t, d.expEnvs, envs)
+			assert.Equal(t, d.expVars, d.vars)
+		})
+	}
+}
+
+func Test_setupEnvs(t *testing.T) {
+	envs, err := setupEnvs([]string{"{{.name}}-zoo"}, "foo")
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"FOO_ZOO"}, envs)
+}
