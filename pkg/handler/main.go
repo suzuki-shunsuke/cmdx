@@ -340,7 +340,11 @@ func mainAction(c *cli.Context) error {
 	if listFlag {
 		arr := make([]string, len(cfg.Tasks))
 		for i, task := range cfg.Tasks {
-			arr[i] = task.Name + " - " + task.Usage
+			name := task.Name
+			if task.Short != "" {
+				name += ", " + task.Short
+			}
+			arr[i] = name + " - " + task.Usage
 		}
 		fmt.Println(strings.Join(arr, "\n"))
 		return nil
