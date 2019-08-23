@@ -273,6 +273,10 @@ tasks:
   script: "bash scripts/hello.sh ${source}"
 ```
 
+## Contributing
+
+Please see the [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 [MIT](LICENSE)
