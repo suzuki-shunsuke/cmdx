@@ -70,7 +70,7 @@ type (
 		Short    string
 		Usage    string
 		Default  string
-		Env      string
+		Envs     []string
 		Type     string
 		Required bool
 	}
@@ -79,7 +79,7 @@ type (
 		Name     string
 		Usage    string
 		Default  string
-		Env      string
+		Envs     []string
 		Required bool
 	}
 )
@@ -141,19 +141,20 @@ func newFlag(flag Flag) cli.Flag {
 	if flag.Short != "" {
 		name += ", " + flag.Short
 	}
+	env := strings.Join(flag.Envs, ",")
 	switch flag.Type {
 	case boolFlagType:
 		return cli.BoolFlag{
 			Name:   name,
 			Usage:  flag.Usage,
-			EnvVar: flag.Env,
+			EnvVar: env,
 		}
 	default:
 		return cli.StringFlag{
 			Name:   name,
 			Usage:  flag.Usage,
 			Value:  flag.Default,
-			EnvVar: flag.Env,
+			EnvVar: env,
 		}
 	}
 }
@@ -196,17 +197,18 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map
 
 	for i, arg := range args {
 		if i < n {
-			vars[arg.Name] = cArgs[i]
-			if arg.Env != "" {
-				envs = append(envs, arg.Env+"="+cArgs[i])
+			val := cArgs[i]
+			vars[arg.Name] = val
+			for _, env := range arg.Envs {
+				envs = append(envs, env+"="+val)
 			}
 			continue
 		}
 		// the positional argument isn't given
 		if arg.Default != "" {
 			vars[arg.Name] = arg.Default
-			if arg.Env != "" {
-				envs = append(envs, arg.Env+"="+arg.Default)
+			for _, env := range arg.Envs {
+				envs = append(envs, env+"="+arg.Default)
 			}
 			continue
 		}
@@ -259,8 +261,8 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 			default:
 				vars[flag.Name] = c.String(flag.Name)
 			}
-			if flag.Env != "" {
-				envs = append(envs, flag.Env+"="+c.String(flag.Name))
+			for _, env := range flag.Envs {
+				envs = append(envs, env+"="+c.String(flag.Name))
 			}
 		}
 
@@ -327,6 +329,10 @@ func mainAction(c *cli.Context) error {
 		return errors.Wrap(err, "please fix the configuration file")
 	}
 
+	if err := setupConfig(&cfg); err != nil {
+		return err
+	}
+
 	if listFlag {
 		arr := make([]string, len(cfg.Tasks))
 		for i, task := range cfg.Tasks {
@@ -340,6 +346,44 @@ func mainAction(c *cli.Context) error {
 	setupApp(app)
 	updateAppWithConfig(app, &cfg, filepath.Dir(cfgFilePath))
 	return app.Run(os.Args)
+}
+
+func setupEnvs(envs []string, name string) ([]string, error) {
+	arr := make([]string, len(envs))
+	for i, env := range envs {
+		e, err := renderTemplate(env, map[string]string{
+			"name": name,
+		})
+		if err != nil {
+			return nil, err
+		}
+		arr[i] = strings.ToUpper(strings.Replace(e, "-", "_", -1))
+	}
+	return arr, nil
+}
+
+func setupConfig(cfg *Config) error {
+	for i, task := range cfg.Tasks {
+		for j, flag := range task.Flags {
+			envs, err := setupEnvs(flag.Envs, flag.Name)
+			if err != nil {
+				return err
+			}
+			flag.Envs = envs
+			task.Flags[j] = flag
+		}
+
+		for j, arg := range task.Args {
+			envs, err := setupEnvs(arg.Envs, arg.Name)
+			if err != nil {
+				return err
+			}
+			arg.Envs = envs
+			task.Args[j] = arg
+		}
+		cfg.Tasks[i] = task
+	}
+	return nil
 }
 
 func getConfigFilePath(cfgFileName string) (string, error) {
