@@ -366,33 +366,41 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
+func setupTask(task *Task, bindEnvs []string) error {
+	if len(task.BindEnvs) == 0 && len(bindEnvs) != 0 {
+		task.BindEnvs = bindEnvs
+	}
+	for j, flag := range task.Flags {
+		if len(flag.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
+			flag.BindEnvs = task.BindEnvs
+		}
+		envs, err := setupEnvs(flag.BindEnvs, flag.Name)
+		if err != nil {
+			return err
+		}
+		flag.BindEnvs = envs
+		task.Flags[j] = flag
+	}
+
+	for j, arg := range task.Args {
+		if len(arg.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
+			arg.BindEnvs = task.BindEnvs
+		}
+		envs, err := setupEnvs(arg.BindEnvs, arg.Name)
+		if err != nil {
+			return err
+		}
+		arg.BindEnvs = envs
+		task.Args[j] = arg
+	}
+
+	return nil
+}
+
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
-		if len(task.BindEnvs) == 0 && len(cfg.BindEnvs) != 0 {
-			task.BindEnvs = cfg.BindEnvs
-		}
-		for j, flag := range task.Flags {
-			if len(flag.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
-				flag.BindEnvs = task.BindEnvs
-			}
-			envs, err := setupEnvs(flag.BindEnvs, flag.Name)
-			if err != nil {
-				return err
-			}
-			flag.BindEnvs = envs
-			task.Flags[j] = flag
-		}
-
-		for j, arg := range task.Args {
-			if len(arg.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
-				arg.BindEnvs = task.BindEnvs
-			}
-			envs, err := setupEnvs(arg.BindEnvs, arg.Name)
-			if err != nil {
-				return err
-			}
-			arg.BindEnvs = envs
-			task.Args[j] = arg
+		if err := setupTask(&task, cfg.BindEnvs); err != nil {
+			return err
 		}
 		cfg.Tasks[i] = task
 	}
