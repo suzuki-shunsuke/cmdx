@@ -195,9 +195,10 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 	}
 }
 
-func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, envs []string, vars map[string]interface{}) ([]string, error) {
+func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interface{}) ([]string, error) {
 	n := len(cArgs)
 
+	envs := []string{}
 	for i, arg := range args {
 		if i < n {
 			val := cArgs[i]
@@ -249,11 +250,11 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 
 		vars := map[string]interface{}{}
 
-		envs, err := updateVarsAndEnvsByArgs(
-			task.Args, c.Args(), os.Environ(), vars)
+		envs, err := updateVarsAndEnvsByArgs(task.Args, c.Args(), vars)
 		if err != nil {
 			return err
 		}
+		envs = append(os.Environ(), envs...)
 
 		for _, flag := range task.Flags {
 			switch flag.Type {
