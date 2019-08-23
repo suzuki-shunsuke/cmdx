@@ -262,3 +262,63 @@ func Test_setupEnvs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"FOO_ZOO"}, envs)
 }
+
+func Test_setupTask(t *testing.T) {
+	data := []struct {
+		title    string
+		task     *Task
+		bindEnvs []string
+		isErr    bool
+		exp      *Task
+	}{
+		{
+			title: "flags and args are empty",
+			task:  &Task{},
+			exp:   &Task{},
+		},
+		{
+			title: "normal",
+			task: &Task{
+				Flags: []Flag{
+					{
+						Name: "foo",
+					},
+				},
+				Args: []Arg{
+					{
+						Name: "bar",
+					},
+				},
+			},
+			bindEnvs: []string{"{{.name}}"},
+			exp: &Task{
+				Flags: []Flag{
+					{
+						Name:     "foo",
+						BindEnvs: []string{"FOO"},
+					},
+				},
+				Args: []Arg{
+					{
+						Name:     "bar",
+						BindEnvs: []string{"BAR"},
+					},
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			err := setupTask(d.task, d.bindEnvs)
+			if err != nil {
+				if d.isErr {
+					return
+				}
+				assert.NotNil(t, err)
+				return
+			}
+			assert.False(t, d.isErr)
+			assert.Equal(t, d.exp, d.task)
+		})
+	}
+}

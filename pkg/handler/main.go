@@ -367,12 +367,12 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 }
 
 func setupTask(task *Task, bindEnvs []string) error {
-	if len(task.BindEnvs) == 0 && len(bindEnvs) != 0 {
-		task.BindEnvs = bindEnvs
+	if len(task.BindEnvs) != 0 {
+		bindEnvs = task.BindEnvs
 	}
 	for j, flag := range task.Flags {
-		if len(flag.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
-			flag.BindEnvs = task.BindEnvs
+		if len(flag.BindEnvs) == 0 {
+			flag.BindEnvs = bindEnvs
 		}
 		envs, err := setupEnvs(flag.BindEnvs, flag.Name)
 		if err != nil {
@@ -383,8 +383,8 @@ func setupTask(task *Task, bindEnvs []string) error {
 	}
 
 	for j, arg := range task.Args {
-		if len(arg.BindEnvs) == 0 && len(task.BindEnvs) != 0 {
-			arg.BindEnvs = task.BindEnvs
+		if len(arg.BindEnvs) == 0 {
+			arg.BindEnvs = bindEnvs
 		}
 		envs, err := setupEnvs(arg.BindEnvs, arg.Name)
 		if err != nil {
