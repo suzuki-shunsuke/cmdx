@@ -127,6 +127,45 @@ func Test_convertTaskToCommand(t *testing.T) {
 				},
 			},
 		},
+		{
+			title: "args",
+			task: Task{
+				Name:        "test",
+				Short:       "t",
+				Usage:       "usage",
+				Description: "description",
+				Args: []Arg{
+					{
+						Name:  "foo",
+						Usage: "usage",
+					},
+				},
+			},
+			exp: cli.Command{
+				Name:        "test",
+				ShortName:   "t",
+				Usage:       "usage",
+				Description: "description",
+				Flags:       []cli.Flag{},
+				CustomHelpTemplate: `NAME:
+   {{.HelpName}} - {{.Usage}}
+
+USAGE:
+   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}<foo>{{end}}{{end}}{{if .Category}}
+
+CATEGORY:
+   {{.Category}}{{end}}{{if .Description}}
+
+DESCRIPTION:
+   {{.Description}}{{end}}{{if .VisibleFlags}}
+
+OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}
+ARGUMENTS:
+   foo  usage`,
+			},
+		},
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
@@ -136,6 +175,7 @@ func Test_convertTaskToCommand(t *testing.T) {
 			assert.Equal(t, d.exp.Usage, cmd.Usage)
 			assert.Equal(t, d.exp.Flags, cmd.Flags)
 			assert.Equal(t, d.exp.Description, cmd.Description)
+			assert.Equal(t, d.exp.CustomHelpTemplate, cmd.CustomHelpTemplate)
 		})
 	}
 }
