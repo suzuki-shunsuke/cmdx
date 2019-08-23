@@ -7,8 +7,8 @@ tasks:
   usage: setup git hooks
 - name: coverage
   short: c
-  description: test a package
-  usage: test a package
+  description: test a package (fzf is required)
+  usage: test a package (fzf is required)
   script: "bash scripts/coverage.sh {{.path}}"
   args:
   - name: path
@@ -37,12 +37,12 @@ tasks:
   - name: version
     required: true
 - name: durl
-  description: check dead links
-  usage: check dead links
+  description: check dead links (durl is required)
+  usage: check dead links (durl is required)
   script: bash scripts/durl.sh
 - name: ci-local
-  description: run the Drone pipeline at localhost
-  usage: run the Drone pipeline at localhost
+  description: run the Drone pipeline at localhost (drone-cli is required)
+  usage: run the Drone pipeline at localhost (drone-cli is required)
   script: time drone exec --pipeline build --event pull_request
   environment:
     LOCAL: "true"
