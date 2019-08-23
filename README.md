@@ -8,11 +8,6 @@
 
 Task runner.
 
-## Project Status
-
-This project status is alpha.
-The API is unstable and the test are poor.
-
 ## Alternative
 
 * Make
