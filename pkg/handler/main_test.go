@@ -308,6 +308,7 @@ func Test_setupTask(t *testing.T) {
 		title    string
 		task     *Task
 		bindEnvs []string
+		timeout  Timeout
 		isErr    bool
 		exp      *Task
 	}{
@@ -356,7 +357,7 @@ func Test_setupTask(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			err := setupTask(d.task, d.bindEnvs)
+			err := setupTask(d.task, d.bindEnvs, d.timeout)
 			if err != nil {
 				if d.isErr {
 					return

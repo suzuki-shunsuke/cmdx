@@ -23,6 +23,11 @@ const (
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
 # https://github.com/suzuki-shunsuke/cmdx
+# timeout:
+#   duration: 600
+#   kill_after: 30
+# bind_envs:
+# - "{{.name}}"
 tasks:
 - name: hello
   # short: h
@@ -56,6 +61,7 @@ type (
 	Config struct {
 		Tasks    []Task
 		BindEnvs []string `yaml:"bind_envs"`
+		Timeout  Timeout
 	}
 
 	Task struct {
@@ -378,12 +384,20 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *Task, bindEnvs []string) error {
+func setupTask(task *Task, bindEnvs []string, timeout Timeout) error {
 	if len(task.BindEnvs) != 0 {
 		bindEnvs = task.BindEnvs
 	}
+
 	if task.Timeout.Duration == 0 {
-		task.Timeout.Duration = defaultTimeout
+		if timeout.Duration == 0 {
+			task.Timeout.Duration = defaultTimeout
+		} else {
+			task.Timeout.Duration = timeout.Duration
+		}
+	}
+	if task.Timeout.KillAfter == 0 {
+		task.Timeout.KillAfter = timeout.KillAfter
 	}
 
 	for j, flag := range task.Flags {
@@ -415,7 +429,7 @@ func setupTask(task *Task, bindEnvs []string) error {
 
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
-		if err := setupTask(&task, cfg.BindEnvs); err != nil {
+		if err := setupTask(&task, cfg.BindEnvs, cfg.Timeout); err != nil {
 			return err
 		}
 		cfg.Tasks[i] = task
