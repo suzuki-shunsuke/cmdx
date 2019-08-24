@@ -31,11 +31,11 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "bool",
 			flag: Flag{
-				Name:     "foo",
-				Short:    "f",
-				Usage:    "usage",
-				BindEnvs: []string{"FOO"},
-				Type:     "bool",
+				Name:      "foo",
+				Short:     "f",
+				Usage:     "usage",
+				InputEnvs: []string{"FOO"},
+				Type:      "bool",
 			},
 			exp: cli.BoolFlag{
 				Name:   "foo, f",
@@ -46,10 +46,10 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "string",
 			flag: Flag{
-				Name:     "foo",
-				Usage:    "usage",
-				Default:  "default value",
-				BindEnvs: []string{"FOO"},
+				Name:      "foo",
+				Usage:     "usage",
+				Default:   "default value",
+				InputEnvs: []string{"FOO"},
 			},
 			exp: cli.StringFlag{
 				Name:   "foo",
@@ -61,10 +61,10 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "required",
 			flag: Flag{
-				Name:     "foo",
-				Usage:    "usage",
-				BindEnvs: []string{"FOO"},
-				Required: true,
+				Name:      "foo",
+				Usage:     "usage",
+				InputEnvs: []string{"FOO"},
+				Required:  true,
 			},
 			exp: cli.StringFlag{
 				Name:   "foo",
@@ -236,13 +236,13 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 			title: "normal",
 			args: []Arg{
 				{
-					Name:     "foo",
-					BindEnvs: []string{"FOO"},
+					Name:       "foo",
+					ScriptEnvs: []string{"FOO"},
 				},
 				{
-					Name:     "bar",
-					BindEnvs: []string{"BAR"},
-					Default:  "bar-value",
+					Name:       "bar",
+					ScriptEnvs: []string{"BAR"},
+					Default:    "bar-value",
 				},
 			},
 			cArgs: []string{
@@ -305,16 +305,16 @@ func Test_setupEnvs(t *testing.T) {
 
 func Test_setupTask(t *testing.T) {
 	data := []struct {
-		title    string
-		task     *Task
-		bindEnvs []string
-		timeout  Timeout
-		isErr    bool
-		exp      *Task
+		title string
+		task  *Task
+		cfg   *Config
+		isErr bool
+		exp   *Task
 	}{
 		{
 			title: "flags and args are empty",
 			task:  &Task{},
+			cfg:   &Config{},
 			exp: &Task{
 				Timeout: Timeout{
 					Duration: defaultTimeout,
@@ -335,21 +335,25 @@ func Test_setupTask(t *testing.T) {
 					},
 				},
 			},
-			bindEnvs: []string{"{{.name}}"},
+			cfg: &Config{
+				InputEnvs: []string{"{{.name}}"},
+			},
 			exp: &Task{
 				Timeout: Timeout{
 					Duration: defaultTimeout,
 				},
 				Flags: []Flag{
 					{
-						Name:     "foo",
-						BindEnvs: []string{"FOO"},
+						Name:       "foo",
+						InputEnvs:  []string{"FOO"},
+						ScriptEnvs: []string{},
 					},
 				},
 				Args: []Arg{
 					{
-						Name:     "bar",
-						BindEnvs: []string{"BAR"},
+						Name:       "bar",
+						InputEnvs:  []string{"BAR"},
+						ScriptEnvs: []string{},
 					},
 				},
 			},
@@ -357,7 +361,7 @@ func Test_setupTask(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			err := setupTask(d.task, d.bindEnvs, d.timeout)
+			err := setupTask(d.task, d.cfg)
 			if err != nil {
 				if d.isErr {
 					return
