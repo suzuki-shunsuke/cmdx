@@ -16,24 +16,49 @@ var (
 	}
 )
 
-func createPrompt(flagName string, prompt Prompt) survey.Prompt {
+func createPrompt(prompt Prompt) survey.Prompt {
 	switch prompt.Type {
 	case "":
 		return nil
 	case "input":
-		return &survey.Input{Message: flagName}
+		return &survey.Input{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+		}
 	case "multiline":
-		return &survey.Multiline{Message: flagName}
+		return &survey.Multiline{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+		}
 	case "password":
-		return &survey.Password{Message: flagName}
+		return &survey.Password{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+		}
 	case "confirm":
-		return &survey.Confirm{Message: flagName}
+		return &survey.Confirm{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+		}
 	case "select":
-		return &survey.Select{Message: flagName, Options: prompt.Options}
+		return &survey.Select{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+			Options: prompt.Options,
+		}
 	case "multi_select":
-		return &survey.MultiSelect{Message: flagName, Options: prompt.Options}
+		return &survey.MultiSelect{
+			Message: prompt.Message,
+			Help:    prompt.Help,
+			Options: prompt.Options,
+		}
 	case "editor":
-		return &survey.Editor{Message: flagName}
+		return &survey.Editor{
+			Message:       prompt.Message,
+			Help:          prompt.Help,
+			HideDefault:   true,
+			AppendDefault: true,
+		}
 	}
 	return nil
 }

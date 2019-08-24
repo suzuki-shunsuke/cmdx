@@ -90,6 +90,8 @@ type (
 
 	Prompt struct {
 		Type    string
+		Message string
+		Help    string
 		Options []string
 	}
 
@@ -313,7 +315,7 @@ func updateVarsByArgs(
 		if isBoundEnv {
 			continue
 		}
-		if prompt := createPrompt(arg.Name, arg.Prompt); prompt != nil {
+		if prompt := createPrompt(arg.Prompt); prompt != nil {
 			if arg.Prompt.Type == confirmPromptType {
 				ans := false
 				// TODO handle returned error
@@ -378,7 +380,7 @@ func newCommandAction(
 				continue
 			}
 
-			p := createPrompt(flag.Name, flag.Prompt)
+			p := createPrompt(flag.Prompt)
 			if p != nil {
 				if flag.Prompt.Type == confirmPromptType {
 					ans := false
@@ -517,6 +519,11 @@ func setupTask(task *Task, cfg *Config) error {
 			return err
 		}
 		flag.ScriptEnvs = envs
+		if flag.Prompt.Type != "" {
+			if flag.Prompt.Message == "" {
+				flag.Prompt.Message = flag.Name
+			}
+		}
 
 		task.Flags[j] = flag
 	}
@@ -539,6 +546,12 @@ func setupTask(task *Task, cfg *Config) error {
 			return err
 		}
 		arg.ScriptEnvs = envs
+
+		if arg.Prompt.Type != "" {
+			if arg.Prompt.Message == "" {
+				arg.Prompt.Message = arg.Name
+			}
+		}
 
 		task.Args[j] = arg
 	}
