@@ -3,7 +3,6 @@ package handler
 import (
 	"testing"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 
@@ -219,7 +218,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 		vars    map[string]interface{}
 		isErr   bool
 		expVars map[string]interface{}
-		expQs   []*survey.Question
 	}{
 		{
 			title: "args and cArgs is empty",
@@ -231,7 +229,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 					"all_args_string": "",
 				},
 			},
-			expQs: []*survey.Question{},
 		},
 		{
 			title: "normal",
@@ -259,7 +256,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 					"all_args_string": "foo-value",
 				},
 			},
-			expQs: []*survey.Question{},
 		},
 		{
 			title: "required",
@@ -270,34 +266,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 				},
 			},
 			isErr: true,
-		},
-		{
-			title: "prompt",
-			args: []Arg{
-				{
-					Name: "foo",
-					Prompt: Prompt{
-						Type: "input",
-					},
-				},
-			},
-			cArgs: []string{},
-			expVars: map[string]interface{}{
-				"_builtin": map[string]interface{}{
-					"args":            []string{},
-					"args_string":     "",
-					"all_args":        []string{},
-					"all_args_string": "",
-				},
-			},
-			expQs: []*survey.Question{
-				{
-					Name: "foo",
-					Prompt: &survey.Input{
-						Message: "foo",
-					},
-				},
-			},
 		},
 	}
 	for _, d := range data {
@@ -311,7 +279,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 			if d.cArgs == nil {
 				d.cArgs = []string{}
 			}
-			qs, err := updateVarsByArgs(d.args, d.cArgs, d.vars)
+			err := updateVarsByArgs(d.args, d.cArgs, d.vars)
 			if err != nil {
 				if d.isErr {
 					return
@@ -321,7 +289,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 			}
 			assert.False(t, d.isErr)
 			assert.Equal(t, d.expVars, d.vars)
-			assert.Equal(t, d.expQs, qs)
 		})
 	}
 }

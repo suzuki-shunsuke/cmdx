@@ -37,21 +37,3 @@ func createPrompt(flagName string, prompt Prompt) survey.Prompt {
 	}
 	return nil
 }
-
-func createQuestionsFromFlags(c hasIsSet, flags []Flag) []*survey.Question {
-	qs := make([]*survey.Question, 0, len(flags))
-	for _, flag := range flags {
-		if c.IsSet(flag.Name) {
-			continue
-		}
-		p := createPrompt(flag.Name, flag.Prompt)
-		if p == nil {
-			continue
-		}
-		qs = append(qs, &survey.Question{
-			Name:   flag.Name,
-			Prompt: p,
-		})
-	}
-	return qs
-}

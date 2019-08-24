@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
@@ -19,8 +18,9 @@ import (
 )
 
 const (
-	boolFlagType   = "bool"
-	defaultTimeout = 36000 // default 10H
+	boolFlagType      = "bool"
+	confirmPromptType = "confirm"
+	defaultTimeout    = 36000 // default 10H
 
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
@@ -292,10 +292,9 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 
 func updateVarsByArgs(
 	args []Arg, cArgs []string, vars map[string]interface{},
-) ([]*survey.Question, error) {
+) error {
 	n := len(cArgs)
 
-	qs := []*survey.Question{}
 	for i, arg := range args {
 		if i < n {
 			val := cArgs[i]
@@ -315,10 +314,19 @@ func updateVarsByArgs(
 			continue
 		}
 		if prompt := createPrompt(arg.Name, arg.Prompt); prompt != nil {
-			qs = append(qs, &survey.Question{
-				Name:   arg.Name,
-				Prompt: prompt,
-			})
+			if arg.Prompt.Type == confirmPromptType {
+				ans := false
+				// TODO handle returned error
+				// set the default value
+				survey.AskOne(prompt, &ans)
+				vars[arg.Name] = ans
+				continue
+			}
+			ans := ""
+			if err := survey.AskOne(prompt, &ans); err != nil {
+				ans = arg.Default
+			}
+			vars[arg.Name] = ans
 			continue
 		}
 		if arg.Default != "" {
@@ -326,7 +334,7 @@ func updateVarsByArgs(
 			continue
 		}
 		if arg.Required {
-			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+			return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 		}
 		vars[arg.Name] = ""
 	}
@@ -345,7 +353,7 @@ func updateVarsByArgs(
 		"all_args":        cArgs,
 		"all_args_string": strings.Join(cArgs, " "),
 	}
-	return qs, nil
+	return nil
 }
 
 func newCommandAction(
@@ -355,45 +363,59 @@ func newCommandAction(
 		// create vars and envs
 		// run command
 
-		flagQs := createQuestionsFromFlags(c, task.Flags)
-
-		if err := validateFlagRequired(c, task.Flags); err != nil {
-			return err
-		}
-
 		vars := map[string]interface{}{}
 
-		argQs, err := updateVarsByArgs(task.Args, c.Args(), vars)
-		if err != nil {
-			return err
-		}
-		qs := append(flagQs, argQs...)
-		if len(qs) != 0 {
-			answers := map[string]interface{}{}
-			if err := survey.Ask(qs, &answers); err != nil {
-				return err
-			}
-			for k, v := range answers {
-				if opt, ok := v.(core.OptionAnswer); ok {
-					vars[k] = opt.Value
-				} else {
-					vars[k] = v
-				}
-			}
-		}
-
 		for _, flag := range task.Flags {
-			if !c.IsSet(flag.Name) {
+			if c.IsSet(flag.Name) {
+				var val interface{}
+				switch flag.Type {
+				case boolFlagType:
+					val = c.Bool(flag.Name)
+				default:
+					val = c.String(flag.Name)
+				}
+				vars[flag.Name] = val
 				continue
 			}
+
+			p := createPrompt(flag.Name, flag.Prompt)
+			if p != nil {
+				if flag.Prompt.Type == confirmPromptType {
+					ans := false
+					// TODO handle returned error
+					// set the default value
+					survey.AskOne(p, &ans)
+					vars[flag.Name] = ans
+					continue
+				}
+				ans := ""
+				if err := survey.AskOne(p, &ans); err != nil {
+					ans = c.String(flag.Name)
+				}
+				vars[flag.Name] = ans
+				continue
+			}
+
 			switch flag.Type {
 			case boolFlagType:
 				// don't ues c.Generic if flag.Type == "bool"
 				// the value in the template is treated as false
 				vars[flag.Name] = c.Bool(flag.Name)
 			default:
-				vars[flag.Name] = c.String(flag.Name)
+				if v := c.String(flag.Name); v != "" {
+					vars[flag.Name] = v
+					continue
+				}
+				if flag.Required {
+					return errors.New(`the flag "` + flag.Name + `" is required`)
+				}
+				vars[flag.Name] = ""
 			}
+		}
+
+		err := updateVarsByArgs(task.Args, c.Args(), vars)
+		if err != nil {
+			return err
 		}
 
 		envs := os.Environ()
