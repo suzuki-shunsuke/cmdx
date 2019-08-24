@@ -9,6 +9,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
@@ -86,6 +88,11 @@ type (
 		KillAfter time.Duration `yaml:"kill_after"`
 	}
 
+	Prompt struct {
+		Type    string
+		Options []string
+	}
+
 	Flag struct {
 		Name       string
 		Short      string
@@ -95,6 +102,7 @@ type (
 		ScriptEnvs []string `yaml:"script_envs"`
 		Type       string
 		Required   bool
+		Prompt     Prompt
 	}
 
 	Arg struct {
@@ -104,6 +112,7 @@ type (
 		InputEnvs  []string `yaml:"input_envs"`
 		ScriptEnvs []string `yaml:"script_envs"`
 		Required   bool
+		Prompt     Prompt
 	}
 )
 
@@ -258,50 +267,62 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 ` + strings.Join(argHelps, "\n")
 	}
 
+	scriptEnvs := map[string][]string{}
+	for _, flag := range task.Flags {
+		if len(flag.ScriptEnvs) != 0 {
+			scriptEnvs[flag.Name] = flag.ScriptEnvs
+		}
+	}
+	for _, arg := range task.Args {
+		if len(arg.ScriptEnvs) != 0 {
+			scriptEnvs[arg.Name] = arg.ScriptEnvs
+		}
+	}
+
 	return cli.Command{
 		Name:               task.Name,
 		ShortName:          task.Short,
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             cliutil.WrapAction(newCommandAction(task, wd)),
+		Action:             cliutil.WrapAction(newCommandAction(task, wd, scriptEnvs)),
 		CustomHelpTemplate: help,
 	}
 }
 
-func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interface{}) ([]string, error) {
+func updateVarsByArgs(
+	args []Arg, cArgs []string, vars map[string]interface{},
+) ([]*survey.Question, error) {
 	n := len(cArgs)
 
-	envs := []string{}
+	qs := []*survey.Question{}
 	for i, arg := range args {
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
-			for _, env := range arg.ScriptEnvs {
-				envs = append(envs, env+"="+val)
-			}
 			continue
 		}
 		// the positional argument isn't given
-		if arg.Default != "" {
-			vars[arg.Name] = arg.Default
-			for _, env := range arg.ScriptEnvs {
-				envs = append(envs, env+"="+arg.Default)
-			}
-			continue
-		}
 		isBoundEnv := false
 		for _, e := range arg.InputEnvs {
 			if v, ok := os.LookupEnv(e); ok {
 				isBoundEnv = true
 				vars[arg.Name] = v
-				for _, e := range arg.ScriptEnvs {
-					envs = append(envs, e+"="+v)
-				}
 				break
 			}
 		}
 		if isBoundEnv {
+			continue
+		}
+		if prompt := createPrompt(arg.Name, arg.Prompt); prompt != nil {
+			qs = append(qs, &survey.Question{
+				Name:   arg.Name,
+				Prompt: prompt,
+			})
+			continue
+		}
+		if arg.Default != "" {
+			vars[arg.Name] = arg.Default
 			continue
 		}
 		if arg.Required {
@@ -324,13 +345,17 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interfa
 		"all_args":        cArgs,
 		"all_args_string": strings.Join(cArgs, " "),
 	}
-	return envs, nil
+	return qs, nil
 }
 
-func newCommandAction(task Task, wd string) func(*cli.Context) error {
+func newCommandAction(
+	task Task, wd string, scriptEnvs map[string][]string,
+) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
+
+		flagQs := createQuestionsFromFlags(c, task.Flags)
 
 		if err := validateFlagRequired(c, task.Flags); err != nil {
 			return err
@@ -338,13 +363,29 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 
 		vars := map[string]interface{}{}
 
-		envs, err := updateVarsAndEnvsByArgs(task.Args, c.Args(), vars)
+		argQs, err := updateVarsByArgs(task.Args, c.Args(), vars)
 		if err != nil {
 			return err
 		}
-		envs = append(os.Environ(), envs...)
+		qs := append(flagQs, argQs...)
+		if len(qs) != 0 {
+			answers := map[string]interface{}{}
+			if err := survey.Ask(qs, &answers); err != nil {
+				return err
+			}
+			for k, v := range answers {
+				if opt, ok := v.(core.OptionAnswer); ok {
+					vars[k] = opt.Value
+				} else {
+					vars[k] = v
+				}
+			}
+		}
 
 		for _, flag := range task.Flags {
+			if !c.IsSet(flag.Name) {
+				continue
+			}
 			switch flag.Type {
 			case boolFlagType:
 				// don't ues c.Generic if flag.Type == "bool"
@@ -353,8 +394,17 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 			default:
 				vars[flag.Name] = c.String(flag.Name)
 			}
-			for _, env := range flag.ScriptEnvs {
-				envs = append(envs, env+"="+c.String(flag.Name))
+		}
+
+		envs := os.Environ()
+		for k, envNames := range scriptEnvs {
+			v, ok := vars[k].(string)
+			if !ok {
+				return fmt.Errorf(
+					"failed to convert the variable's value to the string: var: %s, value: %v", k, vars[k])
+			}
+			for _, e := range envNames {
+				envs = append(envs, e+"="+v)
 			}
 		}
 

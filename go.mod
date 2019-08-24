@@ -3,6 +3,7 @@ module github.com/suzuki-shunsuke/cmdx
 go 1.12
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.0.4
 	github.com/Songmu/timeout v0.4.0
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
