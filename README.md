@@ -18,7 +18,7 @@ Task runner.
 
 ## Overview
 
-`cmdx` is the project specific task runner.
+`cmdx` is the task runner.
 Using `cmdx` you can manage tasks for your project such as test, build, format, lint, and release.
 
 For example, This is the tasks for `cmdx` itself.
@@ -50,6 +50,7 @@ You can make the simple shell script rich with `cmdx`
 
 * `cmdx` supports the parse of the flag and positional arguments
 * `cmdx` provides useful help messages
+* `cmds` supports the interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
 
 `cmdx` searches the configuration file from the current directory to the root directory recursively and run the task at the directory where the configuration file exists so the result of task doesn't depend on the directory you run `cmdx`.
 
@@ -125,7 +126,6 @@ GLOBAL OPTIONS:
 
 List tasks.
 
-
 ```console
 $ cmdx -l
 hello - hello command
@@ -177,12 +177,18 @@ flag.input_envs | []string | flag level environment variable binding | false | [
 flag.script_envs | []string | flag level environment variable binding | false | []
 flag.type | string | the flag type. Either "string" or "bool" | false | "string"
 flag.required | bool | whether the flag argument is required | false | false
+flag.prompt | prompt | prompt | false | prompt is disabled
+prompt.type | string | prompt type | true |
+prompt.message | string | prompt message | false | `flag.name` or `arg.name`
+prompt.help | string | prompt help | false |
+prompt.options | []string | entries of `select` or `multi_select` prompt | true if the prompt type is `select` or `multi_select` |
 arg.name | string | the positional argument name | true |
 arg.usage | string | the positional argument usage | false | ""
 arg.default | string | the positional argument's default value | false | ""
 arg.input_envs | []string | the positional argument level environment variable binding | false | []
 arg.script_envs | []string | the positional argument level environment variable binding | false | []
 arg.required | bool | whether the argument is required | false | false
+arg.prompt | prompt | prompt | false | prompt is disabled
 
 ### script
 
@@ -279,6 +285,28 @@ tasks:
 - name: foo # the timeout.duration is 3
   script: sleep 100
 ```
+
+## prompt
+
+`cmdx` supports the interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey).
+`cmdx` supports the following prompt types.
+
+* input
+* multiline
+* password
+* confirm
+* select
+* multi_select
+* editor
+
+About prompt type, please see [AlecAivazis/survey's document](https://github.com/AlecAivazis/survey#prompts).
+
+## value source priority
+
+1. command line arguments
+2. environment variable (input_envs)
+3. prompt (prompt isn't launched if the value is set by command line argument or environment variable)
+4. default value
 
 ### Example
 
