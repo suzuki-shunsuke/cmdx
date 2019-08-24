@@ -330,9 +330,17 @@ func Test_setupTask(t *testing.T) {
 						Name: "bar",
 					},
 				},
+				Environment: map[string]string{
+					"ZOO": "zoo",
+					"BAR": "bar",
+				},
 			},
 			cfg: &Config{
 				InputEnvs: []string{"{{.name}}"},
+				Environment: map[string]string{
+					"FOO": "foo",
+					"BAR": "hello",
+				},
 			},
 			exp: &Task{
 				Timeout: Timeout{
@@ -351,6 +359,11 @@ func Test_setupTask(t *testing.T) {
 						InputEnvs:  []string{"BAR"},
 						ScriptEnvs: []string{},
 					},
+				},
+				Environment: map[string]string{
+					"FOO": "foo",
+					"BAR": "bar",
+					"ZOO": "zoo",
 				},
 			},
 		},

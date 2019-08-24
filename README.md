@@ -155,6 +155,7 @@ path | type | description | required | default
 .timeout | timeout | the task command timeout | false |
 .input_envs | []string | default environment variable binding | false | []
 .script_envs | []string | default environment variable binding | false | []
+.environment | map[string]string | top level environment variables | false | {}
 .tasks | []task | the list of tasks | true |
 task.name | string | the task name | true |
 task.short | string | the task short name | false |
@@ -215,7 +216,7 @@ name | type | description
 `_builtin.all_args` | []string | the list of all positional arguments
 `_builtin.args_string` | string | the string which joins _builtin.all_args by the space " "
 
-### input_envs, script_envs, environment
+### input_envs, script_envs
 
 `input_envs` is a list of environment variables which are bound to the variable.
 

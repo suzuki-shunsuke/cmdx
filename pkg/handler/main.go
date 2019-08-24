@@ -63,10 +63,11 @@ tasks:
 
 type (
 	Config struct {
-		Tasks      []Task
-		InputEnvs  []string `yaml:"input_envs"`
-		ScriptEnvs []string `yaml:"script_envs"`
-		Timeout    Timeout
+		Tasks       []Task
+		InputEnvs   []string `yaml:"input_envs"`
+		ScriptEnvs  []string `yaml:"script_envs"`
+		Environment map[string]string
+		Timeout     Timeout
 	}
 
 	Task struct {
@@ -487,6 +488,12 @@ func setupTask(task *Task, cfg *Config) error {
 	scriptEnvs := task.ScriptEnvs
 	if len(scriptEnvs) == 0 {
 		scriptEnvs = cfg.ScriptEnvs
+	}
+
+	for k, v := range cfg.Environment {
+		if _, ok := task.Environment[k]; !ok {
+			task.Environment[k] = v
+		}
 	}
 
 	if task.Timeout.Duration == 0 {
