@@ -32,6 +32,8 @@ const (
 # - "{{.name}}"
 # script_envs:
 # - "{{.name}}"
+# environment:
+#   FOO: foo
 tasks:
 - name: hello
   # short: h

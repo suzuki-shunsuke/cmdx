@@ -1,27 +1,5 @@
 ---
 tasks:
-- name: foo
-  script: "echo {{.select}} {{.input}} {{.confirm}} $SELECT $INPUT"
-  flags:
-  - name: select
-    default: zzz
-    prompt:
-      type: select
-      options:
-      - red
-      - green
-    script_envs:
-    - select
-  - name: input
-    default: zzz
-    prompt:
-      type: input
-    script_envs:
-    - input
-  - name: confirm
-    default: zzz
-    prompt:
-      type: confirm
 - name: init
   short: i
   script: bash scripts/githook.sh
