@@ -362,3 +362,71 @@ func Test_setupTask(t *testing.T) {
 		})
 	}
 }
+
+func Test_setupConfig(t *testing.T) {
+	data := []struct {
+		title string
+		cfg   *Config
+		exp   *Config
+		isErr bool
+	}{
+		{
+			title: "normal",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Script: "env",
+					},
+				},
+			},
+			exp: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Script: "env",
+					},
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			err := setupConfig(d.cfg)
+			if err != nil {
+				if d.isErr {
+					return
+				}
+				assert.NotNil(t, err)
+				return
+			}
+			assert.False(t, d.isErr)
+			assert.Equal(t, d.exp, d.cfg)
+		})
+	}
+}
+
+func Test_updateAppWithConfig(t *testing.T) {
+	data := []struct {
+		title string
+		cfg   *Config
+	}{
+		{
+			title: "normal",
+			cfg: &Config{
+				Tasks: []Task{
+					{
+						Name:   "foo",
+						Script: "env",
+					},
+				},
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			app := cli.NewApp()
+			updateAppWithConfig(app, d.cfg, "/tmp")
+		})
+	}
+}
