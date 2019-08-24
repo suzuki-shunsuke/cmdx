@@ -152,6 +152,7 @@ target: foo
 
 path | type | description | required | default
 --- | --- | --- | --- | ---
+.timeout | timeout | the task command timeout | false |
 .bind_envs | []string | default environment variable binding | false | []
 .tasks | []task | the list of tasks | true |
 task.name | string | the task name | true |
@@ -163,6 +164,9 @@ task.args | []arg | the task positional arguments | false | []
 task.bind_envs | []string | task level environment variable binding | false | []
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `sh -c` | true |
+task.timeout | timeout | the task command timeout | false |
+timtout.duration | int | the task command timeout (second) | false | 36000 (10 hours)
+timtout.kill_after | int | the duration the kill signal is sent after `timeout.duration` | false | 0, which means the command isn't killed
 flag.name | string | the flag name | true |
 flag.short | string | the flag short name | false |
 flag.usage | string | the flag usage | false | ""
@@ -175,6 +179,31 @@ arg.usage | string | the positional argument usage | false | ""
 arg.default | string | the positional argument's default value | false | ""
 arg.bind_envs | []string | the positional argument level environment variable binding | false | []
 arg.required | bool | whether the argument is required | false | false
+
+### script
+
+`task.script` is the task command.
+This is parsed by Golang's [text/template](https://golang.org/pkg/text/template/) package.
+The value of the flag and positional argument can be referred by the argument name.
+
+For example,
+
+```yaml
+# refer the value of the argument "source"
+script: "echo {{.source}}"
+```
+
+If the positional argument is optional and the argument isn't passed and the default value isn't set,
+the value is an empty string `""`.
+
+And some special variables are defined.
+
+name | type | description
+--- | --- | ---
+`_builtin.args` | []string | the list of positional arguments which aren't defined by the configuration `args`
+`_builtin.args_string` | string | the string which joins _builtin.args by the space " "
+`_builtin.all_args` | []string | the list of all positional arguments
+`_builtin.args_string` | string | the string which joins _builtin.all_args by the space " "
 
 ### bind_envs
 
@@ -220,31 +249,38 @@ tasks:
     - "{{.name}}"
 ```
 
+### timout
 
-### script
+`cmdx` supports the configuration about the timeout of the task.
 
-`task.script` is the task command.
-This is parsed by Golang's [text/template](https://golang.org/pkg/text/template/) package.
-The value of the flag and positional argument can be referred by the argument name.
+1. send SIGINT after `timeout.duration` seconds (default 36,000 seconds)
+2. if `timeout.kill_after` isn't 0, send SIGKILL after `timeout.duration + timeout.kill_after` seconds. By default `timeout.kill_after` is 0 so SIGKILL isn't sent
 
-For example,
+For example, the following task `foo`'s timeout is 3 seconds.
 
 ```yaml
-# refer the value of the argument "source"
-script: "echo {{.source}}"
+tasks:
+- name: foo
+  script: sleep 100
+  timeout:
+    duration: 3
 ```
 
-If the positional argument is optional and the argument isn't passed and the default value isn't set,
-the value is an empty string `""`.
+```console
+$ cmdx foo
++ sleep 100
+the command is timeout: 3 sec
+```
 
-And some special variables are defined.
+The task timeout configuration inherits the top level timeout configuration.
 
-name | type | description
---- | --- | ---
-`_builtin.args` | []string | the list of positional arguments which aren't defined by the configuration `args`
-`_builtin.args_string` | string | the string which joins _builtin.args by the space " "
-`_builtin.all_args` | []string | the list of all positional arguments
-`_builtin.args_string` | string | the string which joins _builtin.all_args by the space " "
+```yaml
+timeout:
+  duration: 3
+tasks:
+- name: foo # the timeout.duration is 3
+  script: sleep 100
+```
 
 ### Example
 

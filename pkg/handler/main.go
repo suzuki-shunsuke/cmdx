@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
@@ -16,11 +17,17 @@ import (
 )
 
 const (
-	boolFlagType = "bool"
+	boolFlagType   = "bool"
+	defaultTimeout = 36000 // default 10H
 
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
 # https://github.com/suzuki-shunsuke/cmdx
+# timeout:
+#   duration: 600
+#   kill_after: 30
+# bind_envs:
+# - "{{.name}}"
 tasks:
 - name: hello
   # short: h
@@ -54,6 +61,7 @@ type (
 	Config struct {
 		Tasks    []Task
 		BindEnvs []string `yaml:"bind_envs"`
+		Timeout  Timeout
 	}
 
 	Task struct {
@@ -66,6 +74,12 @@ type (
 		BindEnvs    []string `yaml:"bind_envs"`
 		Environment map[string]string
 		Script      string
+		Timeout     Timeout
+	}
+
+	Timeout struct {
+		Duration  time.Duration
+		KillAfter time.Duration `yaml:"kill_after"`
 	}
 
 	Flag struct {
@@ -280,7 +294,7 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 		}
 
 		return runScript(
-			scr, wd, envs, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
+			scr, wd, envs, task.Timeout, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
 	}
 }
 
@@ -370,10 +384,22 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *Task, bindEnvs []string) error {
+func setupTask(task *Task, bindEnvs []string, timeout Timeout) error {
 	if len(task.BindEnvs) != 0 {
 		bindEnvs = task.BindEnvs
 	}
+
+	if task.Timeout.Duration == 0 {
+		if timeout.Duration == 0 {
+			task.Timeout.Duration = defaultTimeout
+		} else {
+			task.Timeout.Duration = timeout.Duration
+		}
+	}
+	if task.Timeout.KillAfter == 0 {
+		task.Timeout.KillAfter = timeout.KillAfter
+	}
+
 	for j, flag := range task.Flags {
 		if len(flag.BindEnvs) == 0 {
 			flag.BindEnvs = bindEnvs
@@ -403,7 +429,7 @@ func setupTask(task *Task, bindEnvs []string) error {
 
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
-		if err := setupTask(&task, cfg.BindEnvs); err != nil {
+		if err := setupTask(&task, cfg.BindEnvs, cfg.Timeout); err != nil {
 			return err
 		}
 		cfg.Tasks[i] = task
