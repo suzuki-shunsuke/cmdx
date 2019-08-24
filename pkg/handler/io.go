@@ -14,6 +14,7 @@ import (
 
 	"github.com/Songmu/timeout"
 	"github.com/pkg/errors"
+	"github.com/urfave/cli"
 )
 
 func readConfig(cfgFilePath string, cfg *Config) error {
@@ -68,6 +69,9 @@ func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun b
 			}
 			if status.IsTimedOut() {
 				return fmt.Errorf("the command is timeout: %d sec", tioCfg.Duration)
+			}
+			if status.Code != 0 {
+				return cli.NewExitError("", status.Code)
 			}
 			return nil
 		}()
