@@ -1,5 +1,27 @@
 ---
 tasks:
+- name: foo
+  script: "echo {{.select}} {{.input}} {{.confirm}} $SELECT $INPUT"
+  flags:
+  - name: select
+    default: zzz
+    prompt:
+      type: select
+      options:
+      - red
+      - green
+    script_envs:
+    - select
+  - name: input
+    default: zzz
+    prompt:
+      type: input
+    script_envs:
+    - input
+  - name: confirm
+    default: zzz
+    prompt:
+      type: confirm
 - name: init
   short: i
   script: bash scripts/githook.sh
@@ -22,14 +44,17 @@ tasks:
   usage: format the go code
   script: bash scripts/fmt.sh
 - name: vet
+  short: v
   description: go vet
   usage: go vet
   script: go vet ./...
 - name: lint
+  short: l
   description: lint the go code
   usage: lint the go code
   script: golangci-lint run
 - name: release
+  short: r
   description: release the new version
   usage: release the new version
   script: "bash scripts/release.sh {{.version}}"
