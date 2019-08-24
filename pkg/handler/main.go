@@ -26,7 +26,9 @@ const (
 # timeout:
 #   duration: 600
 #   kill_after: 30
-# bind_envs:
+# input_envs:
+# - "{{.name}}"
+# script_envs:
 # - "{{.name}}"
 tasks:
 - name: hello
@@ -47,7 +49,7 @@ tasks:
 	# - name: name
   #   usage: source file path
   #   required: true
-  #   bind_envs:
+  #   input_envs:
 	#   - NAME
   environment:
     FOO: foo
@@ -59,9 +61,10 @@ tasks:
 
 type (
 	Config struct {
-		Tasks    []Task
-		BindEnvs []string `yaml:"bind_envs"`
-		Timeout  Timeout
+		Tasks      []Task
+		InputEnvs  []string `yaml:"input_envs"`
+		ScriptEnvs []string `yaml:"script_envs"`
+		Timeout    Timeout
 	}
 
 	Task struct {
@@ -71,7 +74,8 @@ type (
 		Usage       string
 		Flags       []Flag
 		Args        []Arg
-		BindEnvs    []string `yaml:"bind_envs"`
+		InputEnvs   []string `yaml:"input_envs"`
+		ScriptEnvs  []string `yaml:"script_envs"`
 		Environment map[string]string
 		Script      string
 		Timeout     Timeout
@@ -83,21 +87,23 @@ type (
 	}
 
 	Flag struct {
-		Name     string
-		Short    string
-		Usage    string
-		Default  string
-		BindEnvs []string `yaml:"bind_envs"`
-		Type     string
-		Required bool
+		Name       string
+		Short      string
+		Usage      string
+		Default    string
+		InputEnvs  []string `yaml:"input_envs"`
+		ScriptEnvs []string `yaml:"script_envs"`
+		Type       string
+		Required   bool
 	}
 
 	Arg struct {
-		Name     string
-		Usage    string
-		Default  string
-		BindEnvs []string `yaml:"bind_envs"`
-		Required bool
+		Name       string
+		Usage      string
+		Default    string
+		InputEnvs  []string `yaml:"input_envs"`
+		ScriptEnvs []string `yaml:"script_envs"`
+		Required   bool
 	}
 )
 
@@ -108,6 +114,60 @@ func Main() error {
 
 	app.Action = cliutil.WrapAction(mainAction)
 
+	return app.Run(os.Args)
+}
+
+func mainAction(c *cli.Context) error {
+	cfg := Config{}
+	cfgFilePath := c.GlobalString("config")
+	initFlag := c.GlobalBool("init")
+	listFlag := c.GlobalBool("list")
+	cfgFileName := c.GlobalString("name")
+	if initFlag {
+		if cfgFilePath != "" {
+			return createConfigFile(cfgFilePath)
+		}
+		if cfgFileName != "" {
+			return createConfigFile(cfgFileName)
+		}
+		return createConfigFile(".cmdx.yaml")
+	}
+
+	if cfgFilePath == "" {
+		var err error
+		cfgFilePath, err = getConfigFilePath(cfgFileName)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := readConfig(cfgFilePath, &cfg); err != nil {
+		return err
+	}
+	if err := validateConfig(&cfg); err != nil {
+		return errors.Wrap(err, "please fix the configuration file")
+	}
+
+	if err := setupConfig(&cfg); err != nil {
+		return err
+	}
+
+	if listFlag {
+		arr := make([]string, len(cfg.Tasks))
+		for i, task := range cfg.Tasks {
+			name := task.Name
+			if task.Short != "" {
+				name += ", " + task.Short
+			}
+			arr[i] = name + " - " + task.Usage
+		}
+		fmt.Println(strings.Join(arr, "\n"))
+		return nil
+	}
+
+	app := cli.NewApp()
+	setupApp(app)
+	updateAppWithConfig(app, &cfg, filepath.Dir(cfgFilePath))
 	return app.Run(os.Args)
 }
 
@@ -158,7 +218,7 @@ func newFlag(flag Flag) cli.Flag {
 	if flag.Short != "" {
 		name += ", " + flag.Short
 	}
-	env := strings.Join(flag.BindEnvs, ",")
+	env := strings.Join(flag.InputEnvs, ",")
 	switch flag.Type {
 	case boolFlagType:
 		return cli.BoolFlag{
@@ -217,7 +277,7 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interfa
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
-			for _, env := range arg.BindEnvs {
+			for _, env := range arg.ScriptEnvs {
 				envs = append(envs, env+"="+val)
 			}
 			continue
@@ -225,9 +285,23 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interfa
 		// the positional argument isn't given
 		if arg.Default != "" {
 			vars[arg.Name] = arg.Default
-			for _, env := range arg.BindEnvs {
+			for _, env := range arg.ScriptEnvs {
 				envs = append(envs, env+"="+arg.Default)
 			}
+			continue
+		}
+		isBoundEnv := false
+		for _, e := range arg.InputEnvs {
+			if v, ok := os.LookupEnv(e); ok {
+				isBoundEnv = true
+				vars[arg.Name] = v
+				for _, e := range arg.ScriptEnvs {
+					envs = append(envs, e+"="+v)
+				}
+				break
+			}
+		}
+		if isBoundEnv {
 			continue
 		}
 		if arg.Required {
@@ -279,7 +353,7 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 			default:
 				vars[flag.Name] = c.String(flag.Name)
 			}
-			for _, env := range flag.BindEnvs {
+			for _, env := range flag.ScriptEnvs {
 				envs = append(envs, env+"="+c.String(flag.Name))
 			}
 		}
@@ -316,60 +390,6 @@ func renderTemplate(base string, data interface{}) (string, error) {
 	return buf.String(), err
 }
 
-func mainAction(c *cli.Context) error {
-	cfg := Config{}
-	cfgFilePath := c.GlobalString("config")
-	initFlag := c.GlobalBool("init")
-	listFlag := c.GlobalBool("list")
-	cfgFileName := c.GlobalString("name")
-	if initFlag {
-		if cfgFilePath != "" {
-			return createConfigFile(cfgFilePath)
-		}
-		if cfgFileName != "" {
-			return createConfigFile(cfgFileName)
-		}
-		return createConfigFile(".cmdx.yaml")
-	}
-
-	if cfgFilePath == "" {
-		var err error
-		cfgFilePath, err = getConfigFilePath(cfgFileName)
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := readConfig(cfgFilePath, &cfg); err != nil {
-		return err
-	}
-	if err := validateConfig(&cfg); err != nil {
-		return errors.Wrap(err, "please fix the configuration file")
-	}
-
-	if err := setupConfig(&cfg); err != nil {
-		return err
-	}
-
-	if listFlag {
-		arr := make([]string, len(cfg.Tasks))
-		for i, task := range cfg.Tasks {
-			name := task.Name
-			if task.Short != "" {
-				name += ", " + task.Short
-			}
-			arr[i] = name + " - " + task.Usage
-		}
-		fmt.Println(strings.Join(arr, "\n"))
-		return nil
-	}
-
-	app := cli.NewApp()
-	setupApp(app)
-	updateAppWithConfig(app, &cfg, filepath.Dir(cfgFilePath))
-	return app.Run(os.Args)
-}
-
 func setupEnvs(envs []string, name string) ([]string, error) {
 	arr := make([]string, len(envs))
 	for i, env := range envs {
@@ -384,43 +404,70 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *Task, bindEnvs []string, timeout Timeout) error {
-	if len(task.BindEnvs) != 0 {
-		bindEnvs = task.BindEnvs
+func setupTask(task *Task, cfg *Config) error {
+	inputEnvs := task.InputEnvs
+	if len(inputEnvs) == 0 {
+		inputEnvs = cfg.InputEnvs
+	}
+
+	scriptEnvs := task.ScriptEnvs
+	if len(scriptEnvs) == 0 {
+		scriptEnvs = cfg.ScriptEnvs
 	}
 
 	if task.Timeout.Duration == 0 {
-		if timeout.Duration == 0 {
+		if cfg.Timeout.Duration == 0 {
 			task.Timeout.Duration = defaultTimeout
 		} else {
-			task.Timeout.Duration = timeout.Duration
+			task.Timeout.Duration = cfg.Timeout.Duration
 		}
 	}
+
 	if task.Timeout.KillAfter == 0 {
-		task.Timeout.KillAfter = timeout.KillAfter
+		task.Timeout.KillAfter = cfg.Timeout.KillAfter
 	}
 
 	for j, flag := range task.Flags {
-		if len(flag.BindEnvs) == 0 {
-			flag.BindEnvs = bindEnvs
+		if len(flag.InputEnvs) == 0 {
+			flag.InputEnvs = inputEnvs
 		}
-		envs, err := setupEnvs(flag.BindEnvs, flag.Name)
+		envs, err := setupEnvs(flag.InputEnvs, flag.Name)
 		if err != nil {
 			return err
 		}
-		flag.BindEnvs = envs
+		flag.InputEnvs = envs
+
+		if len(flag.ScriptEnvs) == 0 {
+			flag.ScriptEnvs = scriptEnvs
+		}
+		envs, err = setupEnvs(flag.ScriptEnvs, flag.Name)
+		if err != nil {
+			return err
+		}
+		flag.ScriptEnvs = envs
+
 		task.Flags[j] = flag
 	}
 
 	for j, arg := range task.Args {
-		if len(arg.BindEnvs) == 0 {
-			arg.BindEnvs = bindEnvs
+		if len(arg.InputEnvs) == 0 {
+			arg.InputEnvs = inputEnvs
 		}
-		envs, err := setupEnvs(arg.BindEnvs, arg.Name)
+		envs, err := setupEnvs(arg.InputEnvs, arg.Name)
 		if err != nil {
 			return err
 		}
-		arg.BindEnvs = envs
+		arg.InputEnvs = envs
+
+		if len(arg.ScriptEnvs) == 0 {
+			arg.ScriptEnvs = scriptEnvs
+		}
+		envs, err = setupEnvs(arg.ScriptEnvs, arg.Name)
+		if err != nil {
+			return err
+		}
+		arg.ScriptEnvs = envs
+
 		task.Args[j] = arg
 	}
 
@@ -429,7 +476,7 @@ func setupTask(task *Task, bindEnvs []string, timeout Timeout) error {
 
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
-		if err := setupTask(&task, cfg.BindEnvs, cfg.Timeout); err != nil {
+		if err := setupTask(&task, cfg); err != nil {
 			return err
 		}
 		cfg.Tasks[i] = task
