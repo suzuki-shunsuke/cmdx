@@ -4,7 +4,12 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+)
+
+type (
+	hasIsSet interface {
+		IsSet(string) bool
+	}
 )
 
 func validateUniqueName(name string, names map[string]struct{}) bool {
@@ -103,7 +108,7 @@ func validateConfig(cfg *Config) error {
 	return nil
 }
 
-func validateFlagRequired(c *cli.Context, flags []Flag) error {
+func validateFlagRequired(c hasIsSet, flags []Flag) error {
 	for _, flag := range flags {
 		if !flag.Required {
 			continue

@@ -6,6 +6,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type (
+	hasIsSetMock struct {
+		flags map[string]struct{}
+	}
+)
+
+func (h hasIsSetMock) IsSet(flag string) bool {
+	_, ok := h.flags[flag]
+	return ok
+}
+
+func newHasIsSet(flags ...string) hasIsSet {
+	m := make(map[string]struct{}, len(flags))
+	for _, f := range flags {
+		m[f] = struct{}{}
+	}
+	return hasIsSetMock{
+		flags: m,
+	}
+}
+
 func Test_validateUniqueName(t *testing.T) {
 	data := []struct {
 		title    string
@@ -307,6 +328,53 @@ func Test_validateTask(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			err := validateTask(d.task)
+			if err == nil {
+				assert.False(t, d.isErr)
+				return
+			}
+			if d.isErr {
+				return
+			}
+			assert.NotNil(t, err)
+		})
+	}
+}
+
+func Test_validateFlagRequired(t *testing.T) {
+	data := []struct {
+		title   string
+		flagSet []string
+		flags   []Flag
+		isErr   bool
+	}{
+		{
+			title:   "normal",
+			flagSet: []string{"bar"},
+			flags: []Flag{
+				{
+					Name: "foo",
+				},
+				{
+					Name:     "bar",
+					Required: true,
+				},
+			},
+		},
+		{
+			title: "required",
+			flags: []Flag{
+				{
+					Name:     "foo",
+					Required: true,
+				},
+			},
+			isErr: true,
+		},
+	}
+	for _, d := range data {
+		t.Run(d.title, func(t *testing.T) {
+			c := newHasIsSet(d.flagSet...)
+			err := validateFlagRequired(c, d.flags)
 			if err == nil {
 				assert.False(t, d.isErr)
 				return
