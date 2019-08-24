@@ -42,6 +42,6 @@ EOS
 echoEval git add pkg/domain/version.go || exit 1
 echo '+ git commit -m "build: update version to $TAG"'
 git commit -m "build: update version to $TAG" || exit 1
-echoEval git tag $TAG
+echoEval git tag $TAG || exit 1
 echoEval git push $REMOTE $BRANCH || exit 1
 echoEval git push $REMOTE $TAG
