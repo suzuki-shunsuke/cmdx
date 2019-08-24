@@ -49,6 +49,7 @@ steps:
   image: plugins/git
   commands:
   - git fetch --tags
+  - git checkout -- .
 - name: release
   image: &goreleaser goreleaser/goreleaser:v0.116.0
   commands:
