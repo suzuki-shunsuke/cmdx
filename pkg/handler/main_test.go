@@ -210,7 +210,7 @@ func Test_renderTemplate(t *testing.T) {
 	}
 }
 
-func Test_updateVarsAndEnvsByArgs(t *testing.T) {
+func Test_updateVarsByArgs(t *testing.T) {
 	data := []struct {
 		title   string
 		args    []Arg
@@ -218,7 +218,6 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 		vars    map[string]interface{}
 		isErr   bool
 		expVars map[string]interface{}
-		expEnvs []string
 	}{
 		{
 			title: "args and cArgs is empty",
@@ -230,7 +229,6 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 					"all_args_string": "",
 				},
 			},
-			expEnvs: []string{},
 		},
 		{
 			title: "normal",
@@ -258,7 +256,6 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 					"all_args_string": "foo-value",
 				},
 			},
-			expEnvs: []string{"FOO=foo-value", "BAR=bar-value"},
 		},
 		{
 			title: "required",
@@ -282,7 +279,7 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 			if d.cArgs == nil {
 				d.cArgs = []string{}
 			}
-			envs, err := updateVarsAndEnvsByArgs(d.args, d.cArgs, d.vars)
+			err := updateVarsByArgs(d.args, d.cArgs, d.vars)
 			if err != nil {
 				if d.isErr {
 					return
@@ -291,7 +288,6 @@ func Test_updateVarsAndEnvsByArgs(t *testing.T) {
 				return
 			}
 			assert.False(t, d.isErr)
-			assert.Equal(t, d.expEnvs, envs)
 			assert.Equal(t, d.expVars, d.vars)
 		})
 	}

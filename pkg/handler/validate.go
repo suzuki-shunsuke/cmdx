@@ -53,6 +53,15 @@ func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[stri
 			"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
 			taskName, flag.Name, flag.Type)
 	}
+
+	if flag.Prompt.Type != "" {
+		if _, ok := flagTypes[flag.Prompt.Type]; !ok {
+			return fmt.Errorf(
+				"the flag prompt type is invalid: task: %s, flag: %s, prompt: %s",
+				taskName, flag.Name, flag.Prompt.Type)
+		}
+	}
+
 	return nil
 }
 
@@ -114,6 +123,9 @@ func validateFlagRequired(c hasIsSet, flags []Flag) error {
 			continue
 		}
 		if c.IsSet(flag.Name) {
+			continue
+		}
+		if flag.Prompt.Type != "" {
 			continue
 		}
 		return errors.New(`the flag "` + flag.Name + `" is required`)

@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
@@ -17,8 +18,9 @@ import (
 )
 
 const (
-	boolFlagType   = "bool"
-	defaultTimeout = 36000 // default 10H
+	boolFlagType      = "bool"
+	confirmPromptType = "confirm"
+	defaultTimeout    = 36000 // default 10H
 
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
@@ -86,6 +88,13 @@ type (
 		KillAfter time.Duration `yaml:"kill_after"`
 	}
 
+	Prompt struct {
+		Type    string
+		Message string
+		Help    string
+		Options []string
+	}
+
 	Flag struct {
 		Name       string
 		Short      string
@@ -95,6 +104,7 @@ type (
 		ScriptEnvs []string `yaml:"script_envs"`
 		Type       string
 		Required   bool
+		Prompt     Prompt
 	}
 
 	Arg struct {
@@ -104,6 +114,7 @@ type (
 		InputEnvs  []string `yaml:"input_envs"`
 		ScriptEnvs []string `yaml:"script_envs"`
 		Required   bool
+		Prompt     Prompt
 	}
 )
 
@@ -258,54 +269,74 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 ` + strings.Join(argHelps, "\n")
 	}
 
+	scriptEnvs := map[string][]string{}
+	for _, flag := range task.Flags {
+		if len(flag.ScriptEnvs) != 0 {
+			scriptEnvs[flag.Name] = flag.ScriptEnvs
+		}
+	}
+	for _, arg := range task.Args {
+		if len(arg.ScriptEnvs) != 0 {
+			scriptEnvs[arg.Name] = arg.ScriptEnvs
+		}
+	}
+
 	return cli.Command{
 		Name:               task.Name,
 		ShortName:          task.Short,
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             cliutil.WrapAction(newCommandAction(task, wd)),
+		Action:             cliutil.WrapAction(newCommandAction(task, wd, scriptEnvs)),
 		CustomHelpTemplate: help,
 	}
 }
 
-func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interface{}) ([]string, error) {
+func updateVarsByArgs(
+	args []Arg, cArgs []string, vars map[string]interface{},
+) error {
 	n := len(cArgs)
 
-	envs := []string{}
 	for i, arg := range args {
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
-			for _, env := range arg.ScriptEnvs {
-				envs = append(envs, env+"="+val)
-			}
 			continue
 		}
 		// the positional argument isn't given
-		if arg.Default != "" {
-			vars[arg.Name] = arg.Default
-			for _, env := range arg.ScriptEnvs {
-				envs = append(envs, env+"="+arg.Default)
-			}
-			continue
-		}
 		isBoundEnv := false
 		for _, e := range arg.InputEnvs {
 			if v, ok := os.LookupEnv(e); ok {
 				isBoundEnv = true
 				vars[arg.Name] = v
-				for _, e := range arg.ScriptEnvs {
-					envs = append(envs, e+"="+v)
-				}
 				break
 			}
 		}
 		if isBoundEnv {
 			continue
 		}
+		if prompt := createPrompt(arg.Prompt); prompt != nil {
+			if arg.Prompt.Type == confirmPromptType {
+				ans := false
+				// TODO handle returned error
+				// set the default value
+				survey.AskOne(prompt, &ans)
+				vars[arg.Name] = ans
+				continue
+			}
+			ans := ""
+			if err := survey.AskOne(prompt, &ans); err != nil {
+				ans = arg.Default
+			}
+			vars[arg.Name] = ans
+			continue
+		}
+		if arg.Default != "" {
+			vars[arg.Name] = arg.Default
+			continue
+		}
 		if arg.Required {
-			return nil, fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
+			return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
 		}
 		vars[arg.Name] = ""
 	}
@@ -324,37 +355,80 @@ func updateVarsAndEnvsByArgs(args []Arg, cArgs []string, vars map[string]interfa
 		"all_args":        cArgs,
 		"all_args_string": strings.Join(cArgs, " "),
 	}
-	return envs, nil
+	return nil
 }
 
-func newCommandAction(task Task, wd string) func(*cli.Context) error {
+func newCommandAction(
+	task Task, wd string, scriptEnvs map[string][]string,
+) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
 
-		if err := validateFlagRequired(c, task.Flags); err != nil {
-			return err
-		}
-
 		vars := map[string]interface{}{}
 
-		envs, err := updateVarsAndEnvsByArgs(task.Args, c.Args(), vars)
-		if err != nil {
-			return err
-		}
-		envs = append(os.Environ(), envs...)
-
 		for _, flag := range task.Flags {
+			if c.IsSet(flag.Name) {
+				var val interface{}
+				switch flag.Type {
+				case boolFlagType:
+					val = c.Bool(flag.Name)
+				default:
+					val = c.String(flag.Name)
+				}
+				vars[flag.Name] = val
+				continue
+			}
+
+			p := createPrompt(flag.Prompt)
+			if p != nil {
+				if flag.Prompt.Type == confirmPromptType {
+					ans := false
+					// TODO handle returned error
+					// set the default value
+					survey.AskOne(p, &ans)
+					vars[flag.Name] = ans
+					continue
+				}
+				ans := ""
+				if err := survey.AskOne(p, &ans); err != nil {
+					ans = c.String(flag.Name)
+				}
+				vars[flag.Name] = ans
+				continue
+			}
+
 			switch flag.Type {
 			case boolFlagType:
 				// don't ues c.Generic if flag.Type == "bool"
 				// the value in the template is treated as false
 				vars[flag.Name] = c.Bool(flag.Name)
 			default:
-				vars[flag.Name] = c.String(flag.Name)
+				if v := c.String(flag.Name); v != "" {
+					vars[flag.Name] = v
+					continue
+				}
+				if flag.Required {
+					return errors.New(`the flag "` + flag.Name + `" is required`)
+				}
+				vars[flag.Name] = ""
 			}
-			for _, env := range flag.ScriptEnvs {
-				envs = append(envs, env+"="+c.String(flag.Name))
+		}
+
+		err := updateVarsByArgs(task.Args, c.Args(), vars)
+		if err != nil {
+			return err
+		}
+
+		envs := os.Environ()
+		for k, envNames := range scriptEnvs {
+			v, ok := vars[k].(string)
+			if !ok {
+				return fmt.Errorf(
+					"failed to convert the variable's value to the string: var: %s, value: %v", k, vars[k])
+			}
+			for _, e := range envNames {
+				envs = append(envs, e+"="+v)
 			}
 		}
 
@@ -445,6 +519,11 @@ func setupTask(task *Task, cfg *Config) error {
 			return err
 		}
 		flag.ScriptEnvs = envs
+		if flag.Prompt.Type != "" {
+			if flag.Prompt.Message == "" {
+				flag.Prompt.Message = flag.Name
+			}
+		}
 
 		task.Flags[j] = flag
 	}
@@ -467,6 +546,12 @@ func setupTask(task *Task, cfg *Config) error {
 			return err
 		}
 		arg.ScriptEnvs = envs
+
+		if arg.Prompt.Type != "" {
+			if arg.Prompt.Message == "" {
+				arg.Prompt.Message = arg.Name
+			}
+		}
 
 		task.Args[j] = arg
 	}
