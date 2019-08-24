@@ -587,14 +587,12 @@ func getConfigFilePath(cfgFileName string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get the current directory path")
 	}
-	for _, name := range names {
-		p, err := cliutil.FindFile(wd, name, func(name string) bool {
-			_, err := os.Stat(name)
-			return err == nil
-		})
-		if err == nil {
-			return p, nil
-		}
+	p, err := cliutil.FindFile(wd, func(name string) bool {
+		_, err := os.Stat(name)
+		return err == nil
+	}, names...)
+	if err == nil {
+		return p, nil
 	}
 	return "", errors.New("the configuration file is not found")
 }
