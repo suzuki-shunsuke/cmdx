@@ -314,7 +314,11 @@ func Test_setupTask(t *testing.T) {
 		{
 			title: "flags and args are empty",
 			task:  &Task{},
-			exp:   &Task{},
+			exp: &Task{
+				Timeout: Timeout{
+					Duration: defaultTimeout,
+				},
+			},
 		},
 		{
 			title: "normal",
@@ -332,6 +336,9 @@ func Test_setupTask(t *testing.T) {
 			},
 			bindEnvs: []string{"{{.name}}"},
 			exp: &Task{
+				Timeout: Timeout{
+					Duration: defaultTimeout,
+				},
 				Flags: []Flag{
 					{
 						Name:     "foo",
@@ -385,6 +392,9 @@ func Test_setupConfig(t *testing.T) {
 					{
 						Name:   "foo",
 						Script: "env",
+						Timeout: Timeout{
+							Duration: defaultTimeout,
+						},
 					},
 				},
 			},

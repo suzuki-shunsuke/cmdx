@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
@@ -16,7 +17,8 @@ import (
 )
 
 const (
-	boolFlagType = "bool"
+	boolFlagType   = "bool"
+	defaultTimeout = 36000 // default 10H
 
 	configurationFileTemplate = `---
 # the configuration file of cmdx, which is a task runner.
@@ -66,6 +68,12 @@ type (
 		BindEnvs    []string `yaml:"bind_envs"`
 		Environment map[string]string
 		Script      string
+		Timeout     Timeout
+	}
+
+	Timeout struct {
+		Duration  time.Duration
+		KillAfter time.Duration `yaml:"kill_after"`
 	}
 
 	Flag struct {
@@ -280,7 +288,7 @@ func newCommandAction(task Task, wd string) func(*cli.Context) error {
 		}
 
 		return runScript(
-			scr, wd, envs, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
+			scr, wd, envs, task.Timeout, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
 	}
 }
 
@@ -374,6 +382,10 @@ func setupTask(task *Task, bindEnvs []string) error {
 	if len(task.BindEnvs) != 0 {
 		bindEnvs = task.BindEnvs
 	}
+	if task.Timeout.Duration == 0 {
+		task.Timeout.Duration = defaultTimeout
+	}
+
 	for j, flag := range task.Flags {
 		if len(flag.BindEnvs) == 0 {
 			flag.BindEnvs = bindEnvs

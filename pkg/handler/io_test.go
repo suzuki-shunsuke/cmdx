@@ -31,9 +31,12 @@ func Test_runScript(t *testing.T) {
 			isErr:  true,
 		},
 	}
+	tio := Timeout{
+		Duration: 3600,
+	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			err := runScript(d.script, d.wd, d.envs, d.quiet, d.dryRun)
+			err := runScript(d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
 			if err != nil {
 				if d.isErr {
 					return

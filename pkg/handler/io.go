@@ -1,13 +1,18 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Songmu/timeout"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +28,7 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 	return nil
 }
 
-func runScript(script, wd string, envs []string, quiet, dryRun bool) error {
+func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun bool) error {
 	cmd := exec.Command("sh", "-c", script)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -36,10 +41,46 @@ func runScript(script, wd string, envs []string, quiet, dryRun bool) error {
 	if dryRun {
 		return nil
 	}
-	if err := cmd.Run(); err != nil {
-		return err
+	tio := &timeout.Timeout{
+		Cmd:       cmd,
+		Duration:  tioCfg.Duration * time.Second,
+		KillAfter: tioCfg.KillAfter * time.Second,
 	}
-	return nil
+
+	ctx, cancel := context.WithCancel(context.Background())
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(
+		signalChan, syscall.SIGHUP, syscall.SIGINT,
+		syscall.SIGTERM, syscall.SIGQUIT)
+	resultChan := make(chan error, 1)
+	defer cancel()
+	go func() {
+		err := func() error {
+			status, err := tio.RunContext(ctx)
+			if err != nil {
+				return err
+			}
+			if status.IsKilled() {
+				return errors.New("the command is killed")
+			}
+			if status.IsCanceled() {
+				return errors.New("the command is canceled")
+			}
+			if status.IsTimedOut() {
+				return fmt.Errorf("the command is timeout: %d sec", tioCfg.Duration)
+			}
+			return nil
+		}()
+		resultChan <- err
+	}()
+	for {
+		select {
+		case err := <-resultChan:
+			return err
+		case <-signalChan:
+			cancel()
+		}
+	}
 }
 
 func createConfigFile(p string) error {
