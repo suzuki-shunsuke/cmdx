@@ -26,24 +26,26 @@ For example, This is the tasks for `cmdx` itself.
 ```console
 $ cmdx -l
 init, i - setup git hooks
-coverage, c - test a package
+coverage, c - test a package (fzf is required)
 test, t - test
 fmt - format the go code
-vet - go vet
-lint - lint the go code
-release - release the new version
-durl - check dead links
-ci-local - run the Drone pipeline at localhost
+vet, v - go vet
+lint, l - lint the go code
+release, r - release the new version
+durl - check dead links (durl is required)
+ci-local - run the Drone pipeline at localhost (drone-cli is required)
 
 $ cmdx help release
 NAME:
    cmdx release - release the new version
 
 USAGE:
-   cmdx release [arguments...]
+   cmdx release <version>
 
 DESCRIPTION:
    release the new version
+ARGUMENTS:
+   version
 ```
 
 You can make the simple shell script rich with `cmdx`
