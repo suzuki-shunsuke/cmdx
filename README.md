@@ -6,7 +6,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/cmdx.svg)](https://github.com/suzuki-shunsuke/cmdx)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/master/LICENSE)
 
-Task runner.
+Task runner. It provides useful help messages and supports interactive prompts.
 
 ## Alternative
 
@@ -54,7 +54,7 @@ You can make the simple shell script rich with `cmdx`
 * `cmdx` provides useful help messages
 * `cmds` supports the interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
 
-`cmdx` searches the configuration file from the current directory to the root directory recursively and run the task at the directory where the configuration file exists so the result of task doesn't depend on the directory you run `cmdx`.
+`cmdx` searches the configuration file from the current directory to the root directory recursively and runs the task at the directory where the configuration file exists so the result of the task doesn't depend on the directory you run `cmdx`.
 
 ## Install
 
@@ -220,7 +220,7 @@ name | type | description
 
 ### input_envs, script_envs
 
-`input_envs` is a list of environment variables which are bound to the variable.
+`input_envs` is a list of environment variables that are bound to the variable.
 
 ```yaml
 tasks:
@@ -256,9 +256,9 @@ $ cmdx foo zzz
 zzz
 ```
 
-### timout
+### timeout
 
-`cmdx` supports the configuration about the timeout of the task.
+`cmdx` supports the configuration about the timeout of the task by [Songmu/timeout](https://github.com/Songmu/timeout).
 
 1. send SIGINT after `timeout.duration` seconds (default 36,000 seconds)
 2. if `timeout.kill_after` isn't 0, send SIGKILL after `timeout.duration + timeout.kill_after` seconds. By default `timeout.kill_after` is 0 so SIGKILL isn't sent
