@@ -150,6 +150,13 @@ $ cmdx hello --target foo
 target: foo
 ```
 
+## Example
+
+In order to understand `cmdx`, it is good to execute `cmdx` command actually.
+We prepare the sample configuration file for you to execute `cmdx`.
+
+Please see [example](example).
+
 ## Configuration
 
 path | type | description | required | default
@@ -310,10 +317,6 @@ About prompt type, please see [AlecAivazis/survey's document](https://github.com
 2. environment variable (input_envs)
 3. prompt (prompt isn't launched if the value is set by command line argument or environment variable)
 4. default value
-
-### Example
-
-Please see [example](example).
 
 ## Contributing
 
