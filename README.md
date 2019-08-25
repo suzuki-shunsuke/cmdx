@@ -313,26 +313,7 @@ About prompt type, please see [AlecAivazis/survey's document](https://github.com
 
 ### Example
 
-```yaml
----
-tasks:
-- name: hello
-  flags:
-  - name: source
-    short: s
-    description: source file path
-    default: config.json
-    required: false
-  args:
-  - name: id
-    description: id
-    required: true
-    input_envs:
-    - USER_ID
-  environment:
-    TOKEN: "*****"
-  script: "bash scripts/hello.sh ${source}"
-```
+Please see [example](example).
 
 ## Contributing
 

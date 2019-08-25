@@ -1,0 +1,92 @@
+---
+# the configuration file of cmdx, which is a task runner.
+# https://github.com/suzuki-shunsuke/cmdx
+timeout:
+  duration: 600
+  kill_after: 30
+# input_envs:
+# - "{{.name}}"
+# script_envs:
+# - "{{.name}}"
+environment:
+  FOO: foo
+  BAR: bar
+tasks:
+- name: simple
+  script: "echo $FOO"
+- name: env
+  script: echo $FOO $BAR $ZOO
+  environment:
+    BAR: barbar
+    ZOO: zoo
+- name: hello
+  description: hello task
+  usage: hello task
+  script: 'echo "Hello, {{.name}}"'
+  args:
+  - name: name
+    usage: your name
+    description: your name
+    default: Bob
+- name: install
+  short: i
+  script: "echo $INSTALL_NAME"
+  flags:
+  - name: name
+    usage: your name
+    default: Bob
+    input_envs:
+    - "{{.name}}"
+    script_envs:
+    - "INSTALL_{{.name}}"
+- name: timeout
+  script: "sleep 10"
+  timeout:
+    duration: 3
+- name: input
+  script: "echo {{.name}}"
+  flags:
+  - name: name
+    usage: your name
+    default: Bob
+    prompt:
+      type: input
+- name: input-help
+  script: "echo {{.name}}"
+  flags:
+  - name: name
+    usage: your name
+    default: Bob
+    prompt:
+      type: input
+      message: What's your name?
+      help: Please input your name.
+- name: password
+  script: "echo {{.password}}"
+  flags:
+  - name: password
+    usage: password
+    prompt:
+      type: password
+- name: select
+  script: "echo {{.select}}"
+  flags:
+  - name: select
+    prompt:
+      type: select
+      options:
+      - red
+      - green
+      - blue
+- name: multiline
+  script: "echo {{.multiline}}"
+  flags:
+  - name: multiline
+    prompt:
+      type: multiline
+- name: editor
+  script: "echo '{{.profile}}'"
+  flags:
+  - name: profile
+    prompt:
+      type: editor
