@@ -492,6 +492,9 @@ func setupTask(task *Task, cfg *Config) error {
 		scriptEnvs = cfg.ScriptEnvs
 	}
 
+	if task.Environment == nil {
+		task.Environment = map[string]string{}
+	}
 	for k, v := range cfg.Environment {
 		if _, ok := task.Environment[k]; !ok {
 			task.Environment[k] = v
