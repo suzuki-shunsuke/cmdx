@@ -210,3 +210,59 @@ prompt:
 $ cmdx editor
 ? profile [Enter to launch editor]
 ```
+
+### confirm
+
+```yaml
+- name: confirm
+  script: "echo '{{if .confirm}}Good morning{{else}}Good afternoon{{end}}' $CONFIRM"
+  flags:
+  - name: confirm
+    prompt:
+      type: confirm
+    script_envs:
+    - CONFIRM
+```
+
+```console
+$ cmdx confirm
+? confirm (y/N)
+```
+
+Type "N".
+
+```console
+$ cmdx confirm
+? confirm No
++ echo 'Good afternoon' $CONFIRM
+Good afternoon false
+```
+
+### multi select
+
+```console
+$ cmdx multi-select
+? select  [Use arrows to move, space to select, type to filter]
+> [ ]  red
+  [ ]  green
+  [ ]  blue
+```
+
+Select "red" and "blue".
+
+```console
+$ cmdx multi-select
+? select  [Use arrows to move, space to select, type to filter]
+  [x]  red
+  [ ]  green
+> [x]  blue
+```
+
+```console
+$ cmdx multi-select
+? select red, blue
++ echo [red blue] $COLORS
+[red blue] red,blue
+```
+
+`{{.select}}` is array `["red", "blue"]` and the environment variable `COLORS` is `"red,blue"`.

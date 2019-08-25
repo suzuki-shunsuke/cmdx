@@ -78,6 +78,18 @@ tasks:
       - red
       - green
       - blue
+- name: multi-select
+  script: "echo {{.select}} $COLORS"
+  flags:
+  - name: select
+    prompt:
+      type: multi_select
+      options:
+      - red
+      - green
+      - blue
+    script_envs:
+    - COLORS
 - name: multiline
   script: "echo {{.multiline}}"
   flags:
@@ -90,3 +102,11 @@ tasks:
   - name: profile
     prompt:
       type: editor
+- name: confirm
+  script: "echo '{{if .confirm}}Good morning{{else}}Good afternoon{{end}}' $CONFIRM"
+  flags:
+  - name: confirm
+    prompt:
+      type: confirm
+    script_envs:
+    - CONFIRM
