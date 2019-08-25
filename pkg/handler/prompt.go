@@ -62,3 +62,27 @@ func createPrompt(prompt Prompt) survey.Prompt {
 	}
 	return nil
 }
+
+func getValueByPrompt(prompt survey.Prompt, typ string) (interface{}, error) {
+	switch typ {
+	case confirmPromptType:
+		ans := false
+		err := survey.AskOne(prompt, &ans)
+		return ans, err
+	case "select":
+		ans := ""
+		if err := survey.AskOne(prompt, &ans); err != nil {
+			return nil, err
+		}
+		return ans, nil
+	case "multi_select":
+		ans := []string{}
+		if err := survey.AskOne(prompt, &ans); err != nil {
+			return nil, err
+		}
+		return ans, nil
+	default:
+		ans := ""
+		return ans, survey.AskOne(prompt, &ans)
+	}
+}

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
@@ -319,19 +319,16 @@ func updateVarsByArgs(
 			continue
 		}
 		if prompt := createPrompt(arg.Prompt); prompt != nil {
-			if arg.Prompt.Type == confirmPromptType {
-				ans := false
-				// TODO handle returned error
-				// set the default value
-				survey.AskOne(prompt, &ans)
-				vars[arg.Name] = ans
+			val, err := getValueByPrompt(prompt, arg.Prompt.Type)
+			if err != nil {
+				// TODO improvement
+				if arg.Default != "" {
+					vars[arg.Name] = arg.Default
+					continue
+				}
 				continue
 			}
-			ans := ""
-			if err := survey.AskOne(prompt, &ans); err != nil {
-				ans = arg.Default
-			}
-			vars[arg.Name] = ans
+			vars[arg.Name] = val
 			continue
 		}
 		if arg.Default != "" {
@@ -383,22 +380,12 @@ func newCommandAction(
 				continue
 			}
 
-			p := createPrompt(flag.Prompt)
-			if p != nil {
-				if flag.Prompt.Type == confirmPromptType {
-					ans := false
-					// TODO handle returned error
-					// set the default value
-					survey.AskOne(p, &ans)
-					vars[flag.Name] = ans
+			if p := createPrompt(flag.Prompt); p != nil {
+				val, err := getValueByPrompt(p, flag.Prompt.Type)
+				if err == nil {
+					vars[flag.Name] = val
 					continue
 				}
-				ans := ""
-				if err := survey.AskOne(p, &ans); err != nil {
-					ans = c.String(flag.Name)
-				}
-				vars[flag.Name] = ans
-				continue
 			}
 
 			switch flag.Type {
@@ -425,13 +412,21 @@ func newCommandAction(
 
 		envs := os.Environ()
 		for k, envNames := range scriptEnvs {
-			v, ok := vars[k].(string)
-			if !ok {
-				return fmt.Errorf(
-					"failed to convert the variable's value to the string: var: %s, value: %v", k, vars[k])
-			}
-			for _, e := range envNames {
-				envs = append(envs, e+"="+v)
+			switch v := vars[k].(type) {
+			case string:
+				for _, e := range envNames {
+					envs = append(envs, e+"="+v)
+				}
+			case bool:
+				a := strconv.FormatBool(v)
+				for _, e := range envNames {
+					envs = append(envs, e+"="+a)
+				}
+			case []string:
+				a := strings.Join(v, ",")
+				for _, e := range envNames {
+					envs = append(envs, e+"="+a)
+				}
 			}
 		}
 
