@@ -315,6 +315,24 @@ func Test_setupTask(t *testing.T) {
 				Timeout: Timeout{
 					Duration: defaultTimeout,
 				},
+				Environment: map[string]string{},
+			},
+		},
+		{
+			title: "set environment variable",
+			task:  &Task{},
+			cfg: &Config{
+				Environment: map[string]string{
+					"FOO": "foo",
+				},
+			},
+			exp: &Task{
+				Timeout: Timeout{
+					Duration: defaultTimeout,
+				},
+				Environment: map[string]string{
+					"FOO": "foo",
+				},
 			},
 		},
 		{
@@ -409,6 +427,7 @@ func Test_setupConfig(t *testing.T) {
 						Timeout: Timeout{
 							Duration: defaultTimeout,
 						},
+						Environment: map[string]string{},
 					},
 				},
 			},
