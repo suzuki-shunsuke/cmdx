@@ -43,6 +43,13 @@ tasks:
   script: "sleep 10"
   timeout:
     duration: 3
+- name: timeout-force-kill
+  script: |
+    trap "" SIGINT
+    sleep 3600
+  timeout:
+    duration: 3
+    kill_after: 3
 - name: input
   script: "echo {{.name}}"
   flags:

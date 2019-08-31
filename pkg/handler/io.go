@@ -7,14 +7,15 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/Songmu/timeout"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
 func readConfig(cfgFilePath string, cfg *Config) error {
@@ -42,47 +43,40 @@ func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun b
 	if dryRun {
 		return nil
 	}
-	tio := &timeout.Timeout{
-		Cmd:       cmd,
-		Duration:  tioCfg.Duration * time.Second,
-		KillAfter: tioCfg.KillAfter * time.Second,
-	}
+	runner := timeout.NewRunner(time.Duration(tioCfg.KillAfter) * time.Second)
+	runner.SetSigKillCaballback(func(targetID int) {
+		fmt.Fprintf(os.Stderr, "send SIGKILL to %d\n", targetID)
+	})
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(
+		context.Background(), time.Duration(tioCfg.Duration)*time.Second)
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(
 		signalChan, syscall.SIGHUP, syscall.SIGINT,
 		syscall.SIGTERM, syscall.SIGQUIT)
 	resultChan := make(chan error, 1)
 	defer cancel()
+	sentSignals := map[os.Signal]struct{}{}
 	go func() {
-		err := func() error {
-			status, err := tio.RunContext(ctx)
-			if err != nil {
-				return err
-			}
-			if status.IsKilled() {
-				return errors.New("the command is killed")
-			}
-			if status.IsCanceled() {
-				return errors.New("the command is canceled")
-			}
-			if status.IsTimedOut() {
-				return fmt.Errorf("the command is timeout: %d sec", tioCfg.Duration)
-			}
-			if status.Code != 0 {
-				return cli.NewExitError("", status.Code)
-			}
-			return nil
-		}()
-		resultChan <- err
+		resultChan <- runner.Run(ctx, cmd)
 	}()
+	var once sync.Once
 	for {
 		select {
+		case <-ctx.Done():
+			once.Do(func() {
+				fmt.Fprintln(
+					os.Stderr, "command timeout "+strconv.Itoa(tioCfg.Duration)+" seconds")
+			})
 		case err := <-resultChan:
 			return err
-		case <-signalChan:
-			cancel()
+		case sig := <-signalChan:
+			if _, ok := sentSignals[sig]; ok {
+				continue
+			}
+			sentSignals[sig] = struct{}{}
+			fmt.Fprintf(os.Stderr, "send signal %d\n", sig)
+			runner.SendSignal(sig.(syscall.Signal))
 		}
 	}
 }
