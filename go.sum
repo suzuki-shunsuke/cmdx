@@ -25,8 +25,8 @@ github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJy
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/suzuki-shunsuke/go-cliutil v0.3.0 h1:nDMHCFT3LNShus5DxZ8FcHhnIrdqRH00E+BWZDpbaUw=
 github.com/suzuki-shunsuke/go-cliutil v0.3.0/go.mod h1:XdMIFYBkqjjXzLcAga1iKTbFKj4DunDXXmEqegz2HnY=
-github.com/suzuki-shunsuke/go-timeout v0.2.0 h1:lbVkeZVx/5XuJQmPc41GhL2xhC6Wy1gg8W6xAN/XoZ8=
-github.com/suzuki-shunsuke/go-timeout v0.2.0/go.mod h1:5D24GCi0sJYFfk8yptxu7gw4YGo7+oEAbPzLLwqI7V4=
+github.com/suzuki-shunsuke/go-timeout v0.2.1 h1:owpOlUxNfBUEc30+POjbTXdDRahBJ6ExD5qngVTbWp8=
+github.com/suzuki-shunsuke/go-timeout v0.2.1/go.mod h1:46z+hwEIbd+G3m0G9U+u/0uBD6zcx2q8YsCia0+gEUs=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.21.0 h1:wYSSj06510qPIzGSua9ZqsncMmWE3Zr55KBERygyrxE=
 github.com/urfave/cli v1.21.0/go.mod h1:lxDj6qX9Q6lWQxIrbrT0nwecwUtRnhVZAJjJZrVUZZQ=
