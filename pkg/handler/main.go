@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
@@ -87,8 +86,8 @@ type (
 	}
 
 	Timeout struct {
-		Duration  time.Duration
-		KillAfter time.Duration `yaml:"kill_after"`
+		Duration  int
+		KillAfter int `yaml:"kill_after"`
 	}
 
 	Prompt struct {

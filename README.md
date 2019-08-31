@@ -265,7 +265,7 @@ zzz
 
 ### timeout
 
-`cmdx` supports the configuration about the timeout of the task by [Songmu/timeout](https://github.com/Songmu/timeout).
+`cmdx` supports the configuration about the timeout of the task.
 
 1. send SIGINT after `timeout.duration` seconds (default 36,000 seconds)
 2. if `timeout.kill_after` isn't 0, send SIGKILL after `timeout.duration + timeout.kill_after` seconds. By default `timeout.kill_after` is 0 so SIGKILL isn't sent
