@@ -200,16 +200,18 @@ func setupApp(app *cli.App) {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "config, c",
-			Usage: "configuration file path",
+			Name:   "config, c",
+			Usage:  "configuration file path",
+			EnvVar: "CMDX_CONFIG_PATH",
 		},
 		cli.StringFlag{
 			Name:  "name, n",
 			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
 		},
 		cli.StringFlag{
-			Name:  "working-dir, w",
-			Usage: "The working directory path. By default, the task is run on the directory where the configuration file is found",
+			Name:   "working-dir, w",
+			Usage:  "The working directory path. By default, the task is run on the directory where the configuration file is found",
+			EnvVar: "CMDX_WORKING_DIR",
 		},
 		cli.BoolFlag{
 			Name:  "init, i",
