@@ -135,6 +135,7 @@ func mainAction(c *cli.Context) error {
 	cfgFilePath := c.GlobalString("config")
 	initFlag := c.GlobalBool("init")
 	listFlag := c.GlobalBool("list")
+	workingDirFlag := c.GlobalString("working-dir")
 	cfgFileName := c.GlobalString("name")
 	if initFlag {
 		if cfgFilePath != "" {
@@ -180,7 +181,10 @@ func mainAction(c *cli.Context) error {
 
 	app := cli.NewApp()
 	setupApp(app)
-	updateAppWithConfig(app, &cfg, filepath.Dir(cfgFilePath))
+	if workingDirFlag == "" {
+		workingDirFlag = filepath.Dir(cfgFilePath)
+	}
+	updateAppWithConfig(app, &cfg, workingDirFlag)
 	return app.Run(os.Args)
 }
 
@@ -202,6 +206,10 @@ func setupApp(app *cli.App) {
 		cli.StringFlag{
 			Name:  "name, n",
 			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
+		},
+		cli.StringFlag{
+			Name:  "working-dir, w",
+			Usage: "The working directory path. By default, the task is run on the directory where the configuration file is found",
 		},
 		cli.BoolFlag{
 			Name:  "init, i",
