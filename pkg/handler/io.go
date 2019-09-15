@@ -34,6 +34,7 @@ func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun b
 	cmd := exec.Command("sh", "-c", script)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 	cmd.Dir = wd
 
 	cmd.Env = append(os.Environ(), envs...)
