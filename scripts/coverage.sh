@@ -1,4 +1,4 @@
-echoEval() {
+ee() {
   echo "+ $@"
   eval "$@"
 }
@@ -19,6 +19,6 @@ if [ ! -d "$target" ]; then
   exit 1
 fi
 
-echoEval mkdir -p .coverage/$target || exit 1
-echoEval go test ./$target -coverprofile=.coverage/$target/coverage.txt -covermode=atomic || exit 1
-echoEval go tool cover -html=.coverage/$target/coverage.txt
+ee mkdir -p .coverage/$target || exit 1
+ee go test ./$target -coverprofile=.coverage/$target/coverage.txt -covermode=atomic || exit 1
+ee go tool cover -html=.coverage/$target/coverage.txt
