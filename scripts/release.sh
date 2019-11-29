@@ -28,8 +28,9 @@ fi
 
 echoEval cd `dirname $0`/..
 
-echo "create pkg/domain/version.go"
-cat << EOS > pkg/domain/version.go || exit 1
+VERSION_FILE=pkg/domain/version.go
+echo "create $VERSION_FILE"
+cat << EOS > $VERSION_FILE || exit 1
 package domain
 
 // Don't edit this file.
@@ -39,7 +40,7 @@ package domain
 const Version = "$VERSION"
 EOS
 
-echoEval git add pkg/domain/version.go || exit 1
+echoEval git add $VERSION_FILE || exit 1
 echo '+ git commit -m "build: update version to $TAG"'
 git commit -m "build: update version to $TAG" || exit 1
 echoEval git tag $TAG || exit 1
