@@ -14,18 +14,17 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
 func readConfig(cfgFilePath string, cfg *Config) error {
 	f, err := os.Open(cfgFilePath)
 	if err != nil {
-		return errors.Wrap(err, "failed to open the configuration file: "+cfgFilePath)
+		return fmt.Errorf("failed to open the configuration file %s: %w", cfgFilePath, err)
 	}
 	defer f.Close()
 	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		return errors.Wrap(err, "failed to read the configuration file: "+cfgFilePath)
+		return fmt.Errorf("failed to read the configuration file %s: %w", cfgFilePath, err)
 	}
 	return nil
 }
@@ -88,7 +87,7 @@ func createConfigFile(p string) error {
 		return nil
 	}
 	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0644); err != nil {
-		return errors.Wrap(err, "failed to create the configuration file: "+p)
+		return fmt.Errorf("failed to create the configuration file %s: %w", p, err)
 	}
 	return nil
 }
