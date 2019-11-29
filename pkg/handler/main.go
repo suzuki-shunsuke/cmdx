@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pkg/errors"
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli"
 
@@ -159,7 +159,7 @@ func mainAction(c *cli.Context) error {
 		return err
 	}
 	if err := validateConfig(&cfg); err != nil {
-		return errors.Wrap(err, "please fix the configuration file")
+		return fmt.Errorf("please fix the configuration file: %w", err)
 	}
 
 	if err := setupConfig(&cfg); err != nil {
@@ -445,7 +445,7 @@ func newCommandAction(
 
 		scr, err := renderTemplate(task.Script, vars)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse the script: "+task.Script)
+			return fmt.Errorf("failed to parse the script - %s: %w", task.Script, err)
 		}
 
 		return runScript(
@@ -592,7 +592,7 @@ func getConfigFilePath(cfgFileName string) (string, error) {
 	}
 	wd, err := os.Getwd()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get the current directory path")
+		return "", fmt.Errorf("failed to get the current directory path: %w", err)
 	}
 	p, err := cliutil.FindFile(wd, func(name string) bool {
 		_, err := os.Stat(name)
