@@ -10,6 +10,16 @@ steps:
   - sh scripts/durl.sh
 ---
 kind: pipeline
+name: shellcheck
+clone:
+  depth: 1
+steps:
+- name: shellcheck
+  image: koalaman/shellcheck-alpine:v0.7.0
+  commands:
+  - shellcheck scripts/*
+---
+kind: pipeline
 name: build
 clone:
   depth: 1
