@@ -49,3 +49,11 @@ tasks:
   script: time drone exec --pipeline build --event pull_request
   environment:
     LOCAL: "true"
+- name: shellcheck
+  description: shellcheck
+  usage: shellcheck
+  script: shellcheck scripts/*
+- name: shfmt
+  description: shfmt
+  usage: shfmt
+  script: shfmt -l -w scripts/*

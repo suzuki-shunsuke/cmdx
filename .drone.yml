@@ -10,6 +10,20 @@ steps:
   - sh scripts/durl.sh
 ---
 kind: pipeline
+name: shell scripts
+clone:
+  depth: 1
+steps:
+- name: shellcheck
+  image: koalaman/shellcheck-alpine:v0.7.0
+  commands:
+  - shellcheck scripts/*
+- name: shfmt
+  image: mvdan/shfmt:v3.0.0
+  commands:
+  - shfmt -d .
+---
+kind: pipeline
 name: build
 clone:
   depth: 1
@@ -37,7 +51,7 @@ steps:
   image: *image_go
   commands:
   # bash and cgo seem to be required
-  - bash scripts/codecov-test.sh
+  - bash scripts/codecov_test.sh
   - curl -s https://codecov.io/bash > /tmp/codecov.sh
   - test "$LOCAL" = "true" -o "$DRONE_BUILD_EVENT" = "pull_request" || bash /tmp/codecov.sh
   environment:
