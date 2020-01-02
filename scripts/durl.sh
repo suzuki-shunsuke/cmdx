@@ -2,5 +2,5 @@
 
 find . \
   -type d -name .git -prune -o \
-  -type f -print | \
+  -type f -print |
   durl check || exit 1
