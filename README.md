@@ -155,7 +155,7 @@ target: foo
 In order to understand `cmdx`, it is good to execute `cmdx` command actually.
 We prepare the sample configuration file for you to execute `cmdx`.
 
-Please see [example](example).
+Please see [examples](examples).
 
 ## Configuration
 
