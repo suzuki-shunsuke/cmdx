@@ -57,3 +57,7 @@ tasks:
   description: shfmt
   usage: shfmt
   script: shfmt -l -w scripts/* githooks/*
+- name: yamllint
+  description: yamllint
+  usage: yamllint
+  script: 'find . \( -name "*.yml" -o -name "*.yaml" \) -print0 | xargs -0 yamllint -c .yamllint.yml'
