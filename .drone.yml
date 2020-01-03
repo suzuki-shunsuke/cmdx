@@ -32,7 +32,7 @@ volumes:
   temp: {}
 steps:
 - name: download go modules
-  image: &image_go golang:1.13.4
+  image: &image_go golang:1.13.5
   commands:
   - go mod download
   volumes: &volumes
@@ -41,7 +41,7 @@ steps:
   environment:
     GOPATH: /go
 - name: golangci-lint
-  image: golangci/golangci-lint:v1.21.0-alpine
+  image: golangci/golangci-lint:v1.22.2-alpine
   commands:
   - golangci-lint run
   environment:
