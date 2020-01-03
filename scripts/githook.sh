@@ -7,6 +7,6 @@ ee() {
 
 cd "$(dirname "$0")"/.. || exit 1
 if [ ! -f .git/hooks/pre-commit ]; then
-  ee ln -s ../../githook/pre-commit.sh .git/hooks/pre-commit || exit 1
+  ee ln -s ../../githooks/pre-commit.sh .git/hooks/pre-commit || exit 1
 fi
-ee chmod a+x githook/*
+ee chmod a+x githooks/*
