@@ -17,7 +17,7 @@ steps:
 - name: shellcheck
   image: koalaman/shellcheck-alpine:v0.7.0
   commands:
-  - shellcheck scripts/*
+  - shellcheck scripts/* githooks/*
 - name: shfmt
   image: mvdan/shfmt:v3.0.0
   commands:
