@@ -52,8 +52,8 @@ tasks:
 - name: shellcheck
   description: shellcheck
   usage: shellcheck
-  script: shellcheck scripts/*
+  script: shellcheck scripts/* githooks/*
 - name: shfmt
   description: shfmt
   usage: shfmt
-  script: shfmt -l -w scripts/*
+  script: shfmt -l -w scripts/* githooks/*

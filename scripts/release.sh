@@ -2,6 +2,9 @@
 # Usage
 #   bash scripts/tag.sh v0.3.2
 
+set -eu
+set -o pipefail
+
 REMOTE=https://github.com/suzuki-shunsuke/cmdx
 
 ee() {
@@ -9,7 +12,7 @@ ee() {
   eval "$@"
 }
 
-BRANCH=$(git branch | grep "^\* " | sed -e "s/^\* \(.*\)/\1/")
+BRANCH="$(git branch | grep "^\* " | sed -e "s/^\* \(.*\)/\1/")"
 if [ "$BRANCH" != "master" ]; then
   read -r -p "The current branch isn't master but $BRANCH. Are you ok? (y/n)" YN
   if [ "${YN}" != "y" ]; then
@@ -27,11 +30,11 @@ if [ "$TAG" = "$VERSION" ]; then
   exit 1
 fi
 
-ee cd "$(dirname "$0")"/.. || exit 1
+ee cd "$(dirname "$0")/.."
 
 VERSION_FILE=pkg/domain/version.go
 echo "create $VERSION_FILE"
-cat << EOS > $VERSION_FILE || exit 1
+cat << EOS > "$VERSION_FILE"
 package domain
 
 // Don't edit this file.
@@ -41,9 +44,9 @@ package domain
 const Version = "$VERSION"
 EOS
 
-ee git add "$VERSION_FILE" || exit 1
+ee git add "$VERSION_FILE"
 echo "+ git commit -m \"build: update version to $TAG\""
-git commit -m "build: update version to $TAG" || exit 1
-ee git tag "$TAG" || exit 1
-ee git push "$REMOTE" "$BRANCH" || exit 1
+git commit -m "build: update version to $TAG"
+ee git tag "$TAG"
+ee git push "$REMOTE" "$BRANCH"
 ee git push "$REMOTE" "$TAG"
