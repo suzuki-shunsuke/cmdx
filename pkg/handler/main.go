@@ -38,7 +38,7 @@ tasks:
   # short: h
   description: hello task
   flags:
-	# - name: source
+  # - name: source
   #   short: s
   #   usage: source file path
   #   description: source file path
@@ -49,11 +49,11 @@ tasks:
   #   usage: force
   #   type: bool
   args:
-	# - name: name
+  # - name: name
   #   usage: source file path
   #   required: true
   #   input_envs:
-	#   - NAME
+  #   - NAME
   environment:
     FOO: foo
   script: "echo $FOO"
