@@ -167,6 +167,9 @@ func mainAction(c *cli.Context) error {
 			if helpFlag && cfgFileName == "" {
 				return cli.ShowAppHelp(c)
 			}
+			if c.NArg() == 1 && c.Args().First() == "help" && cfgFileName == "" {
+				return cli.ShowAppHelp(c)
+			}
 			return err
 		}
 	}
