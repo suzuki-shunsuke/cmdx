@@ -125,7 +125,7 @@ func Main() error {
 	app.HideHelp = true
 	setupApp(app)
 
-	app.Action = cliutil.WrapAction(mainAction)
+	app.Action = mainAction
 
 	app.CustomAppHelpTemplate = `cmdx - task runner
 https://github.com/suzuki-shunsuke/cmdx
@@ -322,7 +322,7 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             cliutil.WrapAction(newCommandAction(task, wd, scriptEnvs)),
+		Action:             newCommandAction(task, wd, scriptEnvs),
 		CustomHelpTemplate: help,
 	}
 }
