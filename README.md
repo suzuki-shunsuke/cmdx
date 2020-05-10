@@ -177,6 +177,10 @@ task.script_envs | []string | task level environment variable binding | false | 
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `sh -c` | true |
 task.timeout | timeout | the task command timeout | false |
+task.require | require | requirement of task | false | {}
+require.exec | []stringArray | required executable files | false | []
+require.environment | []stringArray | required environment variables | false | []
+stringArray | array whose element is string or array of string | |
 timtout.duration | int | the task command timeout (second) | false | 36000 (10 hours)
 timtout.kill_after | int | the duration the kill signal is sent after `timeout.duration` | false | 0, which means the command isn't killed
 flag.name | string | the flag name | true |
@@ -211,6 +215,14 @@ For example,
 ```yaml
 # refer the value of the argument "source"
 script: "echo {{.source}}"
+```
+
+Multiple lines
+
+```yaml
+script: |
+  echo foo
+  echo bar
 ```
 
 If the positional argument is optional and the argument isn't passed and the default value isn't set,
@@ -294,6 +306,85 @@ timeout:
 tasks:
 - name: foo # the timeout.duration is 3
   script: sleep 100
+```
+
+### require
+
+`task.require` is the requirement to run the task.
+
+#### require.exec
+
+For example, in the following example both of `curl` and `wget` is required.
+
+```yaml
+tasks:
+- name: foo
+  script: curl http://example.com
+  require:
+    exec:
+    - curl
+    - wget
+```
+
+If `curl` isn't installed, the task is failed.
+
+```
+$ cmdx foo
+curl is required
+```
+
+Note that the shell's alias is ignored.
+Internally, [exec.LookupPath](https://golang.org/pkg/os/exec/#LookPath) is used.
+
+In the following example, either `curl` or `wget` is required.
+
+```yaml
+tasks:
+- name: foo
+  script: curl http://example.com
+  require:
+    exec:
+    - - curl
+      - wget
+```
+
+```
+$ cmdx foo
+one of the following is required: curl, wget
+```
+
+#### require.environment
+
+`require.environment` is the required environment variables.
+Note that if the value of the environment variable is an emtpy string, the environment variable is treated as unset.
+
+```yaml
+tasks:
+- name: foo
+  script: curl http://example.com
+  require:
+    environment:
+    - GITHUB_TOKEN
+```
+
+```
+$ cmdx foo
+the environment variable 'GITHUB_TOKEN' is required
+```
+
+```yaml
+tasks:
+- name: foo
+  script: curl http://example.com
+  require:
+    environment:
+    - - GITHUB_TOKEN
+      - GITHUB_ACCESS_TOKEN
+```
+
+```
+$ cmdx foo
+one of the following environment variables is required: GITHUB_TOKEN, GITHUB_ACCESS_TOKEN
 ```
 
 ## prompt
