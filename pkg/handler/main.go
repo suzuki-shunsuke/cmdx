@@ -88,7 +88,8 @@ type (
 	}
 
 	Require struct {
-		Exec []StrList
+		Exec        []StrList
+		Environment []StrList
 	}
 
 	StrList []string
@@ -444,6 +445,25 @@ func newCommandAction(
 					return errors.New(requires[0] + " is required")
 				}
 				return errors.New("one of the following is required: " + strings.Join(requires, ", "))
+			}
+		}
+
+		for _, requires := range task.Require.Environment {
+			if len(requires) == 0 {
+				continue
+			}
+			f := false
+			for _, require := range requires {
+				if os.Getenv(require) != "" {
+					f = true
+					break
+				}
+			}
+			if !f {
+				if len(requires) == 1 {
+					return errors.New("the environment variable '" + requires[0] + "' is required")
+				}
+				return errors.New("one of the following environment variables is required: " + strings.Join(requires, ", "))
 			}
 		}
 
