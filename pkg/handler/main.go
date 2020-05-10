@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -83,7 +84,14 @@ type (
 		Environment map[string]string
 		Script      string
 		Timeout     Timeout
+		Require     Require
 	}
+
+	Require struct {
+		Exec []StrList
+	}
+
+	StrList []string
 
 	Timeout struct {
 		Duration  int
@@ -119,6 +127,29 @@ type (
 		Prompt     Prompt
 	}
 )
+
+func (list *StrList) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var val interface{}
+	if err := unmarshal(&val); err != nil {
+		return err
+	}
+	if s, ok := val.(string); ok {
+		*list = []string{s}
+		return nil
+	}
+	if intfArr, ok := val.([]interface{}); ok {
+		strArr := make([]string, len(intfArr))
+		for i, intf := range intfArr {
+			if s, ok := intf.(string); ok {
+				strArr[i] = s
+				continue
+			}
+			return fmt.Errorf("the type of the value must be string: %v", intf)
+		}
+		*list = strArr
+	}
+	return nil
+}
 
 func Main() error {
 	app := cli.NewApp()
@@ -396,6 +427,25 @@ func newCommandAction(
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
+
+		for _, requires := range task.Require.Exec {
+			if len(requires) == 0 {
+				continue
+			}
+			f := false
+			for _, require := range requires {
+				if _, err := exec.LookPath(require); err == nil {
+					f = true
+					break
+				}
+			}
+			if !f {
+				if len(requires) == 1 {
+					return errors.New(requires[0] + " is required")
+				}
+				return errors.New("one of the following is required: " + strings.Join(requires, ", "))
+			}
+		}
 
 		vars := map[string]interface{}{}
 
