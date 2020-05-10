@@ -170,6 +170,10 @@ func mainAction(c *cli.Context) error {
 			if c.NArg() == 1 && c.Args().First() == "help" && cfgFileName == "" {
 				return cli.ShowAppHelp(c)
 			}
+			if c.NArg() == 1 && c.Args().First() == "version" && cfgFileName == "" {
+				cli.ShowVersion(c)
+				return nil
+			}
 			return err
 		}
 	}
