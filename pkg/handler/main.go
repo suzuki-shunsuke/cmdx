@@ -127,6 +127,18 @@ func Main() error {
 
 	app.Action = cliutil.WrapAction(mainAction)
 
+	app.CustomAppHelpTemplate = `cmdx - task runner
+https://github.com/suzuki-shunsuke/cmdx
+
+Configuration file isn't found.
+First of all, let's create a configuration file.
+
+$ cmdx --init
+
+Or if the configuration file already exists but the file path is unusual, please specify the path by --config (-c) option.
+
+$ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
+`
 	return app.Run(os.Args)
 }
 
@@ -135,6 +147,7 @@ func mainAction(c *cli.Context) error {
 	cfgFilePath := c.GlobalString("config")
 	initFlag := c.GlobalBool("init")
 	listFlag := c.GlobalBool("list")
+	helpFlag := c.GlobalBool("help")
 	workingDirFlag := c.GlobalString("working-dir")
 	cfgFileName := c.GlobalString("name")
 	if initFlag {
@@ -151,6 +164,9 @@ func mainAction(c *cli.Context) error {
 		var err error
 		cfgFilePath, err = getConfigFilePath(cfgFileName)
 		if err != nil {
+			if helpFlag && cfgFileName == "" {
+				return cli.ShowAppHelp(c)
+			}
 			return err
 		}
 	}
