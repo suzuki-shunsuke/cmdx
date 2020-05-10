@@ -14,6 +14,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/suzuki-shunsuke/go-error-with-exit-code/ecerror"
 	"github.com/suzuki-shunsuke/go-timeout/timeout"
 )
 
@@ -69,7 +70,10 @@ func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun b
 					os.Stderr, "command timeout "+strconv.Itoa(tioCfg.Duration)+" seconds")
 			})
 		case err := <-resultChan:
-			return err
+			if err == nil {
+				return nil
+			}
+			return ecerror.Wrap(err, cmd.ProcessState.ExitCode())
 		case sig := <-signalChan:
 			if _, ok := sentSignals[sig]; ok {
 				continue
