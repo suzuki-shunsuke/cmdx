@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -487,124 +485,27 @@ func newCommandAction(
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
-
-		for _, requires := range task.Require.Exec {
-			if len(requires) == 0 {
-				continue
-			}
-			f := false
-			for _, require := range requires {
-				if _, err := exec.LookPath(require); err == nil {
-					f = true
-					break
-				}
-			}
-			if !f {
-				if len(requires) == 1 {
-					return errors.New(requires[0] + " is required")
-				}
-				return errors.New("one of the following is required: " + strings.Join(requires, ", "))
-			}
+		if err := requireExec(task.Require.Exec); err != nil {
+			return err
 		}
-
-		for _, requires := range task.Require.Environment {
-			if len(requires) == 0 {
-				continue
-			}
-			f := false
-			for _, require := range requires {
-				if os.Getenv(require) != "" {
-					f = true
-					break
-				}
-			}
-			if !f {
-				if len(requires) == 1 {
-					return errors.New("the environment variable '" + requires[0] + "' is required")
-				}
-				return errors.New("one of the following environment variables is required: " + strings.Join(requires, ", "))
-			}
+		if err := requireEnv(task.Require.Environment); err != nil {
+			return err
 		}
 
 		vars := map[string]interface{}{}
 
-		for _, flag := range task.Flags {
-			if c.IsSet(flag.Name) {
-				var val interface{}
-				switch flag.Type {
-				case boolFlagType:
-					val = c.Bool(flag.Name)
-				default:
-					s := c.String(flag.Name)
-					if err := validateValueWithValidates(s, flag.Validate); err != nil {
-						return fmt.Errorf(flag.Name+" is invalid: %w", err)
-					}
-					val = s
-				}
-
-				vars[flag.Name] = val
-				continue
-			}
-
-			if p := createPrompt(flag.Prompt); p != nil {
-				val, err := getValueByPrompt(p, flag.Prompt.Type)
-				if err == nil {
-					if s, ok := val.(string); ok {
-						if err := validateValueWithValidates(s, flag.Validate); err != nil {
-							return fmt.Errorf(flag.Name+" is invalid: %w", err)
-						}
-					}
-
-					vars[flag.Name] = val
-					continue
-				}
-			}
-
-			switch flag.Type {
-			case boolFlagType:
-				// don't ues c.Generic if flag.Type == "bool"
-				// the value in the template is treated as false
-				vars[flag.Name] = c.Bool(flag.Name)
-			default:
-				if v := c.String(flag.Name); v != "" {
-					if err := validateValueWithValidates(v, flag.Validate); err != nil {
-						return fmt.Errorf(flag.Name+" is invalid: %w", err)
-					}
-
-					vars[flag.Name] = v
-					continue
-				}
-				if flag.Required {
-					return errors.New(`the flag "` + flag.Name + `" is required`)
-				}
-				vars[flag.Name] = ""
-			}
-		}
-
-		err := updateVarsByArgs(task.Args, c.Args(), vars)
-		if err != nil {
+		// get flag values and set them to vars
+		if err := setFlagValues(c, task.Flags, vars); err != nil {
 			return err
 		}
 
-		envs := os.Environ()
-		for k, envNames := range scriptEnvs {
-			switch v := vars[k].(type) {
-			case string:
-				for _, e := range envNames {
-					envs = append(envs, e+"="+v)
-				}
-			case bool:
-				a := strconv.FormatBool(v)
-				for _, e := range envNames {
-					envs = append(envs, e+"="+a)
-				}
-			case []string:
-				a := strings.Join(v, ",")
-				for _, e := range envNames {
-					envs = append(envs, e+"="+a)
-				}
-			}
+		// get args and set them to vars
+		if err := updateVarsByArgs(task.Args, c.Args(), vars); err != nil {
+			return err
 		}
+
+		// update environment variables which are set to script
+		envs := bindScriptEnvs(os.Environ(), vars, scriptEnvs)
 
 		for k, v := range task.Environment {
 			envs = append(envs, k+"="+v)
