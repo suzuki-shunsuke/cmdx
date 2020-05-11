@@ -7,20 +7,18 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getFlagValue(c *cli.Context, flag Flag, vars map[string]interface{}) (interface{}, error) {
+func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
 	if c.IsSet(flag.Name) {
-		var val interface{}
 		switch flag.Type {
 		case boolFlagType:
-			val = c.Bool(flag.Name)
+			return c.Bool(flag.Name), nil
 		default:
 			s := c.String(flag.Name)
 			if err := validateValueWithValidates(s, flag.Validate); err != nil {
 				return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
 			}
-			val = s
+			return s, nil
 		}
-		return val, nil
 	}
 
 	if p := createPrompt(flag.Prompt); p != nil {
@@ -56,7 +54,7 @@ func getFlagValue(c *cli.Context, flag Flag, vars map[string]interface{}) (inter
 
 func setFlagValues(c *cli.Context, flags []Flag, vars map[string]interface{}) error {
 	for _, flag := range flags {
-		val, err := getFlagValue(c, flag, vars)
+		val, err := getFlagValue(c, flag)
 		if err != nil {
 			return err
 		}
