@@ -116,6 +116,7 @@ type (
 		Type       string
 		Required   bool
 		Prompt     Prompt
+		Validate   []Validate
 	}
 
 	Arg struct {
@@ -534,8 +535,13 @@ func newCommandAction(
 				case boolFlagType:
 					val = c.Bool(flag.Name)
 				default:
-					val = c.String(flag.Name)
+					s := c.String(flag.Name)
+					if err := validateValueWithValidates(s, flag.Validate); err != nil {
+						return fmt.Errorf(flag.Name+" is invalid: %w", err)
+					}
+					val = s
 				}
+
 				vars[flag.Name] = val
 				continue
 			}
@@ -543,6 +549,12 @@ func newCommandAction(
 			if p := createPrompt(flag.Prompt); p != nil {
 				val, err := getValueByPrompt(p, flag.Prompt.Type)
 				if err == nil {
+					if s, ok := val.(string); ok {
+						if err := validateValueWithValidates(s, flag.Validate); err != nil {
+							return fmt.Errorf(flag.Name+" is invalid: %w", err)
+						}
+					}
+
 					vars[flag.Name] = val
 					continue
 				}
@@ -555,6 +567,10 @@ func newCommandAction(
 				vars[flag.Name] = c.Bool(flag.Name)
 			default:
 				if v := c.String(flag.Name); v != "" {
+					if err := validateValueWithValidates(v, flag.Validate); err != nil {
+						return fmt.Errorf(flag.Name+" is invalid: %w", err)
+					}
+
 					vars[flag.Name] = v
 					continue
 				}
