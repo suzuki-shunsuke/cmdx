@@ -191,6 +191,7 @@ flag.input_envs | []string | flag level environment variable binding | false | [
 flag.script_envs | []string | flag level environment variable binding | false | []
 flag.type | string | the flag type. Either "string" or "bool" | false | "string"
 flag.required | bool | whether the flag argument is required | false | false
+flag.validate | []validate | parameters to validate the value of flag | false | []
 flag.prompt | prompt | prompt | false | prompt is disabled
 prompt.type | string | prompt type | true |
 prompt.message | string | prompt message | false | `flag.name` or `arg.name`
@@ -203,6 +204,15 @@ arg.input_envs | []string | the positional argument level environment variable b
 arg.script_envs | []string | the positional argument level environment variable binding | false | []
 arg.required | bool | whether the argument is required | false | false
 arg.prompt | prompt | prompt | false | prompt is disabled
+arg.validate | []validate | parameters to validate the value of arg | false | []
+validate.type | string | value type (`email`, `url`, `int`) | false |
+validate.regexp | string | the regular expression | false |
+validate.min_length | int | the minimum string length | false |
+validate.max_length | int | the maximum string length | false |
+validate.prefix | string | the prefix | false |
+validate.suffix | string | the suffix | false |
+validate.contain | string | the string which the value should contain | false |
+validate.enum | []string | enum | false |
 
 ### script
 
@@ -385,6 +395,28 @@ tasks:
 ```
 $ cmdx foo
 one of the following environment variables is required: GITHUB_TOKEN, GITHUB_ACCESS_TOKEN
+```
+
+## validation
+
+`cmdx` supports to validate `args` and `flags`.
+
+For example,
+
+```yaml
+# .cmdx.yaml
+tasks:
+- name: hello
+  script: echo hello
+  args:
+  - name: age
+    validate:
+    - type: int
+```
+
+```
+$ cmdx hello foo
+age is invalid: must be int: foo
 ```
 
 ## prompt

@@ -116,6 +116,7 @@ type (
 		Type       string
 		Required   bool
 		Prompt     Prompt
+		Validate   []Validate
 	}
 
 	Arg struct {
@@ -126,6 +127,21 @@ type (
 		ScriptEnvs []string `yaml:"script_envs"`
 		Required   bool
 		Prompt     Prompt
+		Validate   []Validate
+	}
+
+	Validate struct {
+		Type      string
+		RegExp    string `yaml:"regexp"`
+		MinLength int    `yaml:"min_length"`
+		MaxLength int    `yaml:"max_length"`
+		Prefix    string
+		Suffix    string
+		Contain   string
+		Enum      []string
+
+		Min int
+		Max int
 	}
 )
 
@@ -400,6 +416,9 @@ func updateVarsByArgs(
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
+			if err := validateValueWithValidates(val, arg.Validate); err != nil {
+				return fmt.Errorf(arg.Name+" is invalid: %w", err)
+			}
 			continue
 		}
 		// the positional argument isn't given
@@ -408,6 +427,9 @@ func updateVarsByArgs(
 			if v, ok := os.LookupEnv(e); ok {
 				isBoundEnv = true
 				vars[arg.Name] = v
+				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+				}
 				break
 			}
 		}
@@ -423,6 +445,11 @@ func updateVarsByArgs(
 					continue
 				}
 				continue
+			}
+			if v, ok := val.(string); ok {
+				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+				}
 			}
 			vars[arg.Name] = val
 			continue
@@ -508,8 +535,13 @@ func newCommandAction(
 				case boolFlagType:
 					val = c.Bool(flag.Name)
 				default:
-					val = c.String(flag.Name)
+					s := c.String(flag.Name)
+					if err := validateValueWithValidates(s, flag.Validate); err != nil {
+						return fmt.Errorf(flag.Name+" is invalid: %w", err)
+					}
+					val = s
 				}
+
 				vars[flag.Name] = val
 				continue
 			}
@@ -517,6 +549,12 @@ func newCommandAction(
 			if p := createPrompt(flag.Prompt); p != nil {
 				val, err := getValueByPrompt(p, flag.Prompt.Type)
 				if err == nil {
+					if s, ok := val.(string); ok {
+						if err := validateValueWithValidates(s, flag.Validate); err != nil {
+							return fmt.Errorf(flag.Name+" is invalid: %w", err)
+						}
+					}
+
 					vars[flag.Name] = val
 					continue
 				}
@@ -529,6 +567,10 @@ func newCommandAction(
 				vars[flag.Name] = c.Bool(flag.Name)
 			default:
 				if v := c.String(flag.Name); v != "" {
+					if err := validateValueWithValidates(v, flag.Validate); err != nil {
+						return fmt.Errorf(flag.Name+" is invalid: %w", err)
+					}
+
 					vars[flag.Name] = v
 					continue
 				}
