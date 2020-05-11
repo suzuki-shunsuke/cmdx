@@ -512,3 +512,21 @@ func TestStrList_UnmarshalYAML(t *testing.T) {
 		assert.Equal(t, d.exp, list)
 	}
 }
+
+func Test_getHelp(t *testing.T) {
+	data := []struct {
+		title string
+		txt   string
+		task  Task
+		exp   string
+	}{
+		{
+			title: "not update",
+			txt:   "hello",
+			exp:   "hello",
+		},
+	}
+	for _, d := range data {
+		assert.Equal(t, d.exp, getHelp(d.txt, d.task))
+	}
+}
