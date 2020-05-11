@@ -26,9 +26,9 @@ func Test_bindScriptEnvs(t *testing.T) {
 				"list": []string{"foo", "bar"},
 			},
 			scriptEnvs: map[string][]string{
-				"age":  []string{"AGE", "ZOO"},
-				"list": []string{"BAR"},
-				"man":  []string{"BOO"},
+				"age":  {"AGE", "ZOO"},
+				"list": {"BAR"},
+				"man":  {"BOO"},
 			},
 			exp: []string{
 				"FOO=foo",
