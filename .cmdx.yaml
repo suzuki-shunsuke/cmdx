@@ -17,20 +17,33 @@ tasks:
   description: test
   usage: test
   script: go test ./... -covermode=atomic
+  require:
+    exec:
+    - go
 - name: fmt
   description: format the go code
   usage: format the go code
   script: bash scripts/fmt.sh
+  require:
+    exec:
+    - bash
+    - go
 - name: vet
   short: v
   description: go vet
   usage: go vet
   script: go vet ./...
+  require:
+    exec:
+    - go
 - name: lint
   short: l
   description: lint the go code
   usage: lint the go code
   script: golangci-lint run
+  require:
+    exec:
+    - golangci-lint
 - name: release
   short: r
   description: release the new version
@@ -39,25 +52,45 @@ tasks:
   args:
   - name: version
     required: true
+  require:
+    exec:
+    - bash
+    - git
 - name: durl
   description: check dead links (durl is required)
   usage: check dead links (durl is required)
   script: bash scripts/durl.sh
+  require:
+    exec:
+    - bash
+    - durl
 - name: ci-local
   description: run the Drone pipeline at localhost (drone-cli is required)
   usage: run the Drone pipeline at localhost (drone-cli is required)
   script: time drone exec --pipeline build --event pull_request
   environment:
     LOCAL: "true"
+  require:
+    exec:
+    - drone
 - name: shellcheck
   description: shellcheck
   usage: shellcheck
   script: shellcheck scripts/* githooks/*
+  require:
+    exec:
+    - shellcheck
 - name: shfmt
   description: shfmt
   usage: shfmt
   script: shfmt -l -w scripts/* githooks/*
+  require:
+    exec:
+    - shfmt
 - name: yamllint
   description: yamllint
   usage: yamllint
   script: 'find . \( -name "*.yml" -o -name "*.yaml" \) -print0 | xargs -0 yamllint -c .yamllint.yml'
+  require:
+    exec:
+    - yamllint
