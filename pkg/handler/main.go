@@ -319,7 +319,7 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
 	}
-	help := ""
+	help := cli.CommandHelpTemplate
 	if len(task.Args) != 0 {
 		argHelps := make([]string, len(task.Args))
 		argNames := make([]string, len(task.Args))
@@ -332,8 +332,40 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 			argNames[i] = "<" + arg.Name + ">"
 		}
 		help = strings.Replace(
-			cli.CommandHelpTemplate, "[arguments...]", strings.Join(argNames, " "), 1) + `ARGUMENTS:
+			cli.CommandHelpTemplate, "[arguments...]", strings.Join(argNames, " "), 1) + `
+ARGUMENTS:
 ` + strings.Join(argHelps, "\n")
+	}
+
+	if len(task.Require.Exec) != 0 {
+		helps := make([]string, 0, len(task.Require.Exec))
+		for _, require := range task.Require.Exec {
+			if len(require) == 0 {
+				continue
+			}
+			helps = append(helps, "  "+strings.Join(require, " or "))
+		}
+		if len(helps) != 0 {
+			help += `
+REQUIREMENTS:
+` + strings.Join(helps, "\n")
+		}
+	}
+
+	if len(task.Require.Environment) != 0 {
+		helps := make([]string, 0, len(task.Require.Environment))
+		for _, require := range task.Require.Environment {
+			if len(require) == 0 {
+				continue
+			}
+			helps = append(helps, "  "+strings.Join(require, " or "))
+		}
+		if len(helps) != 0 {
+			help += `
+
+REQUIRED ENVIRONMENT VARIABLES:
+` + strings.Join(helps, "\n")
+		}
 	}
 
 	scriptEnvs := map[string][]string{}
