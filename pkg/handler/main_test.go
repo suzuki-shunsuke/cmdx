@@ -95,11 +95,12 @@ func Test_convertTaskToCommand(t *testing.T) {
 				Description: "description",
 			},
 			exp: cli.Command{
-				Name:        "test",
-				ShortName:   "t",
-				Usage:       "usage",
-				Description: "description",
-				Flags:       []cli.Flag{},
+				Name:               "test",
+				ShortName:          "t",
+				Usage:              "usage",
+				Description:        "description",
+				CustomHelpTemplate: cli.CommandHelpTemplate,
+				Flags:              []cli.Flag{},
 			},
 		},
 		{
@@ -116,10 +117,11 @@ func Test_convertTaskToCommand(t *testing.T) {
 				},
 			},
 			exp: cli.Command{
-				Name:        "test",
-				ShortName:   "t",
-				Usage:       "usage",
-				Description: "description",
+				Name:               "test",
+				ShortName:          "t",
+				Usage:              "usage",
+				Description:        "description",
+				CustomHelpTemplate: cli.CommandHelpTemplate,
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name: "foo",
@@ -162,6 +164,7 @@ DESCRIPTION:
 OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}{{end}}
+
 ARGUMENTS:
    foo  usage`,
 			},
