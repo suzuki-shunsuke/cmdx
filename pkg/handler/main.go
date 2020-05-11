@@ -126,6 +126,21 @@ type (
 		ScriptEnvs []string `yaml:"script_envs"`
 		Required   bool
 		Prompt     Prompt
+		Validate   []Validate
+	}
+
+	Validate struct {
+		Type      string
+		RegExp    string
+		MinLength int `yaml:"min_length"`
+		MaxLength int `yaml:"max_length"`
+		Prefix    string
+		Suffix    string
+		Contain   string
+		Enum      []string
+
+		Min int
+		Max int
 	}
 )
 
@@ -400,6 +415,9 @@ func updateVarsByArgs(
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
+			if err := validateValueWithValidates(val, arg.Validate); err != nil {
+				return fmt.Errorf(arg.Name+" is invalid: %w", err)
+			}
 			continue
 		}
 		// the positional argument isn't given
@@ -408,6 +426,9 @@ func updateVarsByArgs(
 			if v, ok := os.LookupEnv(e); ok {
 				isBoundEnv = true
 				vars[arg.Name] = v
+				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+				}
 				break
 			}
 		}
@@ -423,6 +444,11 @@ func updateVarsByArgs(
 					continue
 				}
 				continue
+			}
+			if v, ok := val.(string); ok {
+				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+				}
 			}
 			vars[arg.Name] = val
 			continue
