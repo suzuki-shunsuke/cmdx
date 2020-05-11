@@ -132,9 +132,9 @@ type (
 
 	Validate struct {
 		Type      string
-		RegExp    string
-		MinLength int `yaml:"min_length"`
-		MaxLength int `yaml:"max_length"`
+		RegExp    string `yaml:"regexp"`
+		MinLength int    `yaml:"min_length"`
+		MaxLength int    `yaml:"max_length"`
 		Prefix    string
 		Suffix    string
 		Contain   string
