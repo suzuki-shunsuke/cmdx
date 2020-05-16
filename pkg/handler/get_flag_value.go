@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
