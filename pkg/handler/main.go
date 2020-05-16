@@ -10,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
@@ -190,12 +190,12 @@ $ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
 
 func mainAction(c *cli.Context) error {
 	cfg := Config{}
-	cfgFilePath := c.GlobalString("config")
-	initFlag := c.GlobalBool("init")
-	listFlag := c.GlobalBool("list")
-	helpFlag := c.GlobalBool("help")
-	workingDirFlag := c.GlobalString("working-dir")
-	cfgFileName := c.GlobalString("name")
+	cfgFilePath := c.String("config")
+	initFlag := c.Bool("init")
+	listFlag := c.Bool("list")
+	helpFlag := c.Bool("help")
+	workingDirFlag := c.String("working-dir")
+	cfgFileName := c.String("name")
 	if initFlag {
 		if cfgFilePath != "" {
 			return createConfigFile(cfgFilePath)
@@ -253,14 +253,24 @@ func mainAction(c *cli.Context) error {
 	if workingDirFlag == "" {
 		workingDirFlag = filepath.Dir(cfgFilePath)
 	}
-	updateAppWithConfig(app, &cfg, workingDirFlag)
+	updateAppWithConfig(app, &cfg, &GlobalFlags{
+		DryRun:     c.Bool("dry-run"),
+		Quiet:      c.Bool("quiet"),
+		WorkingDir: workingDirFlag,
+	})
 	return app.Run(os.Args)
+}
+
+type GlobalFlags struct {
+	DryRun     bool
+	Quiet      bool
+	WorkingDir string
 }
 
 func setupApp(app *cli.App) {
 	app.Name = "cmdx"
 	app.Version = domain.Version
-	app.Authors = []cli.Author{
+	app.Authors = []*cli.Author{
 		{
 			Name: "Shunsuke Suzuki",
 		},
@@ -268,39 +278,42 @@ func setupApp(app *cli.App) {
 	app.Usage = appUsage
 
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "config, c",
-			Usage:  "configuration file path",
-			EnvVar: "CMDX_CONFIG_PATH",
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "configuration file path",
+			EnvVars: []string{"CMDX_CONFIG_PATH"},
 		},
-		cli.StringFlag{
-			Name:  "name, n",
-			Usage: "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
+		&cli.StringFlag{
+			Name:    "name",
+			Aliases: []string{"n"},
+			Usage:   "configuration file name. The configuration file is searched from the current directory to the root directory recursively",
 		},
-		cli.StringFlag{
-			Name:   "working-dir, w",
-			Usage:  "The working directory path. By default, the task is run on the directory where the configuration file is found",
-			EnvVar: "CMDX_WORKING_DIR",
+		&cli.StringFlag{
+			Name:    "working-dir",
+			Aliases: []string{"w"},
+			Usage:   "The working directory path. By default, the task is run on the directory where the configuration file is found",
+			EnvVars: []string{"CMDX_WORKING_DIR"},
 		},
-		cli.BoolFlag{
-			Name:  "init, i",
-			Usage: "create the configuration file",
+		&cli.BoolFlag{
+			Name:    "init",
+			Aliases: []string{"i"},
+			Usage:   "create the configuration file",
 		},
-		cli.BoolFlag{
-			Name:  "list, l",
-			Usage: "list tasks",
+		&cli.BoolFlag{
+			Name:    "list",
+			Aliases: []string{"l"},
+			Usage:   "list tasks",
 		},
-		cli.BoolFlag{
-			Name:  "help, h",
-			Usage: "show help",
+		&cli.BoolFlag{
+			Name:    "quiet",
+			Aliases: []string{"q"},
+			Usage:   "don't output the executed command",
 		},
-		cli.BoolFlag{
-			Name:  "quiet, q",
-			Usage: "don't output the executed command",
-		},
-		cli.BoolFlag{
-			Name:  "dry-run, d",
-			Usage: "output the script but don't run it actually",
+		&cli.BoolFlag{
+			Name:    "dry-run",
+			Aliases: []string{"d"},
+			Usage:   "output the script but don't run it actually",
 		},
 	}
 }
@@ -310,20 +323,19 @@ func newFlag(flag Flag) cli.Flag {
 	if flag.Short != "" {
 		name += ", " + flag.Short
 	}
-	env := strings.Join(flag.InputEnvs, ",")
 	switch flag.Type {
 	case boolFlagType:
-		return cli.BoolFlag{
-			Name:   name,
-			Usage:  flag.Usage,
-			EnvVar: env,
+		return &cli.BoolFlag{
+			Name:    name,
+			Usage:   flag.Usage,
+			EnvVars: flag.InputEnvs,
 		}
 	default:
-		return cli.StringFlag{
-			Name:   name,
-			Usage:  flag.Usage,
-			Value:  flag.Default,
-			EnvVar: env,
+		return &cli.StringFlag{
+			Name:    name,
+			Usage:   flag.Usage,
+			Value:   flag.Default,
+			EnvVars: flag.InputEnvs,
 		}
 	}
 }
@@ -379,7 +391,7 @@ REQUIRED ENVIRONMENT VARIABLES:
 	return txt
 }
 
-func convertTaskToCommand(task Task, wd string) cli.Command {
+func convertTaskToCommand(task Task, gFlags *GlobalFlags) *cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
@@ -398,13 +410,13 @@ func convertTaskToCommand(task Task, wd string) cli.Command {
 		}
 	}
 
-	return cli.Command{
+	return &cli.Command{
 		Name:               task.Name,
-		ShortName:          task.Short,
+		Aliases:            []string{task.Short},
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             newCommandAction(task, wd, scriptEnvs),
+		Action:             newCommandAction(task, gFlags, scriptEnvs),
 		CustomHelpTemplate: help,
 	}
 }
@@ -484,7 +496,7 @@ func updateVarsByArgs(
 }
 
 func newCommandAction(
-	task Task, wd string, scriptEnvs map[string][]string,
+	task Task, gFlags *GlobalFlags, scriptEnvs map[string][]string,
 ) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
@@ -504,7 +516,7 @@ func newCommandAction(
 		}
 
 		// get args and set them to vars
-		if err := updateVarsByArgs(task.Args, c.Args(), vars); err != nil {
+		if err := updateVarsByArgs(task.Args, c.Args().Slice(), vars); err != nil {
 			return err
 		}
 
@@ -521,14 +533,14 @@ func newCommandAction(
 		}
 
 		return runScript(
-			scr, wd, envs, task.Timeout, c.GlobalBool("quiet"), c.GlobalBool("dry-run"))
+			scr, gFlags.WorkingDir, envs, task.Timeout, gFlags.Quiet, gFlags.DryRun)
 	}
 }
 
-func updateAppWithConfig(app *cli.App, cfg *Config, wd string) {
-	cmds := make([]cli.Command, len(cfg.Tasks))
+func updateAppWithConfig(app *cli.App, cfg *Config, gFlags *GlobalFlags) {
+	cmds := make([]*cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
-		cmds[i] = convertTaskToCommand(task, wd)
+		cmds[i] = convertTaskToCommand(task, gFlags)
 	}
 	app.Commands = cmds
 }

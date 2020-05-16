@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
@@ -16,7 +16,7 @@ func Test_setupApp(t *testing.T) {
 	assert.Equal(t, "cmdx", app.Name)
 	assert.Equal(t, appUsage, app.Usage)
 	assert.Equal(t, domain.Version, app.Version)
-	assert.Equal(t, []cli.Author{
+	assert.Equal(t, []*cli.Author{
 		{
 			Name: "Shunsuke Suzuki",
 		},
@@ -38,10 +38,10 @@ func Test_newFlag(t *testing.T) {
 				InputEnvs: []string{"FOO"},
 				Type:      "bool",
 			},
-			exp: cli.BoolFlag{
-				Name:   "foo, f",
-				Usage:  "usage",
-				EnvVar: "FOO",
+			exp: &cli.BoolFlag{
+				Name:    "foo, f",
+				Usage:   "usage",
+				EnvVars: []string{"FOO"},
 			},
 		},
 		{
@@ -52,11 +52,11 @@ func Test_newFlag(t *testing.T) {
 				Default:   "default value",
 				InputEnvs: []string{"FOO"},
 			},
-			exp: cli.StringFlag{
-				Name:   "foo",
-				Usage:  "usage",
-				Value:  "default value",
-				EnvVar: "FOO",
+			exp: &cli.StringFlag{
+				Name:    "foo",
+				Usage:   "usage",
+				Value:   "default value",
+				EnvVars: []string{"FOO"},
 			},
 		},
 		{
@@ -67,10 +67,10 @@ func Test_newFlag(t *testing.T) {
 				InputEnvs: []string{"FOO"},
 				Required:  true,
 			},
-			exp: cli.StringFlag{
-				Name:   "foo",
-				Usage:  "usage",
-				EnvVar: "FOO",
+			exp: &cli.StringFlag{
+				Name:    "foo",
+				Usage:   "usage",
+				EnvVars: []string{"FOO"},
 			},
 		},
 	}
@@ -97,7 +97,7 @@ func Test_convertTaskToCommand(t *testing.T) {
 			},
 			exp: cli.Command{
 				Name:               "test",
-				ShortName:          "t",
+				Aliases:            []string{"t"},
 				Usage:              "usage",
 				Description:        "description",
 				CustomHelpTemplate: cli.CommandHelpTemplate,
@@ -119,12 +119,12 @@ func Test_convertTaskToCommand(t *testing.T) {
 			},
 			exp: cli.Command{
 				Name:               "test",
-				ShortName:          "t",
+				Aliases:            []string{"t"},
 				Usage:              "usage",
 				Description:        "description",
 				CustomHelpTemplate: cli.CommandHelpTemplate,
 				Flags: []cli.Flag{
-					cli.StringFlag{
+					&cli.StringFlag{
 						Name: "foo",
 					},
 				},
@@ -146,7 +146,7 @@ func Test_convertTaskToCommand(t *testing.T) {
 			},
 			exp: cli.Command{
 				Name:        "test",
-				ShortName:   "t",
+				Aliases:     []string{"t"},
 				Usage:       "usage",
 				Description: "description",
 				Flags:       []cli.Flag{},
@@ -173,9 +173,9 @@ ARGUMENTS:
 	}
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			cmd := convertTaskToCommand(d.task, "")
+			cmd := convertTaskToCommand(d.task, &GlobalFlags{})
 			assert.Equal(t, d.exp.Name, cmd.Name)
-			assert.Equal(t, d.exp.ShortName, cmd.ShortName)
+			assert.Equal(t, d.exp.Aliases, cmd.Aliases)
 			assert.Equal(t, d.exp.Usage, cmd.Usage)
 			assert.Equal(t, d.exp.Flags, cmd.Flags)
 			assert.Equal(t, d.exp.Description, cmd.Description)
@@ -473,7 +473,7 @@ func Test_updateAppWithConfig(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			app := cli.NewApp()
-			updateAppWithConfig(app, d.cfg, "/tmp")
+			updateAppWithConfig(app, d.cfg, &GlobalFlags{WorkingDir: "/tmp"})
 		})
 	}
 }
