@@ -81,6 +81,7 @@ type (
 		ScriptEnvs  []string `yaml:"script_envs"`
 		Environment map[string]string
 		Timeout     Timeout
+		Quiet       *bool
 	}
 
 	Task struct {
@@ -96,6 +97,7 @@ type (
 		Script      string
 		Timeout     Timeout
 		Require     Require
+		Quiet       *bool
 	}
 
 	Require struct {
@@ -232,9 +234,14 @@ func mainAction(args []string) func(*cli.Context) error {
 		if workingDirFlag == "" {
 			workingDirFlag = filepath.Dir(cfgFilePath)
 		}
+		var quiet *bool
+		if c.IsSet("quiet") {
+			q := c.Bool("quiet")
+			quiet = &q
+		}
 		updateAppWithConfig(app, &cfg, &GlobalFlags{
 			DryRun:     c.Bool("dry-run"),
-			Quiet:      c.Bool("quiet"),
+			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
 		return app.Run(args)
@@ -243,7 +250,7 @@ func mainAction(args []string) func(*cli.Context) error {
 
 type GlobalFlags struct {
 	DryRun     bool
-	Quiet      bool
+	Quiet      *bool
 	WorkingDir string
 }
 
@@ -513,8 +520,15 @@ func newCommandAction(
 			return fmt.Errorf("failed to parse the script - %s: %w", task.Script, err)
 		}
 
+		quiet := false
+		if gFlags.Quiet != nil {
+			quiet = *gFlags.Quiet
+		} else if task.Quiet != nil {
+			quiet = *task.Quiet
+		}
+
 		return runScript(
-			scr, gFlags.WorkingDir, envs, task.Timeout, gFlags.Quiet, gFlags.DryRun)
+			scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
 	}
 }
 
@@ -554,6 +568,10 @@ func setupTask(task *Task, cfg *Config) error {
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = cfg.InputEnvs
+	}
+
+	if task.Quiet == nil {
+		task.Quiet = cfg.Quiet
 	}
 
 	scriptEnvs := task.ScriptEnvs

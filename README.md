@@ -165,6 +165,7 @@ path | type | description | required | default
 .input_envs | []string | default environment variable binding | false | []
 .script_envs | []string | default environment variable binding | false | []
 .environment | map[string]string | top level environment variables | false | {}
+.quiet | bool | Default configuration whether the content of script is outputted | false |
 .tasks | []task | the list of tasks | true |
 task.name | string | the task name | true |
 task.short | string | the task short name | false |
@@ -176,6 +177,7 @@ task.input_envs | []string | task level environment variable binding | false | [
 task.script_envs | []string | task level environment variable binding | false | []
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `sh -c` | true |
+task.quiet | bool | task level default configuration whether the content of script is outputted | false |
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
 require.exec | []stringArray | required executable files | false | []
@@ -417,6 +419,67 @@ tasks:
 ```
 $ cmdx hello foo
 age is invalid: must be int: foo
+```
+
+## quiet
+
+By default `cmdx` outputs the content of task's `script` when the task is run.
+
+In case of the following example, `+ echo hello` is outputted.
+
+```yaml
+# .cmdx.yaml
+tasks:
+- name: hello
+  script: echo hello
+```
+
+```console
+$ cmdx hello
++ echo hello
+hello
+```
+
+You can suppress the output by `--quiet (-q)` option.
+
+```console
+# BAD: cmdx hello -q
+$ cmdx -q hello
+hello
+```
+
+And you can change the default configuration of `quiet` at the global level or the task level.
+
+```yaml
+# .cmdx.yaml
+tasks:
+- name: hello
+  script: echo hello
+  quiet: true  # task level
+```
+
+```yaml
+# .cmdx.yaml
+quiet: true # global level
+tasks:
+- name: hello
+  script: echo hello
+  quiet: true
+```
+
+The priority is
+
+1. command line flag
+2. task level configuration
+3. global level configuration
+
+If the quiet is enabled by configuration but you want to output `script`, please set the flag `-q=false`.
+
+```
+# "=" is needed
+$ cmdx -q=false hello
++ echo hello
+hello
 ```
 
 ## prompt

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/urfave/cli/v2"
 )
@@ -13,7 +12,6 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
 		helpFlag := c.Bool("help")
-		workingDirFlag := c.String("working-dir")
 		cfgFileName := c.String("name")
 		if initFlag {
 			cli.DefaultAppComplete(c)
@@ -57,14 +55,7 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 
 		app := cli.NewApp()
 		setupApp(app)
-		if workingDirFlag == "" {
-			workingDirFlag = filepath.Dir(cfgFilePath)
-		}
-		updateAppWithConfig(app, &cfg, &GlobalFlags{
-			DryRun:     c.Bool("dry-run"),
-			Quiet:      c.Bool("quiet"),
-			WorkingDir: workingDirFlag,
-		})
+		updateAppWithConfig(app, &cfg, &GlobalFlags{})
 		if err := app.Run(args); err != nil {
 			fmt.Println(err)
 			return
