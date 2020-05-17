@@ -58,6 +58,19 @@ tasks:
   script: "echo $FOO"
 `
 
+	rootHelp = `cmdx - task runner
+https://github.com/suzuki-shunsuke/cmdx
+
+Configuration file isn't found.
+First of all, let's create a configuration file.
+
+$ cmdx --init
+
+Or if the configuration file already exists but the file path is unusual, please specify the path by --config (-c) option.
+
+$ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
+`
+
 	appUsage = "task runner"
 )
 
@@ -89,8 +102,6 @@ type (
 		Exec        []StrList
 		Environment []StrList
 	}
-
-	StrList []string
 
 	Timeout struct {
 		Duration  int
@@ -143,29 +154,6 @@ type (
 	}
 )
 
-func (list *StrList) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var val interface{}
-	if err := unmarshal(&val); err != nil {
-		return err
-	}
-	if s, ok := val.(string); ok {
-		*list = []string{s}
-		return nil
-	}
-	if intfArr, ok := val.([]interface{}); ok {
-		strArr := make([]string, len(intfArr))
-		for i, intf := range intfArr {
-			if s, ok := intf.(string); ok {
-				strArr[i] = s
-				continue
-			}
-			return fmt.Errorf("the type of the value must be string: %v", intf)
-		}
-		*list = strArr
-	}
-	return nil
-}
-
 func Main(args []string) error {
 	app := cli.NewApp()
 	setupApp(app)
@@ -174,84 +162,8 @@ func Main(args []string) error {
 
 	app.Action = mainAction(args)
 
-	app.CustomAppHelpTemplate = `cmdx - task runner
-https://github.com/suzuki-shunsuke/cmdx
-
-Configuration file isn't found.
-First of all, let's create a configuration file.
-
-$ cmdx --init
-
-Or if the configuration file already exists but the file path is unusual, please specify the path by --config (-c) option.
-
-$ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
-`
+	app.CustomAppHelpTemplate = rootHelp
 	return app.Run(args)
-}
-
-func rootBashCompletion(args []string) func(c *cli.Context) {
-	return func(c *cli.Context) {
-		cfg := Config{}
-		cfgFilePath := c.String("config")
-		initFlag := c.Bool("init")
-		helpFlag := c.Bool("help")
-		workingDirFlag := c.String("working-dir")
-		cfgFileName := c.String("name")
-		if initFlag {
-			cli.DefaultAppComplete(c)
-			return
-		}
-
-		if cfgFilePath == "" {
-			var err error
-			cfgFilePath, err = getConfigFilePath(cfgFileName)
-			if err != nil {
-				if helpFlag && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
-					return
-				}
-				if c.NArg() == 1 && c.Args().First() == "help" && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
-					return
-				}
-				if c.NArg() == 1 && c.Args().First() == "version" && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
-					return
-				}
-				fmt.Println(err)
-				return
-			}
-		}
-
-		if err := readConfig(cfgFilePath, &cfg); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := validateConfig(&cfg); err != nil {
-			fmt.Println(fmt.Errorf("please fix the configuration file: %w", err))
-			return
-		}
-
-		if err := setupConfig(&cfg); err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		app := cli.NewApp()
-		setupApp(app)
-		if workingDirFlag == "" {
-			workingDirFlag = filepath.Dir(cfgFilePath)
-		}
-		updateAppWithConfig(app, &cfg, &GlobalFlags{
-			DryRun:     c.Bool("dry-run"),
-			Quiet:      c.Bool("quiet"),
-			WorkingDir: workingDirFlag,
-		})
-		if err := app.Run(args); err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
 }
 
 func mainAction(args []string) func(*cli.Context) error {
