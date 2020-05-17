@@ -24,8 +24,12 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 		return fmt.Errorf("failed to open the configuration file %s: %w", cfgFilePath, err)
 	}
 	defer f.Close()
-	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
 		return fmt.Errorf("failed to read the configuration file %s: %w", cfgFilePath, err)
+	}
+	if err := yaml.Unmarshal(b, cfg); err != nil {
+		return fmt.Errorf("failed to parse the configuration file. the configuration file is invalid: %s: %w", cfgFilePath, err)
 	}
 	return nil
 }

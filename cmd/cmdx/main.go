@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	if err := handler.Main(); err != nil {
+	if err := handler.Main(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(ecerror.GetExitCode(err))
 	}

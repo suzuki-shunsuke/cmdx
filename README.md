@@ -243,9 +243,9 @@ And some special variables are defined.
 name | type | description
 --- | --- | ---
 `_builtin.args` | []string | the list of positional arguments which aren't defined by the configuration `args`
-`_builtin.args_string` | string | the string which joins _builtin.args by the space " "
+`_builtin.args_string` | string | the string which joins `_builtin.args` by the space " "
 `_builtin.all_args` | []string | the list of all positional arguments
-`_builtin.args_string` | string | the string which joins _builtin.all_args by the space " "
+`_builtin.args_string` | string | the string which joins `_builtin.all_args` by the space " "
 
 ### input_envs, script_envs
 
@@ -440,6 +440,19 @@ About prompt type, please see [AlecAivazis/survey's document](https://github.com
 2. environment variable (input_envs)
 3. prompt (prompt isn't launched if the value is set by command line argument or environment variable)
 4. default value
+
+## Bash (Zsh) Completion
+
+https://github.com/urfave/cli/blob/477292c8d462a3f51cd18bc77c0542193a62274d/docs/v2/manual.md#bash-completion
+
+`cmdx` supports Bash (Zsh) Completion powered by urfave/cli.
+
+We test the completion with Zsh, but we don't test the completion with other shell.
+
+To enable the completion, you have to load a shell script.
+For detail, please see the [document of urfave/cli](https://github.com/urfave/cli/blob/477292c8d462a3f51cd18bc77c0542193a62274d/docs/v2/manual.md#bash-completion).
+
+Please set `cmdx` to `PROG`
 
 ## Contributing
 
