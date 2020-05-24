@@ -13,6 +13,7 @@ import (
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli/v2"
 
+	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 )
@@ -21,44 +22,6 @@ const (
 	boolFlagType      = "bool"
 	confirmPromptType = "confirm"
 	defaultTimeout    = 36000 // default 10H
-
-	configurationFileTemplate = `---
-# the configuration file of cmdx, which is a task runner.
-# https://github.com/suzuki-shunsuke/cmdx
-# timeout:
-#   duration: 600
-#   kill_after: 30
-# input_envs:
-# - "{{.name}}"
-# script_envs:
-# - "{{.name}}"
-# environment:
-#   FOO: foo
-tasks:
-- name: hello
-  # short: h
-  description: hello task
-  flags:
-  # - name: source
-  #   short: s
-  #   usage: source file path
-  #   description: source file path
-  #   default: .drone.jsonnet
-  #   required: true
-  # - name: force
-  #   short: f
-  #   usage: force
-  #   type: bool
-  args:
-  # - name: name
-  #   usage: source file path
-  #   required: true
-  #   input_envs:
-  #   - NAME
-  environment:
-    FOO: foo
-  script: "echo $FOO"
-`
 
 	rootHelp = `cmdx - task runner
 https://github.com/suzuki-shunsuke/cmdx
@@ -183,14 +146,15 @@ func mainAction(args []string) func(*cli.Context) error {
 		helpFlag := c.Bool("help")
 		workingDirFlag := c.String("working-dir")
 		cfgFileName := c.String("name")
+		cfgClient := config.New()
 		if initFlag {
 			if cfgFilePath != "" {
-				return createConfigFile(cfgFilePath)
+				return cfgClient.Create(cfgFilePath)
 			}
 			if cfgFileName != "" {
-				return createConfigFile(cfgFileName)
+				return cfgClient.Create(cfgFileName)
 			}
-			return createConfigFile(".cmdx.yaml")
+			return cfgClient.Create(".cmdx.yaml")
 		}
 
 		if cfgFilePath == "" {
@@ -211,7 +175,7 @@ func mainAction(args []string) func(*cli.Context) error {
 			}
 		}
 
-		if err := readConfig(cfgFilePath, &cfg); err != nil {
+		if err := cfgClient.Read(cfgFilePath, &cfg); err != nil {
 			return err
 		}
 		if err := validateConfig(&cfg); err != nil {

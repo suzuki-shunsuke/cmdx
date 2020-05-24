@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 
+	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,6 +18,8 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 			cli.DefaultAppComplete(c)
 			return
 		}
+
+		cfgClient := config.New()
 
 		if cfgFilePath == "" {
 			var err error
@@ -39,7 +42,7 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 			}
 		}
 
-		if err := readConfig(cfgFilePath, &cfg); err != nil {
+		if err := cfgClient.Read(cfgFilePath, &cfg); err != nil {
 			fmt.Println(err)
 			return
 		}
