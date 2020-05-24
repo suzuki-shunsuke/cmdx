@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,10 +35,11 @@ func Test_runScript(t *testing.T) {
 	tio := Timeout{
 		Duration: 3600,
 	}
+	ctx := context.Background()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := runScript(d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
+			err := runScript(ctx, d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
 			if err != nil {
 				if d.isErr {
 					return
