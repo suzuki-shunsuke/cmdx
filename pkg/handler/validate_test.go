@@ -66,6 +66,7 @@ func Test_validateUniqueName(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			f := validateUniqueName(d.name, d.names)
 			if d.exp {
@@ -151,6 +152,7 @@ func Test_validateConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := validateConfig(d.cfg)
 			if err == nil {
@@ -222,6 +224,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.names == nil {
 				d.names = map[string]struct{}{}
@@ -271,6 +274,7 @@ func Test_validateArg(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.names == nil {
 				d.names = map[string]struct{}{}
@@ -326,6 +330,7 @@ func Test_validateTask(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := validateTask(d.task)
 			if err == nil {
@@ -372,6 +377,7 @@ func Test_validateFlagRequired(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			c := newHasIsSet(d.flagSet...)
 			err := validateFlagRequired(c, d.flags)

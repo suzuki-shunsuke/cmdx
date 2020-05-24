@@ -25,6 +25,7 @@ func Test_requireExec(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := requireExec(d.execs)
 			if d.isErr {
@@ -81,6 +82,7 @@ func Test_requireEnv(t *testing.T) {
 	}
 	defer os.Clearenv()
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			os.Clearenv()
 			for k, v := range d.setEnvs {

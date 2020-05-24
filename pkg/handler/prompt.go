@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	flagTypes = map[string]struct{}{
+	flagTypes = map[string]struct{}{ //nolint:gochecknoglobals
 		"input":        {},
 		"multiline":    {},
 		"password":     {},
