@@ -74,6 +74,7 @@ func Test_newFlag(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			assert.Equal(t, d.exp, newFlag(d.flag))
 		})
@@ -171,6 +172,7 @@ ARGUMENTS:
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			cmd := convertTaskToCommand(d.task, &GlobalFlags{})
 			assert.Equal(t, d.exp.Name, cmd.Name)
@@ -199,6 +201,7 @@ func Test_renderTemplate(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			s, err := renderTemplate(d.base, d.data)
 			if err != nil {
@@ -272,6 +275,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.vars == nil {
 				d.vars = map[string]interface{}{}
@@ -390,6 +394,7 @@ func Test_setupTask(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := setupTask(d.task, d.cfg)
 			if err != nil {
@@ -437,6 +442,7 @@ func Test_setupConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := setupConfig(d.cfg)
 			if err != nil {
@@ -470,6 +476,7 @@ func Test_updateAppWithConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			app := cli.NewApp()
 			updateAppWithConfig(app, d.cfg, &GlobalFlags{WorkingDir: "/tmp"})

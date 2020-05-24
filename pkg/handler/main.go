@@ -660,6 +660,7 @@ func setupTask(task *Task, cfg *Config) error {
 
 func setupConfig(cfg *Config) error {
 	for i, task := range cfg.Tasks {
+		task := task
 		if err := setupTask(&task, cfg); err != nil {
 			return err
 		}

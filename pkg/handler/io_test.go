@@ -35,6 +35,7 @@ func Test_runScript(t *testing.T) {
 		Duration: 3600,
 	}
 	for _, d := range data {
+		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := runScript(d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
 			if err != nil {

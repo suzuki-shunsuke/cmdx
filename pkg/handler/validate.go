@@ -26,7 +26,7 @@ func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[stri
 	}
 	if len(flag.Short) > 1 {
 		return fmt.Errorf(
-			"The length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
+			"the length of task.short should be 0 or 1. task: %s, flag: %s, short: %s",
 			taskName, flag.Name, flag.Short)
 	}
 
@@ -50,7 +50,7 @@ func validateFlag(taskName string, flag Flag, flagNames, flagShortNames map[stri
 	case "string":
 	default:
 		return fmt.Errorf(
-			"The flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
+			"the flag type should be either '' or 'string' or 'bool'. task: %s, flag: %s, flag.type: %s",
 			taskName, flag.Name, flag.Type)
 	}
 
