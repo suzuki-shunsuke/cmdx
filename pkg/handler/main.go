@@ -100,6 +100,7 @@ type (
 		Timeout     Timeout
 		Require     Require
 		Quiet       *bool
+		Shell       []string
 	}
 
 	Require struct {
@@ -533,7 +534,7 @@ func newCommandAction(
 		}
 
 		return runScript(
-			c.Context, scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
+			c.Context, task.Shell, scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
 	}
 }
 
