@@ -183,8 +183,8 @@ task.require | require | requirement of task | false | {}
 require.exec | []stringArray | required executable files | false | []
 require.environment | []stringArray | required environment variables | false | []
 stringArray | array whose element is string or array of string | |
-timtout.duration | int | the task command timeout (second) | false | 36000 (10 hours)
-timtout.kill_after | int | the duration the kill signal is sent after `timeout.duration` | false | 0, which means the command isn't killed
+timeout.duration | int | the task command timeout (second) | false | 36000 (10 hours)
+timeout.kill_after | int | the duration the kill signal is sent after `timeout.duration` | false | 0, which means the command isn't killed
 flag.name | string | the flag name | true |
 flag.short | string | the flag short name | false |
 flag.usage | string | the flag usage | false | ""
