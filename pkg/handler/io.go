@@ -2,14 +2,11 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"os/signal"
-	"strconv"
-	"sync"
-	"syscall"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -34,7 +31,7 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 	return nil
 }
 
-func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun bool) error {
+func runScript(ctx context.Context, script, wd string, envs []string, tioCfg Timeout, quiet, dryRun bool) error {
 	cmd := exec.Command("sh", "-c", script)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -54,39 +51,19 @@ func runScript(script, wd string, envs []string, tioCfg Timeout, quiet, dryRun b
 	})
 
 	ctx, cancel := context.WithTimeout(
-		context.Background(), time.Duration(tioCfg.Duration)*time.Second)
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(
-		signalChan, syscall.SIGHUP, syscall.SIGINT,
-		syscall.SIGTERM, syscall.SIGQUIT)
-	resultChan := make(chan error, 1)
+		ctx, time.Duration(tioCfg.Duration)*time.Second)
 	defer cancel()
-	sentSignals := map[os.Signal]struct{}{}
 	go func() {
-		resultChan <- runner.Run(ctx, cmd)
-	}()
-	var once sync.Once
-	for {
-		select {
-		case <-ctx.Done():
-			once.Do(func() {
-				fmt.Fprintln(
-					os.Stderr, "command timeout "+strconv.Itoa(tioCfg.Duration)+" seconds")
-			})
-		case err := <-resultChan:
-			if err == nil {
-				return nil
-			}
-			return ecerror.Wrap(err, cmd.ProcessState.ExitCode())
-		case sig := <-signalChan:
-			if _, ok := sentSignals[sig]; ok {
-				continue
-			}
-			sentSignals[sig] = struct{}{}
-			fmt.Fprintf(os.Stderr, "send signal %d\n", sig)
-			runner.SendSignal(sig.(syscall.Signal))
+		<-ctx.Done()
+		err := ctx.Err()
+		if errors.Is(err, context.DeadlineExceeded) {
+			fmt.Fprintf(os.Stderr, "command is terminated by timeout: %d seconds\n", tioCfg.Duration)
 		}
+	}()
+	if err := runner.Run(ctx, cmd); err != nil {
+		return ecerror.Wrap(err, cmd.ProcessState.ExitCode())
 	}
+	return nil
 }
 
 func createConfigFile(p string) error {

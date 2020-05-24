@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
+	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 )
 
 const (
@@ -165,7 +167,10 @@ func Main(args []string) error {
 	app.Action = mainAction(args)
 
 	app.CustomAppHelpTemplate = rootHelp
-	return app.Run(args)
+	c, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go signal.Handle(cancel)
+	return app.RunContext(c, args)
 }
 
 func mainAction(args []string) func(*cli.Context) error {
@@ -528,7 +533,7 @@ func newCommandAction(
 		}
 
 		return runScript(
-			scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
+			c.Context, scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
 	}
 }
 
