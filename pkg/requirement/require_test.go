@@ -1,4 +1,4 @@
-package handler
+package requirement
 
 import (
 	"os"
@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_requireExec(t *testing.T) {
+func TestChecker_Exec(t *testing.T) {
 	data := []struct {
 		title string
-		execs []StrList
+		execs []string
 		isErr bool
 	}{
 		{
@@ -18,16 +18,12 @@ func Test_requireExec(t *testing.T) {
 			execs: nil,
 			isErr: false,
 		},
-		{
-			title: "no validation 2",
-			execs: []StrList{nil},
-			isErr: false,
-		},
 	}
+	checker := New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := requireExec(d.execs)
+			err := checker.Exec(d.execs)
 			if d.isErr {
 				assert.NotNil(t, err)
 				return
@@ -37,10 +33,10 @@ func Test_requireExec(t *testing.T) {
 	}
 }
 
-func Test_requireEnv(t *testing.T) {
+func TestChecker_Env(t *testing.T) {
 	data := []struct {
 		title   string
-		envs    []StrList
+		envs    []string
 		setEnvs map[string]string
 		isErr   bool
 	}{
@@ -51,11 +47,7 @@ func Test_requireEnv(t *testing.T) {
 		},
 		{
 			title: "ok",
-			envs: []StrList{
-				{},
-				{"FOO"},
-				{"BAR", "ZOO"},
-			},
+			envs:  []string{"BAR", "ZOO"},
 			setEnvs: map[string]string{
 				"FOO": "foo",
 				"BAR": "bar",
@@ -64,23 +56,20 @@ func Test_requireEnv(t *testing.T) {
 			isErr: false,
 		},
 		{
-			title: "FOO is required",
-			envs: []StrList{
-				{"FOO"},
-			},
+			title:   "FOO is required",
+			envs:    []string{"FOO"},
 			setEnvs: nil,
 			isErr:   true,
 		},
 		{
-			title: "FOO or BAR is required",
-			envs: []StrList{
-				{"FOO", "BAR"},
-			},
+			title:   "FOO or BAR is required",
+			envs:    []string{"FOO", "BAR"},
 			setEnvs: nil,
 			isErr:   true,
 		},
 	}
 	defer os.Clearenv()
+	checker := New()
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
@@ -88,7 +77,7 @@ func Test_requireEnv(t *testing.T) {
 			for k, v := range d.setEnvs {
 				os.Setenv(k, v)
 			}
-			err := requireEnv(d.envs)
+			err := checker.Env(d.envs)
 			if d.isErr {
 				assert.NotNil(t, err)
 				return

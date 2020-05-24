@@ -17,6 +17,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/execute"
+	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 )
 
@@ -461,11 +462,16 @@ func newCommandAction(
 	return func(c *cli.Context) error {
 		// create vars and envs
 		// run command
-		if err := requireExec(task.Require.Exec); err != nil {
-			return err
+		requireChecker := requirement.New()
+		for _, requires := range task.Require.Exec {
+			if err := requireChecker.Exec(requires); err != nil {
+				return err
+			}
 		}
-		if err := requireEnv(task.Require.Environment); err != nil {
-			return err
+		for _, requires := range task.Require.Environment {
+			if err := requireChecker.Env(requires); err != nil {
+				return err
+			}
 		}
 
 		vars := map[string]interface{}{}
