@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/urfave/cli/v2"
 )
 
@@ -21,8 +22,8 @@ func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
 		}
 	}
 
-	if p := createPrompt(flag.Prompt); p != nil {
-		val, err := getValueByPrompt(p, flag.Prompt.Type)
+	if p := prompt.Create(flag.Prompt); p != nil {
+		val, err := prompt.GetValue(p, flag.Prompt.Type)
 		if err == nil {
 			if s, ok := val.(string); ok {
 				if err := validateValueWithValidates(s, flag.Validate); err != nil {

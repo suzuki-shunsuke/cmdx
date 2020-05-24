@@ -17,14 +17,14 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/execute"
+	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 )
 
 const (
-	boolFlagType      = "bool"
-	confirmPromptType = "confirm"
-	defaultTimeout    = 36000 // default 10H
+	boolFlagType   = "bool"
+	defaultTimeout = 36000 // default 10H
 
 	rootHelp = `cmdx - task runner
 https://github.com/suzuki-shunsuke/cmdx
@@ -79,13 +79,6 @@ type (
 		KillAfter int `yaml:"kill_after"`
 	}
 
-	Prompt struct {
-		Type    string
-		Message string
-		Help    string
-		Options []string
-	}
-
 	Flag struct {
 		Name       string
 		Short      string
@@ -95,7 +88,7 @@ type (
 		ScriptEnvs []string `yaml:"script_envs"`
 		Type       string
 		Required   bool
-		Prompt     Prompt
+		Prompt     prompt.Prompt
 		Validate   []Validate
 	}
 
@@ -106,7 +99,7 @@ type (
 		InputEnvs  []string `yaml:"input_envs"`
 		ScriptEnvs []string `yaml:"script_envs"`
 		Required   bool
-		Prompt     Prompt
+		Prompt     prompt.Prompt
 		Validate   []Validate
 	}
 
@@ -411,8 +404,8 @@ func updateVarsByArgs(
 		if isBoundEnv {
 			continue
 		}
-		if prompt := createPrompt(arg.Prompt); prompt != nil {
-			val, err := getValueByPrompt(prompt, arg.Prompt.Type)
+		if prmpt := prompt.Create(arg.Prompt); prmpt != nil {
+			val, err := prompt.GetValue(prmpt, arg.Prompt.Type)
 			if err != nil {
 				// TODO improvement
 				if arg.Default != "" {

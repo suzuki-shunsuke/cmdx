@@ -12,6 +12,18 @@ type (
 	}
 )
 
+var (
+	flagTypes = map[string]struct{}{ //nolint:gochecknoglobals
+		"input":        {},
+		"multiline":    {},
+		"password":     {},
+		"confirm":      {},
+		"select":       {},
+		"multi_select": {},
+		"editor":       {},
+	}
+)
+
 func validateUniqueName(name string, names map[string]struct{}) bool {
 	if _, ok := names[name]; ok {
 		return false

@@ -1,22 +1,21 @@
-package handler
+package prompt
 
 import (
 	"github.com/AlecAivazis/survey/v2"
 )
 
-var (
-	flagTypes = map[string]struct{}{ //nolint:gochecknoglobals
-		"input":        {},
-		"multiline":    {},
-		"password":     {},
-		"confirm":      {},
-		"select":       {},
-		"multi_select": {},
-		"editor":       {},
-	}
+const (
+	confirmPromptType = "confirm"
 )
 
-func createPrompt(prompt Prompt) survey.Prompt {
+type Prompt struct {
+	Type    string
+	Message string
+	Help    string
+	Options []string
+}
+
+func Create(prompt Prompt) survey.Prompt {
 	switch prompt.Type {
 	case "":
 		return nil
@@ -63,7 +62,7 @@ func createPrompt(prompt Prompt) survey.Prompt {
 	return nil
 }
 
-func getValueByPrompt(prompt survey.Prompt, typ string) (interface{}, error) {
+func GetValue(prompt survey.Prompt, typ string) (interface{}, error) {
 	switch typ {
 	case confirmPromptType:
 		ans := false
