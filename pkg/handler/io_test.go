@@ -39,7 +39,7 @@ func Test_runScript(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := runScript(ctx, d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
+			err := runScript(ctx, nil, d.script, d.wd, d.envs, tio, d.quiet, d.dryRun)
 			if err != nil {
 				if d.isErr {
 					return

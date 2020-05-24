@@ -31,8 +31,11 @@ func readConfig(cfgFilePath string, cfg *Config) error {
 	return nil
 }
 
-func runScript(ctx context.Context, script, wd string, envs []string, tioCfg Timeout, quiet, dryRun bool) error {
-	cmd := exec.Command("sh", "-c", script)
+func runScript(ctx context.Context, shell []string, script, wd string, envs []string, tioCfg Timeout, quiet, dryRun bool) error {
+	if len(shell) == 0 {
+		shell = []string{"sh", "-c"}
+	}
+	cmd := exec.Command(shell[0], append(shell[1:], script)...) //nolint:gosec
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

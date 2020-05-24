@@ -178,6 +178,7 @@ task.script_envs | []string | task level environment variable binding | false | 
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `sh -c` | true |
 task.quiet | bool | task level default configuration whether the content of script is outputted | false |
+task.shell | []string | shell command to run the script | `["sh", "-c"]`
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
 require.exec | []stringArray | required executable files | false | []
@@ -503,6 +504,41 @@ About prompt type, please see [AlecAivazis/survey's document](https://github.com
 2. environment variable (input_envs)
 3. prompt (prompt isn't launched if the value is set by command line argument or environment variable)
 4. default value
+
+## shell
+
+**This is an advanced feature.**
+
+By default task's `script` is run by the command `sh -c`.
+You can change the command by the `shell` option.
+
+For example, you can run Python script.
+
+```yaml
+- name: hello
+  shell:
+  - python
+  - -c
+  script: |
+    print("hello")
+```
+
+And you can run the shell script in the container.
+
+```yaml
+- name: hello
+  shell:
+  - docker
+  - exec
+  - -ti
+  - foo
+  - sh
+  - -c
+  script: |
+    whoami
+    read -p "name?" name
+    echo "name: $name"
+```
 
 ## Bash (Zsh) Completion
 
