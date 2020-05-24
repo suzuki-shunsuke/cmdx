@@ -9,12 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
+	"github.com/suzuki-shunsuke/cmdx/pkg/execute"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 )
 
@@ -497,8 +499,21 @@ func newCommandAction(
 			quiet = *task.Quiet
 		}
 
-		return runScript(
-			c.Context, task.Shell, scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
+		exc := execute.New()
+
+		return exc.Run(
+			c.Context, &execute.Params{
+				Shell:      task.Shell,
+				Script:     scr,
+				WorkingDir: gFlags.WorkingDir,
+				Envs:       envs,
+				Timeout: &execute.Timeout{
+					Duration:  time.Duration(task.Timeout.Duration) * time.Second,
+					KillAfter: time.Duration(task.Timeout.KillAfter) * time.Second,
+				},
+				Quiet:  quiet,
+				DryRun: gFlags.DryRun,
+			})
 	}
 }
 
