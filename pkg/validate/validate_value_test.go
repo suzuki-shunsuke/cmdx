@@ -1,28 +1,29 @@
-package handler
+package validate
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
-func Test_validateValue(t *testing.T) {
+func Test_value(t *testing.T) {
 	data := []struct {
 		title    string
 		val      string
-		validate Validate
+		validate domain.Validate
 		isErr    bool
 	}{
 		{
 			title:    "no validation",
 			val:      "foo",
-			validate: Validate{},
+			validate: domain.Validate{},
 			isErr:    false,
 		},
 		{
 			title: "int",
 			val:   "0",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "int",
 			},
 			isErr: false,
@@ -30,7 +31,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "int error",
 			val:   "foo",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "int",
 			},
 			isErr: true,
@@ -38,7 +39,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "url",
 			val:   "http://example.com",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "url",
 			},
 			isErr: false,
@@ -46,7 +47,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "url error",
 			val:   "foo",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "url",
 			},
 			isErr: true,
@@ -54,7 +55,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "email",
 			val:   "foo@example.com",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "email",
 			},
 			isErr: false,
@@ -62,7 +63,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "email error",
 			val:   "foo",
-			validate: Validate{
+			validate: domain.Validate{
 				Type: "email",
 			},
 			isErr: true,
@@ -70,7 +71,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "contain",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Contain: "lo",
 			},
 			isErr: false,
@@ -78,7 +79,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "contain error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Contain: "foo",
 			},
 			isErr: true,
@@ -86,7 +87,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "prefix",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Prefix: "hel",
 			},
 			isErr: false,
@@ -94,7 +95,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "prefix error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Prefix: "ell",
 			},
 			isErr: true,
@@ -102,7 +103,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "suffix",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Suffix: "lo",
 			},
 			isErr: false,
@@ -110,7 +111,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "suffix error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Suffix: "ll",
 			},
 			isErr: true,
@@ -118,7 +119,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "min length",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				MinLength: 3,
 			},
 			isErr: false,
@@ -126,7 +127,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "min length error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				MinLength: 6,
 			},
 			isErr: true,
@@ -134,7 +135,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "max length",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				MaxLength: 5,
 			},
 			isErr: false,
@@ -142,7 +143,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "max length error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				MaxLength: 4,
 			},
 			isErr: true,
@@ -150,7 +151,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "enum",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Enum: []string{"bar", "hello"},
 			},
 			isErr: false,
@@ -158,7 +159,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "enum error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				Enum: []string{"bar", "zoo"},
 			},
 			isErr: true,
@@ -166,7 +167,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "regexp",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				RegExp: "^h.llo",
 			},
 			isErr: false,
@@ -174,7 +175,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "regexp error",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				RegExp: "^ho",
 			},
 			isErr: true,
@@ -182,7 +183,7 @@ func Test_validateValue(t *testing.T) {
 		{
 			title: "invalid regexp",
 			val:   "hello",
-			validate: Validate{
+			validate: domain.Validate{
 				RegExp: "(.",
 			},
 			isErr: true,
@@ -191,7 +192,7 @@ func Test_validateValue(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := validateValue(d.val, d.validate)
+			err := value(d.val, d.validate)
 			if d.isErr {
 				assert.NotNil(t, err)
 				return

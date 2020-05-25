@@ -1,64 +1,24 @@
 package handler
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
-	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli/v2"
 
+	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
+	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
+	"github.com/suzuki-shunsuke/cmdx/pkg/util"
+	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 )
 
 const (
-	boolFlagType      = "bool"
-	confirmPromptType = "confirm"
-	defaultTimeout    = 36000 // default 10H
-
-	configurationFileTemplate = `---
-# the configuration file of cmdx, which is a task runner.
-# https://github.com/suzuki-shunsuke/cmdx
-# timeout:
-#   duration: 600
-#   kill_after: 30
-# input_envs:
-# - "{{.name}}"
-# script_envs:
-# - "{{.name}}"
-# environment:
-#   FOO: foo
-tasks:
-- name: hello
-  # short: h
-  description: hello task
-  flags:
-  # - name: source
-  #   short: s
-  #   usage: source file path
-  #   description: source file path
-  #   default: .drone.jsonnet
-  #   required: true
-  # - name: force
-  #   short: f
-  #   usage: force
-  #   type: bool
-  args:
-  # - name: name
-  #   usage: source file path
-  #   required: true
-  #   input_envs:
-  #   - NAME
-  environment:
-    FOO: foo
-  script: "echo $FOO"
-`
+	boolFlagType   = "bool"
+	defaultTimeout = 36000 // default 10H
 
 	rootHelp = `cmdx - task runner
 https://github.com/suzuki-shunsuke/cmdx
@@ -74,89 +34,6 @@ $ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
 `
 
 	appUsage = "task runner"
-)
-
-type (
-	Config struct {
-		Tasks       []Task
-		InputEnvs   []string `yaml:"input_envs"`
-		ScriptEnvs  []string `yaml:"script_envs"`
-		Environment map[string]string
-		Timeout     Timeout
-		Quiet       *bool
-	}
-
-	Task struct {
-		Name        string
-		Short       string
-		Description string
-		Usage       string
-		Flags       []Flag
-		Args        []Arg
-		InputEnvs   []string `yaml:"input_envs"`
-		ScriptEnvs  []string `yaml:"script_envs"`
-		Environment map[string]string
-		Script      string
-		Timeout     Timeout
-		Require     Require
-		Quiet       *bool
-		Shell       []string
-	}
-
-	Require struct {
-		Exec        []StrList
-		Environment []StrList
-	}
-
-	Timeout struct {
-		Duration  int
-		KillAfter int `yaml:"kill_after"`
-	}
-
-	Prompt struct {
-		Type    string
-		Message string
-		Help    string
-		Options []string
-	}
-
-	Flag struct {
-		Name       string
-		Short      string
-		Usage      string
-		Default    string
-		InputEnvs  []string `yaml:"input_envs"`
-		ScriptEnvs []string `yaml:"script_envs"`
-		Type       string
-		Required   bool
-		Prompt     Prompt
-		Validate   []Validate
-	}
-
-	Arg struct {
-		Name       string
-		Usage      string
-		Default    string
-		InputEnvs  []string `yaml:"input_envs"`
-		ScriptEnvs []string `yaml:"script_envs"`
-		Required   bool
-		Prompt     Prompt
-		Validate   []Validate
-	}
-
-	Validate struct {
-		Type      string
-		RegExp    string `yaml:"regexp"`
-		MinLength int    `yaml:"min_length"`
-		MaxLength int    `yaml:"max_length"`
-		Prefix    string
-		Suffix    string
-		Contain   string
-		Enum      []string
-
-		Min int
-		Max int
-	}
 )
 
 func Main(args []string) error {
@@ -176,26 +53,27 @@ func Main(args []string) error {
 
 func mainAction(args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		cfg := Config{}
+		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
 		listFlag := c.Bool("list")
 		helpFlag := c.Bool("help")
 		workingDirFlag := c.String("working-dir")
 		cfgFileName := c.String("name")
+		cfgClient := config.New()
 		if initFlag {
 			if cfgFilePath != "" {
-				return createConfigFile(cfgFilePath)
+				return cfgClient.Create(cfgFilePath)
 			}
 			if cfgFileName != "" {
-				return createConfigFile(cfgFileName)
+				return cfgClient.Create(cfgFileName)
 			}
-			return createConfigFile(".cmdx.yaml")
+			return cfgClient.Create(".cmdx.yaml")
 		}
 
 		if cfgFilePath == "" {
 			var err error
-			cfgFilePath, err = getConfigFilePath(cfgFileName)
+			cfgFilePath, err = cfgClient.GetFilePath(cfgFileName)
 			if err != nil {
 				if helpFlag && cfgFileName == "" {
 					return cli.ShowAppHelp(c)
@@ -211,10 +89,10 @@ func mainAction(args []string) func(*cli.Context) error {
 			}
 		}
 
-		if err := readConfig(cfgFilePath, &cfg); err != nil {
+		if err := cfgClient.Read(cfgFilePath, &cfg); err != nil {
 			return err
 		}
-		if err := validateConfig(&cfg); err != nil {
+		if err := validate.Config(&cfg); err != nil {
 			return fmt.Errorf("please fix the configuration file: %w", err)
 		}
 
@@ -245,19 +123,13 @@ func mainAction(args []string) func(*cli.Context) error {
 			q := c.Bool("quiet")
 			quiet = &q
 		}
-		updateAppWithConfig(app, &cfg, &GlobalFlags{
+		updateAppWithConfig(app, &cfg, &domain.GlobalFlags{
 			DryRun:     c.Bool("dry-run"),
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
 		return app.Run(args)
 	}
-}
-
-type GlobalFlags struct {
-	DryRun     bool
-	Quiet      *bool
-	WorkingDir string
 }
 
 func setupApp(app *cli.App) {
@@ -312,7 +184,7 @@ func setupApp(app *cli.App) {
 	}
 }
 
-func newFlag(flag Flag) cli.Flag {
+func newFlag(flag domain.Flag) cli.Flag {
 	name := flag.Name
 	if flag.Short != "" {
 		name += ", " + flag.Short
@@ -334,7 +206,7 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func getHelp(txt string, task Task) string {
+func getHelp(txt string, task domain.Task) string {
 	if len(task.Args) != 0 {
 		argHelps := make([]string, len(task.Args))
 		argNames := make([]string, len(task.Args))
@@ -385,7 +257,7 @@ REQUIRED ENVIRONMENT VARIABLES:
 	return txt
 }
 
-func convertTaskToCommand(task Task, gFlags *GlobalFlags) *cli.Command {
+func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
@@ -410,135 +282,12 @@ func convertTaskToCommand(task Task, gFlags *GlobalFlags) *cli.Command {
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
-		Action:             newCommandAction(task, gFlags, scriptEnvs),
+		Action:             action.NewCommandAction(task, gFlags, scriptEnvs),
 		CustomHelpTemplate: help,
 	}
 }
 
-func updateVarsByArgs(
-	args []Arg, cArgs []string, vars map[string]interface{},
-) error {
-	n := len(cArgs)
-
-	for i, arg := range args {
-		if i < n {
-			val := cArgs[i]
-			vars[arg.Name] = val
-			if err := validateValueWithValidates(val, arg.Validate); err != nil {
-				return fmt.Errorf(arg.Name+" is invalid: %w", err)
-			}
-			continue
-		}
-		// the positional argument isn't given
-		isBoundEnv := false
-		for _, e := range arg.InputEnvs {
-			if v, ok := os.LookupEnv(e); ok {
-				isBoundEnv = true
-				vars[arg.Name] = v
-				if err := validateValueWithValidates(v, arg.Validate); err != nil {
-					return fmt.Errorf(arg.Name+" is invalid: %w", err)
-				}
-				break
-			}
-		}
-		if isBoundEnv {
-			continue
-		}
-		if prompt := createPrompt(arg.Prompt); prompt != nil {
-			val, err := getValueByPrompt(prompt, arg.Prompt.Type)
-			if err != nil {
-				// TODO improvement
-				if arg.Default != "" {
-					vars[arg.Name] = arg.Default
-					continue
-				}
-				continue
-			}
-			if v, ok := val.(string); ok {
-				if err := validateValueWithValidates(v, arg.Validate); err != nil {
-					return fmt.Errorf(arg.Name+" is invalid: %w", err)
-				}
-			}
-			vars[arg.Name] = val
-			continue
-		}
-		if arg.Default != "" {
-			vars[arg.Name] = arg.Default
-			continue
-		}
-		if arg.Required {
-			return fmt.Errorf("the %d th argument '%s' is required", i+1, arg.Name)
-		}
-		vars[arg.Name] = ""
-	}
-
-	extraArgs := []string{}
-	for i, arg := range cArgs {
-		if i < len(args) {
-			continue
-		}
-		extraArgs = append(extraArgs, arg)
-	}
-
-	vars["_builtin"] = map[string]interface{}{
-		"args":            extraArgs,
-		"args_string":     strings.Join(extraArgs, " "),
-		"all_args":        cArgs,
-		"all_args_string": strings.Join(cArgs, " "),
-	}
-	return nil
-}
-
-func newCommandAction(
-	task Task, gFlags *GlobalFlags, scriptEnvs map[string][]string,
-) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		// create vars and envs
-		// run command
-		if err := requireExec(task.Require.Exec); err != nil {
-			return err
-		}
-		if err := requireEnv(task.Require.Environment); err != nil {
-			return err
-		}
-
-		vars := map[string]interface{}{}
-
-		// get flag values and set them to vars
-		if err := setFlagValues(c, task.Flags, vars); err != nil {
-			return err
-		}
-
-		// get args and set them to vars
-		if err := updateVarsByArgs(task.Args, c.Args().Slice(), vars); err != nil {
-			return err
-		}
-
-		// update environment variables which are set to script
-		envs := bindScriptEnvs(os.Environ(), vars, scriptEnvs)
-
-		for k, v := range task.Environment {
-			envs = append(envs, k+"="+v)
-		}
-
-		scr, err := renderTemplate(task.Script, vars)
-		if err != nil {
-			return fmt.Errorf("failed to parse the script - %s: %w", task.Script, err)
-		}
-
-		quiet := false
-		if gFlags.Quiet != nil {
-			quiet = *gFlags.Quiet
-		} else if task.Quiet != nil {
-			quiet = *task.Quiet
-		}
-
-		return runScript(
-			c.Context, task.Shell, scr, gFlags.WorkingDir, envs, task.Timeout, quiet, gFlags.DryRun)
-	}
-}
-
-func updateAppWithConfig(app *cli.App, cfg *Config, gFlags *GlobalFlags) {
+func updateAppWithConfig(app *cli.App, cfg *domain.Config, gFlags *domain.GlobalFlags) {
 	cmds := make([]*cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
 		cmds[i] = convertTaskToCommand(task, gFlags)
@@ -546,20 +295,10 @@ func updateAppWithConfig(app *cli.App, cfg *Config, gFlags *GlobalFlags) {
 	app.Commands = cmds
 }
 
-func renderTemplate(base string, data interface{}) (string, error) {
-	tmpl, err := template.New("command").Parse(base)
-	if err != nil {
-		return "", err
-	}
-	buf := bytes.NewBufferString("")
-	err = tmpl.Execute(buf, data)
-	return buf.String(), err
-}
-
 func setupEnvs(envs []string, name string) ([]string, error) {
 	arr := make([]string, len(envs))
 	for i, env := range envs {
-		e, err := renderTemplate(env, map[string]string{
+		e, err := util.RenderTemplate(env, map[string]string{
 			"name": name,
 		})
 		if err != nil {
@@ -570,7 +309,7 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *Task, cfg *Config) error {
+func setupTask(task *domain.Task, cfg *domain.Config) error {
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = cfg.InputEnvs
@@ -664,7 +403,7 @@ func setupTask(task *Task, cfg *Config) error {
 	return nil
 }
 
-func setupConfig(cfg *Config) error {
+func setupConfig(cfg *domain.Config) error {
 	for i, task := range cfg.Tasks {
 		task := task
 		if err := setupTask(&task, cfg); err != nil {
@@ -673,23 +412,4 @@ func setupConfig(cfg *Config) error {
 		cfg.Tasks[i] = task
 	}
 	return nil
-}
-
-func getConfigFilePath(cfgFileName string) (string, error) {
-	names := []string{".cmdx.yaml", ".cmdx.yml", "cmdx.yaml", "cmdx.yml"}
-	if cfgFileName != "" {
-		names = []string{cfgFileName}
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("failed to get the current directory path: %w", err)
-	}
-	p, err := cliutil.FindFile(wd, func(name string) bool {
-		_, err := os.Stat(name)
-		return err == nil
-	}, names...)
-	if err == nil {
-		return p, nil
-	}
-	return "", errors.New("the configuration file is not found")
 }
