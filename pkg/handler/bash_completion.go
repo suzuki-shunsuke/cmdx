@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
+	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 	"github.com/urfave/cli/v2"
 )
 
 func rootBashCompletion(args []string) func(c *cli.Context) {
 	return func(c *cli.Context) {
-		cfg := Config{}
+		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
 		helpFlag := c.Bool("help")
@@ -46,7 +48,7 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 			fmt.Println(err)
 			return
 		}
-		if err := validateConfig(&cfg); err != nil {
+		if err := validate.Config(&cfg); err != nil {
 			fmt.Println(fmt.Errorf("please fix the configuration file: %w", err))
 			return
 		}

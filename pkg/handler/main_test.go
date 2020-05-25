@@ -25,12 +25,12 @@ func Test_setupApp(t *testing.T) {
 func Test_newFlag(t *testing.T) {
 	data := []struct {
 		title string
-		flag  Flag
+		flag  domain.Flag
 		exp   cli.Flag
 	}{
 		{
 			title: "bool",
-			flag: Flag{
+			flag: domain.Flag{
 				Name:      "foo",
 				Short:     "f",
 				Usage:     "usage",
@@ -45,7 +45,7 @@ func Test_newFlag(t *testing.T) {
 		},
 		{
 			title: "string",
-			flag: Flag{
+			flag: domain.Flag{
 				Name:      "foo",
 				Usage:     "usage",
 				Default:   "default value",
@@ -60,7 +60,7 @@ func Test_newFlag(t *testing.T) {
 		},
 		{
 			title: "required",
-			flag: Flag{
+			flag: domain.Flag{
 				Name:      "foo",
 				Usage:     "usage",
 				InputEnvs: []string{"FOO"},
@@ -84,12 +84,12 @@ func Test_newFlag(t *testing.T) {
 func Test_convertTaskToCommand(t *testing.T) {
 	data := []struct {
 		title string
-		task  Task
+		task  domain.Task
 		exp   cli.Command
 	}{
 		{
 			title: "no flag",
-			task: Task{
+			task: domain.Task{
 				Name:        "test",
 				Short:       "t",
 				Usage:       "usage",
@@ -106,12 +106,12 @@ func Test_convertTaskToCommand(t *testing.T) {
 		},
 		{
 			title: "flag",
-			task: Task{
+			task: domain.Task{
 				Name:        "test",
 				Short:       "t",
 				Usage:       "usage",
 				Description: "description",
-				Flags: []Flag{
+				Flags: []domain.Flag{
 					{
 						Name: "foo",
 					},
@@ -132,12 +132,12 @@ func Test_convertTaskToCommand(t *testing.T) {
 		},
 		{
 			title: "args",
-			task: Task{
+			task: domain.Task{
 				Name:        "test",
 				Short:       "t",
 				Usage:       "usage",
 				Description: "description",
-				Args: []Arg{
+				Args: []domain.Arg{
 					{
 						Name:  "foo",
 						Usage: "usage",
@@ -219,7 +219,7 @@ func Test_renderTemplate(t *testing.T) {
 func Test_updateVarsByArgs(t *testing.T) {
 	data := []struct {
 		title   string
-		args    []Arg
+		args    []domain.Arg
 		cArgs   []string
 		vars    map[string]interface{}
 		isErr   bool
@@ -238,7 +238,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 		},
 		{
 			title: "normal",
-			args: []Arg{
+			args: []domain.Arg{
 				{
 					Name:       "foo",
 					ScriptEnvs: []string{"FOO"},
@@ -265,7 +265,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 		},
 		{
 			title: "required",
-			args: []Arg{
+			args: []domain.Arg{
 				{
 					Name:     "foo",
 					Required: true,
@@ -281,7 +281,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 				d.vars = map[string]interface{}{}
 			}
 			if d.args == nil {
-				d.args = []Arg{}
+				d.args = []domain.Arg{}
 			}
 			if d.cArgs == nil {
 				d.cArgs = []string{}
@@ -309,17 +309,17 @@ func Test_setupEnvs(t *testing.T) {
 func Test_setupTask(t *testing.T) {
 	data := []struct {
 		title string
-		task  *Task
-		cfg   *Config
+		task  *domain.Task
+		cfg   *domain.Config
 		isErr bool
-		exp   *Task
+		exp   *domain.Task
 	}{
 		{
 			title: "flags and args are empty",
-			task:  &Task{},
-			cfg:   &Config{},
-			exp: &Task{
-				Timeout: Timeout{
+			task:  &domain.Task{},
+			cfg:   &domain.Config{},
+			exp: &domain.Task{
+				Timeout: domain.Timeout{
 					Duration: defaultTimeout,
 				},
 				Environment: map[string]string{},
@@ -327,14 +327,14 @@ func Test_setupTask(t *testing.T) {
 		},
 		{
 			title: "set environment variable",
-			task:  &Task{},
-			cfg: &Config{
+			task:  &domain.Task{},
+			cfg: &domain.Config{
 				Environment: map[string]string{
 					"FOO": "foo",
 				},
 			},
-			exp: &Task{
-				Timeout: Timeout{
+			exp: &domain.Task{
+				Timeout: domain.Timeout{
 					Duration: defaultTimeout,
 				},
 				Environment: map[string]string{
@@ -344,13 +344,13 @@ func Test_setupTask(t *testing.T) {
 		},
 		{
 			title: "normal",
-			task: &Task{
-				Flags: []Flag{
+			task: &domain.Task{
+				Flags: []domain.Flag{
 					{
 						Name: "foo",
 					},
 				},
-				Args: []Arg{
+				Args: []domain.Arg{
 					{
 						Name: "bar",
 					},
@@ -360,25 +360,25 @@ func Test_setupTask(t *testing.T) {
 					"BAR": "bar",
 				},
 			},
-			cfg: &Config{
+			cfg: &domain.Config{
 				InputEnvs: []string{"{{.name}}"},
 				Environment: map[string]string{
 					"FOO": "foo",
 					"BAR": "hello",
 				},
 			},
-			exp: &Task{
-				Timeout: Timeout{
+			exp: &domain.Task{
+				Timeout: domain.Timeout{
 					Duration: defaultTimeout,
 				},
-				Flags: []Flag{
+				Flags: []domain.Flag{
 					{
 						Name:       "foo",
 						InputEnvs:  []string{"FOO"},
 						ScriptEnvs: []string{},
 					},
 				},
-				Args: []Arg{
+				Args: []domain.Arg{
 					{
 						Name:       "bar",
 						InputEnvs:  []string{"BAR"},
@@ -413,26 +413,26 @@ func Test_setupTask(t *testing.T) {
 func Test_setupConfig(t *testing.T) {
 	data := []struct {
 		title string
-		cfg   *Config
-		exp   *Config
+		cfg   *domain.Config
+		exp   *domain.Config
 		isErr bool
 	}{
 		{
 			title: "normal",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Script: "env",
 					},
 				},
 			},
-			exp: &Config{
-				Tasks: []Task{
+			exp: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Script: "env",
-						Timeout: Timeout{
+						Timeout: domain.Timeout{
 							Duration: defaultTimeout,
 						},
 						Environment: map[string]string{},
@@ -461,12 +461,12 @@ func Test_setupConfig(t *testing.T) {
 func Test_updateAppWithConfig(t *testing.T) {
 	data := []struct {
 		title string
-		cfg   *Config
+		cfg   *domain.Config
 	}{
 		{
 			title: "normal",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Script: "env",
@@ -488,7 +488,7 @@ func Test_getHelp(t *testing.T) {
 	data := []struct {
 		title string
 		txt   string
-		task  Task
+		task  domain.Task
 		exp   string
 	}{
 		{

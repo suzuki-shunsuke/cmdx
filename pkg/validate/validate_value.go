@@ -1,4 +1,4 @@
-package handler
+package validate
 
 import (
 	"errors"
@@ -8,18 +8,19 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
-func validateValueWithValidates(val string, validates []Validate) error {
+func ValueWithValidates(val string, validates []domain.Validate) error {
 	for _, validateParam := range validates {
-		if err := validateValue(val, validateParam); err != nil {
+		if err := value(val, validateParam); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func validateValue(val string, validate Validate) error {
+func value(val string, validate domain.Validate) error {
 	switch validate.Type {
 	case "email":
 		if !govalidator.IsEmail(val) {

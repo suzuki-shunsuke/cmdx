@@ -4,18 +4,20 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
+	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 	"github.com/urfave/cli/v2"
 )
 
-func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
+func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 	if c.IsSet(flag.Name) {
 		switch flag.Type {
 		case boolFlagType:
 			return c.Bool(flag.Name), nil
 		default:
 			s := c.String(flag.Name)
-			if err := validateValueWithValidates(s, flag.Validate); err != nil {
+			if err := validate.ValueWithValidates(s, flag.Validate); err != nil {
 				return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
 			}
 			return s, nil
@@ -26,7 +28,7 @@ func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
 		val, err := prompt.GetValue(p, flag.Prompt.Type)
 		if err == nil {
 			if s, ok := val.(string); ok {
-				if err := validateValueWithValidates(s, flag.Validate); err != nil {
+				if err := validate.ValueWithValidates(s, flag.Validate); err != nil {
 					return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
 				}
 			}
@@ -41,7 +43,7 @@ func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
 		return c.Bool(flag.Name), nil
 	default:
 		if v := c.String(flag.Name); v != "" {
-			if err := validateValueWithValidates(v, flag.Validate); err != nil {
+			if err := validate.ValueWithValidates(v, flag.Validate); err != nil {
 				return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
 			}
 			return v, nil
@@ -53,7 +55,7 @@ func getFlagValue(c *cli.Context, flag Flag) (interface{}, error) {
 	}
 }
 
-func setFlagValues(c *cli.Context, flags []Flag, vars map[string]interface{}) error {
+func setFlagValues(c *cli.Context, flags []domain.Flag, vars map[string]interface{}) error {
 	for _, flag := range flags {
 		val, err := getFlagValue(c, flag)
 		if err != nil {

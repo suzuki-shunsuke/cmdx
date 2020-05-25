@@ -20,6 +20,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
+	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 )
 
 const (
@@ -42,82 +43,6 @@ $ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
 	appUsage = "task runner"
 )
 
-type (
-	Config struct {
-		Tasks       []Task
-		InputEnvs   []string `yaml:"input_envs"`
-		ScriptEnvs  []string `yaml:"script_envs"`
-		Environment map[string]string
-		Timeout     Timeout
-		Quiet       *bool
-	}
-
-	Task struct {
-		Name        string
-		Short       string
-		Description string
-		Usage       string
-		Flags       []Flag
-		Args        []Arg
-		InputEnvs   []string `yaml:"input_envs"`
-		ScriptEnvs  []string `yaml:"script_envs"`
-		Environment map[string]string
-		Script      string
-		Timeout     Timeout
-		Require     Require
-		Quiet       *bool
-		Shell       []string
-	}
-
-	Require struct {
-		Exec        []StrList
-		Environment []StrList
-	}
-
-	Timeout struct {
-		Duration  int
-		KillAfter int `yaml:"kill_after"`
-	}
-
-	Flag struct {
-		Name       string
-		Short      string
-		Usage      string
-		Default    string
-		InputEnvs  []string `yaml:"input_envs"`
-		ScriptEnvs []string `yaml:"script_envs"`
-		Type       string
-		Required   bool
-		Prompt     prompt.Prompt
-		Validate   []Validate
-	}
-
-	Arg struct {
-		Name       string
-		Usage      string
-		Default    string
-		InputEnvs  []string `yaml:"input_envs"`
-		ScriptEnvs []string `yaml:"script_envs"`
-		Required   bool
-		Prompt     prompt.Prompt
-		Validate   []Validate
-	}
-
-	Validate struct {
-		Type      string
-		RegExp    string `yaml:"regexp"`
-		MinLength int    `yaml:"min_length"`
-		MaxLength int    `yaml:"max_length"`
-		Prefix    string
-		Suffix    string
-		Contain   string
-		Enum      []string
-
-		Min int
-		Max int
-	}
-)
-
 func Main(args []string) error {
 	app := cli.NewApp()
 	setupApp(app)
@@ -135,7 +60,7 @@ func Main(args []string) error {
 
 func mainAction(args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		cfg := Config{}
+		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
 		listFlag := c.Bool("list")
@@ -174,7 +99,7 @@ func mainAction(args []string) func(*cli.Context) error {
 		if err := cfgClient.Read(cfgFilePath, &cfg); err != nil {
 			return err
 		}
-		if err := validateConfig(&cfg); err != nil {
+		if err := validate.Config(&cfg); err != nil {
 			return fmt.Errorf("please fix the configuration file: %w", err)
 		}
 
@@ -272,7 +197,7 @@ func setupApp(app *cli.App) {
 	}
 }
 
-func newFlag(flag Flag) cli.Flag {
+func newFlag(flag domain.Flag) cli.Flag {
 	name := flag.Name
 	if flag.Short != "" {
 		name += ", " + flag.Short
@@ -294,7 +219,7 @@ func newFlag(flag Flag) cli.Flag {
 	}
 }
 
-func getHelp(txt string, task Task) string {
+func getHelp(txt string, task domain.Task) string {
 	if len(task.Args) != 0 {
 		argHelps := make([]string, len(task.Args))
 		argNames := make([]string, len(task.Args))
@@ -345,7 +270,7 @@ REQUIRED ENVIRONMENT VARIABLES:
 	return txt
 }
 
-func convertTaskToCommand(task Task, gFlags *GlobalFlags) *cli.Command {
+func convertTaskToCommand(task domain.Task, gFlags *GlobalFlags) *cli.Command {
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
@@ -376,7 +301,7 @@ func convertTaskToCommand(task Task, gFlags *GlobalFlags) *cli.Command {
 }
 
 func updateVarsByArgs(
-	args []Arg, cArgs []string, vars map[string]interface{},
+	args []domain.Arg, cArgs []string, vars map[string]interface{},
 ) error {
 	n := len(cArgs)
 
@@ -384,7 +309,7 @@ func updateVarsByArgs(
 		if i < n {
 			val := cArgs[i]
 			vars[arg.Name] = val
-			if err := validateValueWithValidates(val, arg.Validate); err != nil {
+			if err := validate.ValueWithValidates(val, arg.Validate); err != nil {
 				return fmt.Errorf(arg.Name+" is invalid: %w", err)
 			}
 			continue
@@ -395,7 +320,7 @@ func updateVarsByArgs(
 			if v, ok := os.LookupEnv(e); ok {
 				isBoundEnv = true
 				vars[arg.Name] = v
-				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+				if err := validate.ValueWithValidates(v, arg.Validate); err != nil {
 					return fmt.Errorf(arg.Name+" is invalid: %w", err)
 				}
 				break
@@ -415,7 +340,7 @@ func updateVarsByArgs(
 				continue
 			}
 			if v, ok := val.(string); ok {
-				if err := validateValueWithValidates(v, arg.Validate); err != nil {
+				if err := validate.ValueWithValidates(v, arg.Validate); err != nil {
 					return fmt.Errorf(arg.Name+" is invalid: %w", err)
 				}
 			}
@@ -450,7 +375,7 @@ func updateVarsByArgs(
 }
 
 func newCommandAction(
-	task Task, gFlags *GlobalFlags, scriptEnvs map[string][]string,
+	task domain.Task, gFlags *GlobalFlags, scriptEnvs map[string][]string,
 ) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		// create vars and envs
@@ -516,7 +441,7 @@ func newCommandAction(
 	}
 }
 
-func updateAppWithConfig(app *cli.App, cfg *Config, gFlags *GlobalFlags) {
+func updateAppWithConfig(app *cli.App, cfg *domain.Config, gFlags *GlobalFlags) {
 	cmds := make([]*cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
 		cmds[i] = convertTaskToCommand(task, gFlags)
@@ -548,7 +473,7 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *Task, cfg *Config) error {
+func setupTask(task *domain.Task, cfg *domain.Config) error {
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = cfg.InputEnvs
@@ -642,7 +567,7 @@ func setupTask(task *Task, cfg *Config) error {
 	return nil
 }
 
-func setupConfig(cfg *Config) error {
+func setupConfig(cfg *domain.Config) error {
 	for i, task := range cfg.Tasks {
 		task := task
 		if err := setupTask(&task, cfg); err != nil {

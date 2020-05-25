@@ -1,33 +1,13 @@
-package handler
+package validate
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
-type (
-	hasIsSetMock struct {
-		flags map[string]struct{}
-	}
-)
-
-func (h hasIsSetMock) IsSet(flag string) bool {
-	_, ok := h.flags[flag]
-	return ok
-}
-
-func newHasIsSet(flags ...string) hasIsSet {
-	m := make(map[string]struct{}, len(flags))
-	for _, f := range flags {
-		m[f] = struct{}{}
-	}
-	return hasIsSetMock{
-		flags: m,
-	}
-}
-
-func Test_validateUniqueName(t *testing.T) {
+func Test_vUniqueName(t *testing.T) {
 	data := []struct {
 		title    string
 		name     string
@@ -68,7 +48,7 @@ func Test_validateUniqueName(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			f := validateUniqueName(d.name, d.names)
+			f := vUniqueName(d.name, d.names)
 			if d.exp {
 				assert.True(t, f)
 				assert.Equal(t, d.expNames, d.names)
@@ -79,20 +59,20 @@ func Test_validateUniqueName(t *testing.T) {
 	}
 }
 
-func Test_validateConfig(t *testing.T) {
+func TestConfig(t *testing.T) {
 	data := []struct {
 		title string
-		cfg   *Config
+		cfg   *domain.Config
 		isErr bool
 	}{
 		{
 			title: "no task",
-			cfg:   &Config{},
+			cfg:   &domain.Config{},
 		},
 		{
 			title: "normal",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Short:  "f",
@@ -103,8 +83,8 @@ func Test_validateConfig(t *testing.T) {
 		},
 		{
 			title: "task name duplicates",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Script: "pwd",
@@ -119,8 +99,8 @@ func Test_validateConfig(t *testing.T) {
 		},
 		{
 			title: "task short name duplicates",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:   "foo",
 						Short:  "f",
@@ -137,12 +117,12 @@ func Test_validateConfig(t *testing.T) {
 		},
 		{
 			title: "invalid task",
-			cfg: &Config{
-				Tasks: []Task{
+			cfg: &domain.Config{
+				Tasks: []domain.Task{
 					{
 						Name:  "foo",
 						Short: "f",
-						Args: []Arg{
+						Args: []domain.Arg{
 							{},
 						},
 					},
@@ -154,7 +134,7 @@ func Test_validateConfig(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := validateConfig(d.cfg)
+			err := Config(d.cfg)
 			if err == nil {
 				assert.False(t, d.isErr)
 				return
@@ -167,10 +147,10 @@ func Test_validateConfig(t *testing.T) {
 	}
 }
 
-func Test_validateFlag(t *testing.T) {
+func Test_vFlag(t *testing.T) {
 	data := []struct {
 		title      string
-		flag       Flag
+		flag       domain.Flag
 		names      map[string]struct{}
 		shortNames map[string]struct{}
 		isErr      bool
@@ -181,7 +161,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 		{
 			title: "short name is too long",
-			flag: Flag{
+			flag: domain.Flag{
 				Name:  "foo",
 				Short: "foo",
 			},
@@ -189,7 +169,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 		{
 			title: "flag name duplicates",
-			flag: Flag{
+			flag: domain.Flag{
 				Name: "foo",
 			},
 			names: map[string]struct{}{
@@ -199,7 +179,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 		{
 			title: "flag short name duplicates",
-			flag: Flag{
+			flag: domain.Flag{
 				Name:  "foo",
 				Short: "f",
 			},
@@ -210,7 +190,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 		{
 			title: "invalid flag type",
-			flag: Flag{
+			flag: domain.Flag{
 				Name: "foo",
 				Type: "f",
 			},
@@ -218,7 +198,7 @@ func Test_validateFlag(t *testing.T) {
 		},
 		{
 			title: "normal",
-			flag: Flag{
+			flag: domain.Flag{
 				Name: "foo",
 			},
 		},
@@ -232,7 +212,7 @@ func Test_validateFlag(t *testing.T) {
 			if d.shortNames == nil {
 				d.shortNames = map[string]struct{}{}
 			}
-			err := validateFlag("task-name", d.flag, d.names, d.shortNames)
+			err := vFlag("task-name", d.flag, d.names, d.shortNames)
 			if err == nil {
 				assert.False(t, d.isErr)
 				return
@@ -245,10 +225,10 @@ func Test_validateFlag(t *testing.T) {
 	}
 }
 
-func Test_validateArg(t *testing.T) {
+func Test_vArg(t *testing.T) {
 	data := []struct {
 		title string
-		arg   Arg
+		arg   domain.Arg
 		names map[string]struct{}
 		isErr bool
 	}{
@@ -258,7 +238,7 @@ func Test_validateArg(t *testing.T) {
 		},
 		{
 			title: "arg name duplicates",
-			arg: Arg{
+			arg: domain.Arg{
 				Name: "foo",
 			},
 			names: map[string]struct{}{
@@ -268,7 +248,7 @@ func Test_validateArg(t *testing.T) {
 		},
 		{
 			title: "normal",
-			arg: Arg{
+			arg: domain.Arg{
 				Name: "foo",
 			},
 		},
@@ -279,7 +259,7 @@ func Test_validateArg(t *testing.T) {
 			if d.names == nil {
 				d.names = map[string]struct{}{}
 			}
-			err := validateArg("task-name", d.arg, d.names)
+			err := vArg("task-name", d.arg, d.names)
 			if err == nil {
 				assert.False(t, d.isErr)
 				return
@@ -292,10 +272,10 @@ func Test_validateArg(t *testing.T) {
 	}
 }
 
-func Test_validateTask(t *testing.T) {
+func Test_vTask(t *testing.T) {
 	data := []struct {
 		title string
-		task  Task
+		task  domain.Task
 		isErr bool
 	}{
 		{
@@ -304,9 +284,9 @@ func Test_validateTask(t *testing.T) {
 		},
 		{
 			title: "invalid flag",
-			task: Task{
+			task: domain.Task{
 				Name: "foo",
-				Flags: []Flag{
+				Flags: []domain.Flag{
 					{},
 				},
 			},
@@ -314,9 +294,9 @@ func Test_validateTask(t *testing.T) {
 		},
 		{
 			title: "invalid arg",
-			task: Task{
+			task: domain.Task{
 				Name: "foo",
-				Args: []Arg{
+				Args: []domain.Arg{
 					{},
 				},
 			},
@@ -324,7 +304,7 @@ func Test_validateTask(t *testing.T) {
 		},
 		{
 			title: "normal",
-			task: Task{
+			task: domain.Task{
 				Name: "foo",
 			},
 		},
@@ -332,55 +312,7 @@ func Test_validateTask(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := validateTask(d.task)
-			if err == nil {
-				assert.False(t, d.isErr)
-				return
-			}
-			if d.isErr {
-				return
-			}
-			assert.NotNil(t, err)
-		})
-	}
-}
-
-func Test_validateFlagRequired(t *testing.T) {
-	data := []struct {
-		title   string
-		flagSet []string
-		flags   []Flag
-		isErr   bool
-	}{
-		{
-			title:   "normal",
-			flagSet: []string{"bar"},
-			flags: []Flag{
-				{
-					Name: "foo",
-				},
-				{
-					Name:     "bar",
-					Required: true,
-				},
-			},
-		},
-		{
-			title: "required",
-			flags: []Flag{
-				{
-					Name:     "foo",
-					Required: true,
-				},
-			},
-			isErr: true,
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			c := newHasIsSet(d.flagSet...)
-			err := validateFlagRequired(c, d.flags)
+			err := vTask(d.task)
 			if err == nil {
 				assert.False(t, d.isErr)
 				return
