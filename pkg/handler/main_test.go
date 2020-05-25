@@ -174,128 +174,13 @@ ARGUMENTS:
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			cmd := convertTaskToCommand(d.task, &GlobalFlags{})
+			cmd := convertTaskToCommand(d.task, &domain.GlobalFlags{})
 			assert.Equal(t, d.exp.Name, cmd.Name)
 			assert.Equal(t, d.exp.Aliases, cmd.Aliases)
 			assert.Equal(t, d.exp.Usage, cmd.Usage)
 			assert.Equal(t, d.exp.Flags, cmd.Flags)
 			assert.Equal(t, d.exp.Description, cmd.Description)
 			assert.Equal(t, d.exp.CustomHelpTemplate, cmd.CustomHelpTemplate)
-		})
-	}
-}
-
-func Test_renderTemplate(t *testing.T) {
-	data := []struct {
-		title string
-		base  string
-		data  interface{}
-		isErr bool
-		exp   string
-	}{
-		{
-			title: "normal",
-			base:  "foo {{.source}}",
-			data:  map[string]string{"source": "bar"},
-			exp:   "foo bar",
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			s, err := renderTemplate(d.base, d.data)
-			if err != nil {
-				if d.isErr {
-					return
-				}
-				assert.NotNil(t, err)
-				return
-			}
-			assert.Equal(t, d.exp, s)
-		})
-	}
-}
-
-func Test_updateVarsByArgs(t *testing.T) {
-	data := []struct {
-		title   string
-		args    []domain.Arg
-		cArgs   []string
-		vars    map[string]interface{}
-		isErr   bool
-		expVars map[string]interface{}
-	}{
-		{
-			title: "args and cArgs is empty",
-			expVars: map[string]interface{}{
-				"_builtin": map[string]interface{}{
-					"args":            []string{},
-					"args_string":     "",
-					"all_args":        []string{},
-					"all_args_string": "",
-				},
-			},
-		},
-		{
-			title: "normal",
-			args: []domain.Arg{
-				{
-					Name:       "foo",
-					ScriptEnvs: []string{"FOO"},
-				},
-				{
-					Name:       "bar",
-					ScriptEnvs: []string{"BAR"},
-					Default:    "bar-value",
-				},
-			},
-			cArgs: []string{
-				"foo-value",
-			},
-			expVars: map[string]interface{}{
-				"foo": "foo-value",
-				"bar": "bar-value",
-				"_builtin": map[string]interface{}{
-					"args":            []string{},
-					"args_string":     "",
-					"all_args":        []string{"foo-value"},
-					"all_args_string": "foo-value",
-				},
-			},
-		},
-		{
-			title: "required",
-			args: []domain.Arg{
-				{
-					Name:     "foo",
-					Required: true,
-				},
-			},
-			isErr: true,
-		},
-	}
-	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
-			if d.vars == nil {
-				d.vars = map[string]interface{}{}
-			}
-			if d.args == nil {
-				d.args = []domain.Arg{}
-			}
-			if d.cArgs == nil {
-				d.cArgs = []string{}
-			}
-			err := updateVarsByArgs(d.args, d.cArgs, d.vars)
-			if err != nil {
-				if d.isErr {
-					return
-				}
-				assert.NotNil(t, err)
-				return
-			}
-			assert.False(t, d.isErr)
-			assert.Equal(t, d.expVars, d.vars)
 		})
 	}
 }
@@ -479,7 +364,7 @@ func Test_updateAppWithConfig(t *testing.T) {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
 			app := cli.NewApp()
-			updateAppWithConfig(app, d.cfg, &GlobalFlags{WorkingDir: "/tmp"})
+			updateAppWithConfig(app, d.cfg, &domain.GlobalFlags{WorkingDir: "/tmp"})
 		})
 	}
 }

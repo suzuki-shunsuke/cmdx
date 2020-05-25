@@ -4,6 +4,12 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 )
 
+type GlobalFlags struct {
+	DryRun     bool
+	Quiet      *bool
+	WorkingDir string
+}
+
 type Flag struct {
 	Name       string
 	Short      string

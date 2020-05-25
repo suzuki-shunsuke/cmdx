@@ -60,7 +60,7 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 
 		app := cli.NewApp()
 		setupApp(app)
-		updateAppWithConfig(app, &cfg, &GlobalFlags{})
+		updateAppWithConfig(app, &cfg, &domain.GlobalFlags{})
 		if err := app.Run(args); err != nil {
 			fmt.Println(err)
 			return
