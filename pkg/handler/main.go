@@ -17,6 +17,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/execute"
+	"github.com/suzuki-shunsuke/cmdx/pkg/flag"
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
@@ -395,7 +396,7 @@ func newCommandAction(
 		vars := map[string]interface{}{}
 
 		// get flag values and set them to vars
-		if err := setFlagValues(c, task.Flags, vars); err != nil {
+		if err := flag.SetValues(c, task.Flags, vars); err != nil {
 			return err
 		}
 

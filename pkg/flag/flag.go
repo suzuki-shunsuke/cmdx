@@ -1,4 +1,4 @@
-package handler
+package flag
 
 import (
 	"errors"
@@ -8,6 +8,10 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 	"github.com/urfave/cli/v2"
+)
+
+const (
+	boolFlagType = "bool"
 )
 
 func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
@@ -55,7 +59,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 	}
 }
 
-func setFlagValues(c *cli.Context, flags []domain.Flag, vars map[string]interface{}) error {
+func SetValues(c *cli.Context, flags []domain.Flag, vars map[string]interface{}) error {
 	for _, flag := range flags {
 		val, err := getFlagValue(c, flag)
 		if err != nil {
