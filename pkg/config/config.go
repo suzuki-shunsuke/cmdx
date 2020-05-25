@@ -1,10 +1,12 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/suzuki-shunsuke/go-cliutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -77,4 +79,23 @@ func (client *Client) Create(p string) error {
 		return fmt.Errorf("failed to create the configuration file %s: %w", p, err)
 	}
 	return nil
+}
+
+func (client *Client) GetFilePath(cfgFileName string) (string, error) {
+	names := []string{".cmdx.yaml", ".cmdx.yml", "cmdx.yaml", "cmdx.yml"}
+	if cfgFileName != "" {
+		names = []string{cfgFileName}
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get the current directory path: %w", err)
+	}
+	p, err := cliutil.FindFile(wd, func(name string) bool {
+		_, err := os.Stat(name)
+		return err == nil
+	}, names...)
+	if err == nil {
+		return p, nil
+	}
+	return "", errors.New("the configuration file is not found")
 }

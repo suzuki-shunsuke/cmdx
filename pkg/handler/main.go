@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/suzuki-shunsuke/go-cliutil"
 	"github.com/urfave/cli/v2"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
@@ -81,7 +79,7 @@ func mainAction(args []string) func(*cli.Context) error {
 
 		if cfgFilePath == "" {
 			var err error
-			cfgFilePath, err = getConfigFilePath(cfgFileName)
+			cfgFilePath, err = cfgClient.GetFilePath(cfgFileName)
 			if err != nil {
 				if helpFlag && cfgFileName == "" {
 					return cli.ShowAppHelp(c)
@@ -577,23 +575,4 @@ func setupConfig(cfg *domain.Config) error {
 		cfg.Tasks[i] = task
 	}
 	return nil
-}
-
-func getConfigFilePath(cfgFileName string) (string, error) {
-	names := []string{".cmdx.yaml", ".cmdx.yml", "cmdx.yaml", "cmdx.yml"}
-	if cfgFileName != "" {
-		names = []string{cfgFileName}
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("failed to get the current directory path: %w", err)
-	}
-	p, err := cliutil.FindFile(wd, func(name string) bool {
-		_, err := os.Stat(name)
-		return err == nil
-	}, names...)
-	if err == nil {
-		return p, nil
-	}
-	return "", errors.New("the configuration file is not found")
 }

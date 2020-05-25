@@ -25,7 +25,7 @@ func rootBashCompletion(args []string) func(c *cli.Context) {
 
 		if cfgFilePath == "" {
 			var err error
-			cfgFilePath, err = getConfigFilePath(cfgFileName)
+			cfgFilePath, err = cfgClient.GetFilePath(cfgFileName)
 			if err != nil {
 				if helpFlag && cfgFileName == "" {
 					cli.DefaultAppComplete(c)
