@@ -326,16 +326,6 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 }
 
 func setupTask(task *domain.Task, base *domain.Task) error {
-	if len(task.Tasks) != 0 {
-		for i, t := range task.Tasks {
-			t := t
-			if err := setupTask(&t, base); err != nil {
-				return err
-			}
-			task.Tasks[i] = t
-		}
-		return nil
-	}
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = base.InputEnvs
@@ -424,6 +414,20 @@ func setupTask(task *domain.Task, base *domain.Task) error {
 		}
 
 		task.Args[j] = arg
+	}
+
+	task.Require.Exec = append(task.Require.Exec, base.Require.Exec...)
+	task.Require.Environment = append(task.Require.Environment, base.Require.Environment...)
+
+	if len(task.Tasks) != 0 {
+		for i, t := range task.Tasks {
+			t := t
+			if err := setupTask(&t, task); err != nil {
+				return err
+			}
+			task.Tasks[i] = t
+		}
+		return nil
 	}
 
 	return nil
