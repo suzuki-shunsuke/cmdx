@@ -325,11 +325,11 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *domain.Task, cfg *domain.Config) error {
+func setupTask(task *domain.Task, base *domain.Task) error {
 	if len(task.Tasks) != 0 {
 		for i, t := range task.Tasks {
 			t := t
-			if err := setupTask(&t, cfg); err != nil {
+			if err := setupTask(&t, base); err != nil {
 				return err
 			}
 			task.Tasks[i] = t
@@ -338,37 +338,37 @@ func setupTask(task *domain.Task, cfg *domain.Config) error {
 	}
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
-		inputEnvs = cfg.InputEnvs
+		inputEnvs = base.InputEnvs
 	}
 
 	if task.Quiet == nil {
-		task.Quiet = cfg.Quiet
+		task.Quiet = base.Quiet
 	}
 
 	scriptEnvs := task.ScriptEnvs
 	if len(scriptEnvs) == 0 {
-		scriptEnvs = cfg.ScriptEnvs
+		scriptEnvs = base.ScriptEnvs
 	}
 
 	if task.Environment == nil {
 		task.Environment = map[string]string{}
 	}
-	for k, v := range cfg.Environment {
+	for k, v := range base.Environment {
 		if _, ok := task.Environment[k]; !ok {
 			task.Environment[k] = v
 		}
 	}
 
 	if task.Timeout.Duration == 0 {
-		if cfg.Timeout.Duration == 0 {
+		if base.Timeout.Duration == 0 {
 			task.Timeout.Duration = defaultTimeout
 		} else {
-			task.Timeout.Duration = cfg.Timeout.Duration
+			task.Timeout.Duration = base.Timeout.Duration
 		}
 	}
 
 	if task.Timeout.KillAfter == 0 {
-		task.Timeout.KillAfter = cfg.Timeout.KillAfter
+		task.Timeout.KillAfter = base.Timeout.KillAfter
 	}
 
 	for j, flag := range task.Flags {
@@ -430,9 +430,16 @@ func setupTask(task *domain.Task, cfg *domain.Config) error {
 }
 
 func setupConfig(cfg *domain.Config) error {
+	base := &domain.Task{
+		InputEnvs:   cfg.InputEnvs,
+		Quiet:       cfg.Quiet,
+		ScriptEnvs:  cfg.ScriptEnvs,
+		Environment: cfg.Environment,
+		Timeout:     cfg.Timeout,
+	}
 	for i, task := range cfg.Tasks {
 		task := task
-		if err := setupTask(&task, cfg); err != nil {
+		if err := setupTask(&task, base); err != nil {
 			return err
 		}
 		cfg.Tasks[i] = task
