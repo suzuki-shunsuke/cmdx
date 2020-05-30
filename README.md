@@ -48,13 +48,20 @@ ARGUMENTS:
    version
 ```
 
-You can make the simple shell script rich with `cmdx`
+`cmdx` searches the configuration file from the current directory to the root directory recursively, and runs the task at the directory where the configuration file exists.
+So the result of the task doesn't depend on the directory you run `cmdx`.
 
-* `cmdx` supports the parse of the flag and positional arguments
-* `cmdx` provides useful help messages
-* `cmds` supports the interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
+## Features
 
-`cmdx` searches the configuration file from the current directory to the root directory recursively and runs the task at the directory where the configuration file exists so the result of the task doesn't depend on the directory you run `cmdx`.
+* Easy to install (one binary)
+* Parse the flag and positional arguments
+* Useful help messages
+* Interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
+* Validate requirements
+* Validate flag and positional arguments
+* Timeout
+* Bash and Zsh completion
+* Nested tasks (Sub tasks)
 
 ## Install
 
@@ -181,6 +188,7 @@ task.quiet | bool | task level default configuration whether the content of scri
 task.shell | []string | shell command to run the script | `["sh", "-c"]`
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
+task.tasks | []task | sub tasks | false | `[]`
 require.exec | []stringArray | required executable files | false | []
 require.environment | []stringArray | required environment variables | false | []
 stringArray | array whose element is string or array of string | |
@@ -552,6 +560,84 @@ To enable the completion, you have to load a shell script.
 For detail, please see the [document of urfave/cli](https://github.com/urfave/cli/blob/477292c8d462a3f51cd18bc77c0542193a62274d/docs/v2/manual.md#bash-completion).
 
 Please set `cmdx` to `PROG`
+
+## Sub tasks
+
+`cmdx` supports sub tasks.
+
+For example,
+
+```yaml
+tasks:
+- name: admin
+  usage: administrator feature
+  tasks:
+  - name: cluster
+    usage: manage clusters
+    tasks:
+    - name: create
+      usage: create a cluster
+      script: echo "create a cluster"
+```
+
+```
+$ cmdx admin cluster create
++ echo "create a cluster"
+create a cluster
+```
+
+`requires` and `input_envs` and `script_envs` are inherited from the parent tasks.
+
+The following attributes are inherited from the parent tasks.
+
+* input_envs
+* script_envs
+* quiet
+* environment
+* timeout
+* requires
+
+For example,
+
+```yaml
+tasks:
+- name: admin
+  usage: administrator feature
+  require:
+    exec:
+    - yamllint
+  tasks:
+  - name: cluster
+    usage: manage clusters
+    tasks:
+    - name: create
+      usage: create a cluster
+      script: echo "create a cluster"
+```
+
+```
+$ cmdx admin cluster create
+yamllint is required
+```
+
+We can't set both `task.script` and `task.tasks`.
+
+For example,
+
+```yaml
+tasks:
+- name: hello
+  script: echo hello
+  tasks:
+  - name: world
+    script: echo "hello world"
+```
+
+```
+$ cmdx hello
+please fix the configuration file: the task `hello` is invalid. when sub tasks are set, 'script' can't b
+e set
+```
 
 ## Contributing
 

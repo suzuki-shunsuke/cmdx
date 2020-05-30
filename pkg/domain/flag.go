@@ -38,6 +38,7 @@ type Task struct {
 	Require     Require
 	Quiet       *bool
 	Shell       []string
+	Tasks       []Task
 }
 
 type Arg struct {

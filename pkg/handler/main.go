@@ -258,11 +258,27 @@ REQUIRED ENVIRONMENT VARIABLES:
 }
 
 func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Command {
+	help := getHelp(cli.CommandHelpTemplate, task)
+
+	if len(task.Tasks) != 0 {
+		tasks := make([]*cli.Command, len(task.Tasks))
+		for i, s := range task.Tasks {
+			tasks[i] = convertTaskToCommand(s, gFlags)
+		}
+		return &cli.Command{
+			Name:               task.Name,
+			Aliases:            []string{task.Short},
+			Usage:              task.Usage,
+			Description:        task.Description,
+			Subcommands:        tasks,
+			CustomHelpTemplate: help,
+		}
+	}
+
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
 	}
-	help := getHelp(cli.CommandHelpTemplate, task)
 
 	scriptEnvs := map[string][]string{}
 	for _, flag := range task.Flags {
@@ -309,40 +325,40 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *domain.Task, cfg *domain.Config) error {
+func setupTask(task *domain.Task, base *domain.Task) error {
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
-		inputEnvs = cfg.InputEnvs
+		inputEnvs = base.InputEnvs
 	}
 
 	if task.Quiet == nil {
-		task.Quiet = cfg.Quiet
+		task.Quiet = base.Quiet
 	}
 
 	scriptEnvs := task.ScriptEnvs
 	if len(scriptEnvs) == 0 {
-		scriptEnvs = cfg.ScriptEnvs
+		scriptEnvs = base.ScriptEnvs
 	}
 
 	if task.Environment == nil {
 		task.Environment = map[string]string{}
 	}
-	for k, v := range cfg.Environment {
+	for k, v := range base.Environment {
 		if _, ok := task.Environment[k]; !ok {
 			task.Environment[k] = v
 		}
 	}
 
 	if task.Timeout.Duration == 0 {
-		if cfg.Timeout.Duration == 0 {
+		if base.Timeout.Duration == 0 {
 			task.Timeout.Duration = defaultTimeout
 		} else {
-			task.Timeout.Duration = cfg.Timeout.Duration
+			task.Timeout.Duration = base.Timeout.Duration
 		}
 	}
 
 	if task.Timeout.KillAfter == 0 {
-		task.Timeout.KillAfter = cfg.Timeout.KillAfter
+		task.Timeout.KillAfter = base.Timeout.KillAfter
 	}
 
 	for j, flag := range task.Flags {
@@ -400,13 +416,34 @@ func setupTask(task *domain.Task, cfg *domain.Config) error {
 		task.Args[j] = arg
 	}
 
+	task.Require.Exec = append(task.Require.Exec, base.Require.Exec...)
+	task.Require.Environment = append(task.Require.Environment, base.Require.Environment...)
+
+	if len(task.Tasks) != 0 {
+		for i, t := range task.Tasks {
+			t := t
+			if err := setupTask(&t, task); err != nil {
+				return err
+			}
+			task.Tasks[i] = t
+		}
+		return nil
+	}
+
 	return nil
 }
 
 func setupConfig(cfg *domain.Config) error {
+	base := &domain.Task{
+		InputEnvs:   cfg.InputEnvs,
+		Quiet:       cfg.Quiet,
+		ScriptEnvs:  cfg.ScriptEnvs,
+		Environment: cfg.Environment,
+		Timeout:     cfg.Timeout,
+	}
 	for i, task := range cfg.Tasks {
 		task := task
-		if err := setupTask(&task, cfg); err != nil {
+		if err := setupTask(&task, base); err != nil {
 			return err
 		}
 		cfg.Tasks[i] = task

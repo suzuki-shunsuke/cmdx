@@ -195,14 +195,14 @@ func Test_setupTask(t *testing.T) {
 	data := []struct {
 		title string
 		task  *domain.Task
-		cfg   *domain.Config
+		base  *domain.Task
 		isErr bool
 		exp   *domain.Task
 	}{
 		{
 			title: "flags and args are empty",
 			task:  &domain.Task{},
-			cfg:   &domain.Config{},
+			base:  &domain.Task{},
 			exp: &domain.Task{
 				Timeout: domain.Timeout{
 					Duration: defaultTimeout,
@@ -213,7 +213,7 @@ func Test_setupTask(t *testing.T) {
 		{
 			title: "set environment variable",
 			task:  &domain.Task{},
-			cfg: &domain.Config{
+			base: &domain.Task{
 				Environment: map[string]string{
 					"FOO": "foo",
 				},
@@ -245,7 +245,7 @@ func Test_setupTask(t *testing.T) {
 					"BAR": "bar",
 				},
 			},
-			cfg: &domain.Config{
+			base: &domain.Task{
 				InputEnvs: []string{"{{.name}}"},
 				Environment: map[string]string{
 					"FOO": "foo",
@@ -281,7 +281,7 @@ func Test_setupTask(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.title, func(t *testing.T) {
-			err := setupTask(d.task, d.cfg)
+			err := setupTask(d.task, d.base)
 			if err != nil {
 				if d.isErr {
 					return
