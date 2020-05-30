@@ -122,5 +122,15 @@ func vTask(task domain.Task) error {
 			return err
 		}
 	}
+	if len(task.Tasks) != 0 {
+		if task.Script != "" {
+			return errors.New("the task `" + task.Name + "` is invalid. when sub tasks are set, 'script' can't be set")
+		}
+	}
+	for _, t := range task.Tasks {
+		if err := vTask(t); err != nil {
+			return err
+		}
+	}
 	return nil
 }
