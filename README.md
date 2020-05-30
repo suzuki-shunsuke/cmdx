@@ -586,8 +586,6 @@ $ cmdx admin cluster create
 create a cluster
 ```
 
-`requires` and `input_envs` and `script_envs` are inherited from the parent tasks.
-
 The following attributes are inherited from the parent tasks.
 
 * input_envs
