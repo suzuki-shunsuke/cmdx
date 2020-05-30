@@ -181,6 +181,7 @@ task.quiet | bool | task level default configuration whether the content of scri
 task.shell | []string | shell command to run the script | `["sh", "-c"]`
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
+task.tasks | []task | sub tasks | false | `[]`
 require.exec | []stringArray | required executable files | false | []
 require.environment | []stringArray | required environment variables | false | []
 stringArray | array whose element is string or array of string | |
@@ -552,6 +553,75 @@ To enable the completion, you have to load a shell script.
 For detail, please see the [document of urfave/cli](https://github.com/urfave/cli/blob/477292c8d462a3f51cd18bc77c0542193a62274d/docs/v2/manual.md#bash-completion).
 
 Please set `cmdx` to `PROG`
+
+## Sub tasks
+
+`cmdx` supports sub tasks.
+
+For example,
+
+```yaml
+tasks:
+- name: admin
+  usage: administrator feature
+  tasks:
+  - name: cluster
+    usage: manage clusters
+    tasks:
+    - name: create
+      usage: create a cluster
+      script: echo "create a cluster"
+```
+
+```
+$ cmdx admin cluster create
++ echo "create a cluster"
+create a cluster
+```
+
+`requires` are inherited from the parent tasks.
+
+For example,
+
+```yaml
+tasks:
+- name: admin
+  usage: administrator feature
+  require:
+    exec:
+    - yamllint
+  tasks:
+  - name: cluster
+    usage: manage clusters
+    tasks:
+    - name: create
+      usage: create a cluster
+      script: echo "create a cluster"
+```
+
+```
+$ cmdx admin cluster create
+yamllint is required
+```
+
+We can't set both `task.script` and `task.tasks`.
+
+For example,
+
+```yaml
+tasks:
+- name: hello
+  script: echo hello
+  tasks:
+  - name: world
+    script: echo "hello world"
+```
+
+```
+$ cmdx hello
+please fix the configuration file: the task `hello` is invalid. when sub tasks are set, 'script' can't b
+e set
+```
 
 ## Contributing
 
