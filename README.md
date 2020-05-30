@@ -48,13 +48,20 @@ ARGUMENTS:
    version
 ```
 
-You can make the simple shell script rich with `cmdx`
+`cmdx` searches the configuration file from the current directory to the root directory recursively, and runs the task at the directory where the configuration file exists.
+So the result of the task doesn't depend on the directory you run `cmdx`.
 
-* `cmdx` supports the parse of the flag and positional arguments
-* `cmdx` provides useful help messages
-* `cmds` supports the interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
+## Features
 
-`cmdx` searches the configuration file from the current directory to the root directory recursively and runs the task at the directory where the configuration file exists so the result of the task doesn't depend on the directory you run `cmdx`.
+* Easy to install (one binary)
+* Parse the flag and positional arguments
+* Useful help messages
+* Interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
+* Validate requirements
+* Validate flag and positional arguments
+* Timeout
+* Bash and Zsh completion
+* Nested tasks (Sub tasks)
 
 ## Install
 
@@ -579,7 +586,16 @@ $ cmdx admin cluster create
 create a cluster
 ```
 
-`requires` are inherited from the parent tasks.
+`requires` and `input_envs` and `script_envs` are inherited from the parent tasks.
+
+The following attributes are inherited from the parent tasks.
+
+* input_envs
+* script_envs
+* quiet
+* environment
+* timeout
+* requires
 
 For example,
 
