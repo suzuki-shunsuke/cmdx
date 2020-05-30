@@ -258,11 +258,27 @@ REQUIRED ENVIRONMENT VARIABLES:
 }
 
 func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Command {
+	help := getHelp(cli.CommandHelpTemplate, task)
+
+	if len(task.Tasks) != 0 {
+		tasks := make([]*cli.Command, len(task.Tasks))
+		for i, s := range task.Tasks {
+			tasks[i] = convertTaskToCommand(s, gFlags)
+		}
+		return &cli.Command{
+			Name:               task.Name,
+			Aliases:            []string{task.Short},
+			Usage:              task.Usage,
+			Description:        task.Description,
+			Subcommands:        tasks,
+			CustomHelpTemplate: help,
+		}
+	}
+
 	flags := make([]cli.Flag, len(task.Flags))
 	for j, flag := range task.Flags {
 		flags[j] = newFlag(flag)
 	}
-	help := getHelp(cli.CommandHelpTemplate, task)
 
 	scriptEnvs := map[string][]string{}
 	for _, flag := range task.Flags {
@@ -310,6 +326,16 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 }
 
 func setupTask(task *domain.Task, cfg *domain.Config) error {
+	if len(task.Tasks) != 0 {
+		for i, t := range task.Tasks {
+			t := t
+			if err := setupTask(&t, cfg); err != nil {
+				return err
+			}
+			task.Tasks[i] = t
+		}
+		return nil
+	}
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = cfg.InputEnvs
