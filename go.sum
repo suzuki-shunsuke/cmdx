@@ -39,6 +39,8 @@ github.com/suzuki-shunsuke/go-cliutil v0.3.0 h1:nDMHCFT3LNShus5DxZ8FcHhnIrdqRH00
 github.com/suzuki-shunsuke/go-cliutil v0.3.0/go.mod h1:XdMIFYBkqjjXzLcAga1iKTbFKj4DunDXXmEqegz2HnY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v0.2.1 h1:d4qBtZlH0Lpag40uAJMd0QUpXEwuYn2qNuWRQn0YjiM=
 github.com/suzuki-shunsuke/go-error-with-exit-code v0.2.1/go.mod h1:tpm3UnD+WSEPI1BUn/t3jM/7orIWUjrtlREQJrruX/E=
+github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
+github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
 github.com/suzuki-shunsuke/go-timeout v0.2.1 h1:owpOlUxNfBUEc30+POjbTXdDRahBJ6ExD5qngVTbWp8=
 github.com/suzuki-shunsuke/go-timeout v0.2.1/go.mod h1:46z+hwEIbd+G3m0G9U+u/0uBD6zcx2q8YsCia0+gEUs=
 github.com/urfave/cli v1.20.0 h1:fDqGv3UG/4jbVl/QkFwEdddtEDjh/5Ov6X+0B/3bPaw=
