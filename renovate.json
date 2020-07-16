@@ -1,12 +1,5 @@
 {
   "extends": [
-    "config:base"
-  ],
-  "packageRules": [
-    {
-      "packageNames": ["golang"],
-      "updateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true
-    }
+    "github>suzuki-shunsuke/renovate-config:golang"
   ]
 }
