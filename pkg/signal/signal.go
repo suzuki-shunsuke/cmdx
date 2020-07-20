@@ -7,9 +7,7 @@ import (
 	"syscall"
 )
 
-var (
-	once sync.Once //nolint:gochecknoglobals
-)
+var once sync.Once //nolint:gochecknoglobals
 
 // Handle calls the function "callback" when the sinal is sent.
 // This is useful to support canceling by signal.

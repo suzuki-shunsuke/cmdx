@@ -325,7 +325,7 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 	return arr, nil
 }
 
-func setupTask(task *domain.Task, base *domain.Task) error {
+func setupTask(task, base *domain.Task) error {
 	inputEnvs := task.InputEnvs
 	if len(inputEnvs) == 0 {
 		inputEnvs = base.InputEnvs

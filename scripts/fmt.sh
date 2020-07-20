@@ -1,6 +1,7 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-find . \
-  -type d -name .git -prune -o \
-  -type f -name "*.go" -print0 |
-  xargs -0 gofmt -l -s -w
+set -eu
+set -o pipefail
+
+git ls-files | grep -E "\.go$" |
+  xargs gofumpt -l -s -w
