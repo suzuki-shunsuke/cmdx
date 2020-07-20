@@ -75,7 +75,7 @@ func (client *Client) Create(p string) error {
 		// If the configuration file already exists, do nothing.
 		return nil
 	}
-	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0644); err != nil { //nolint:gosec
+	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0o644); err != nil { //nolint:gosec
 		return fmt.Errorf("failed to create the configuration file %s: %w", p, err)
 	}
 	return nil

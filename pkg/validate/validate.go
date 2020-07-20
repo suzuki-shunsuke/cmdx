@@ -1,24 +1,21 @@
 package validate
 
 import (
-	"fmt"
-
 	"errors"
+	"fmt"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
-var (
-	flagTypes = map[string]struct{}{ //nolint:gochecknoglobals
-		"input":        {},
-		"multiline":    {},
-		"password":     {},
-		"confirm":      {},
-		"select":       {},
-		"multi_select": {},
-		"editor":       {},
-	}
-)
+var flagTypes = map[string]struct{}{ //nolint:gochecknoglobals
+	"input":        {},
+	"multiline":    {},
+	"password":     {},
+	"confirm":      {},
+	"select":       {},
+	"multi_select": {},
+	"editor":       {},
+}
 
 func Config(cfg *domain.Config) error {
 	taskNames := make(map[string]struct{}, len(cfg.Tasks))
