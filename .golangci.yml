@@ -11,3 +11,4 @@ linters:
   - gocognit
   - godox
   - nestif
+  - nlreturn

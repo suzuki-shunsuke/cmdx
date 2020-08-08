@@ -6,14 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/urfave/cli/v2"
-
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
 	"github.com/suzuki-shunsuke/cmdx/pkg/util"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
+	"github.com/urfave/cli/v2"
 )
 
 const (

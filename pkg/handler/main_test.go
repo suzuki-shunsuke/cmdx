@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
+	"github.com/urfave/cli/v2"
 )
 
 func Test_setupApp(t *testing.T) {
