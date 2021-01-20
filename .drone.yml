@@ -40,7 +40,7 @@ volumes:
   temp: {}
 steps:
 - name: download go modules
-  image: golang:1.15.5
+  image: golang:1.15.7
   commands:
   - go mod download
   volumes: &volumes
@@ -52,7 +52,7 @@ steps:
   - golangci-lint run
   volumes: *volumes
 - name: test
-  image: golang:1.15.5
+  image: golang:1.15.7
   commands:
   - bash ci/test.sh
   environment:
