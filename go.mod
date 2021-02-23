@@ -3,7 +3,7 @@ module github.com/suzuki-shunsuke/cmdx
 go 1.14
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.7
+	github.com/AlecAivazis/survey/v2 v2.2.8
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/stretchr/testify v1.7.0
 	github.com/suzuki-shunsuke/go-cliutil v0.3.0
