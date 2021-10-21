@@ -35,13 +35,23 @@ $ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
 	appUsage = "task runner"
 )
 
-func Main(args []string) error {
-	app := cli.NewApp()
-	setupApp(app)
-	app.HideHelp = true
-	app.BashComplete = rootBashCompletion(args)
+type LDFlags struct {
+	Version string
+	Commit  string
+	Date    string
+}
 
-	app.Action = mainAction(args)
+func (flags *LDFlags) AppVersion() string {
+	return flags.Version + " (" + flags.Commit + ")"
+}
+
+func Main(flags *LDFlags, args []string) error {
+	app := cli.NewApp()
+	setupApp(app, flags)
+	app.HideHelp = true
+	app.BashComplete = rootBashCompletion(flags, args)
+
+	app.Action = mainAction(flags, args)
 
 	app.CustomAppHelpTemplate = rootHelp
 	c, cancel := context.WithCancel(context.Background())
@@ -50,7 +60,7 @@ func Main(args []string) error {
 	return app.RunContext(c, args)
 }
 
-func mainAction(args []string) func(*cli.Context) error {
+func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
@@ -113,7 +123,7 @@ func mainAction(args []string) func(*cli.Context) error {
 		}
 
 		app := cli.NewApp()
-		setupApp(app)
+		setupApp(app, flags)
 		if workingDirFlag == "" {
 			workingDirFlag = filepath.Dir(cfgFilePath)
 		}
@@ -131,9 +141,9 @@ func mainAction(args []string) func(*cli.Context) error {
 	}
 }
 
-func setupApp(app *cli.App) {
+func setupApp(app *cli.App, flags *LDFlags) {
 	app.Name = "cmdx"
-	app.Version = domain.Version
+	app.Version = flags.AppVersion()
 	app.Authors = []*cli.Author{
 		{
 			Name: "Shunsuke Suzuki",
