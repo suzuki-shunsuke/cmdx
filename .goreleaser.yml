@@ -1,4 +1,7 @@
 ---
+project_name: cmdx
+archives:
+- name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
 builds:
 - binary: cmdx
   main: cmd/cmdx/main.go
@@ -10,3 +13,5 @@ builds:
   - linux
   goarch:
   - amd64
+release:
+  prerelease: true

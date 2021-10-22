@@ -10,10 +10,13 @@ import (
 
 func Test_setupApp(t *testing.T) {
 	app := cli.NewApp()
-	setupApp(app)
+	flags := &LDFlags{
+		Version: "v1.6.0",
+	}
+	setupApp(app, flags)
 	assert.Equal(t, "cmdx", app.Name)
 	assert.Equal(t, appUsage, app.Usage)
-	assert.Equal(t, domain.Version, app.Version)
+	assert.Equal(t, flags.AppVersion(), app.Version)
 	assert.Equal(t, []*cli.Author{
 		{
 			Name: "Shunsuke Suzuki",
