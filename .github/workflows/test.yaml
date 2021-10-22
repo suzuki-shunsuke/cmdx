@@ -1,0 +1,39 @@
+---
+name: test
+on:
+  push:
+    branches: [main]
+    tags: [v*]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.17'
+
+    - uses: int128/aqua-action@v1
+      with:
+        version: v0.7.7 # renovate: depName=suzuki-shunsuke/aqua
+
+    - run: golangci-lint run
+    - run: go test -v ./... -race -covermode=atomic
+
+    - name: remove changes
+      # Sometimes it is failed to release by goreleaser due to changes of go.sum
+      run: git checkout -- .
+    - name: fetch tags to release
+      run: git fetch --tags
+    - name: Unshallow
+      run: git fetch --prune --unshallow
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
