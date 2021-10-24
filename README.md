@@ -66,6 +66,12 @@ So the result of the task doesn't depend on the directory you run `cmdx`.
 
 Download the binary from the [release page](https://github.com/suzuki-shunsuke/cmdx/releases).
 
+Or you can install cmdx with [Homebrew](https://brew.sh/).
+
+```
+$ brew install suzuki-shunsuke/cmdx/cmdx
+```
+
 ## Getting Started
 
 Create the configuration file.
