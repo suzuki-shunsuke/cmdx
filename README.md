@@ -7,14 +7,6 @@
 
 Task runner. It provides useful help messages and supports interactive prompts.
 
-## Alternative
-
-* Make
-* [npm scripts](https://docs.npmjs.com/misc/scripts)
-* [Task](https://taskfile.dev)
-* [tj/robo](https://github.com/tj/robo)
-* [mumoshu/variant](https://github.com/mumoshu/variant)
-
 ## Overview
 
 `cmdx` is the task runner.
@@ -48,7 +40,6 @@ ARGUMENTS:
 ```
 
 `cmdx` searches the configuration file from the current directory to the root directory recursively, and runs the task at the directory where the configuration file exists.
-So the result of the task doesn't depend on the directory you run `cmdx`.
 
 ## Features
 
@@ -61,14 +52,14 @@ So the result of the task doesn't depend on the directory you run `cmdx`.
 * Timeout
 * Bash and Zsh completion
 * Nested tasks (Sub tasks)
+* Invoke AWS Lambda Function
 
 ## Install
 
 Download the binary from the [release page](https://github.com/suzuki-shunsuke/cmdx/releases).
+you can install cmdx with [Homebrew](https://brew.sh/) too.
 
-Or you can install cmdx with [Homebrew](https://brew.sh/).
-
-```
+```console
 $ brew install suzuki-shunsuke/cmdx/cmdx
 ```
 
@@ -194,6 +185,15 @@ task.shell | []string | shell command to run the script | `["sh", "-c"]`
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
 task.tasks | []task | sub tasks | false | `[]`
+task.type | string | task type | false | ""
+task.payload | []payloadParam | AWS Lambda Function's Payload Parameter | false |
+payloadParam.name | string | Payload parameter name | true |
+payloadParam.value | template string | Payload parameter value | true |
+task.region | string | AWS Region | false |
+task.profile | string | AWS Profile | false |
+task.function_name | string | AWS Lambda Function Name | false |
+task.log_type | string | AWS Lambda Invoke Function's parameter | false |
+task.invocation_type | string | AWS Lambda Invoke Function's parameter | false |
 require.exec | []stringArray | required executable files | false | []
 require.environment | []stringArray | required environment variables | false | []
 stringArray | array whose element is string or array of string | |
@@ -640,6 +640,30 @@ tasks:
 $ cmdx hello
 please fix the configuration file: the task `hello` is invalid. when sub tasks are set, 'script' can't b
 e set
+```
+
+## Invoke Lambda Function
+
+e.g.
+
+```yaml
+- name: lambda-hello
+  description: lambda hello
+  type: lambda
+  function_name: hello
+  region: ap-northeast-1
+  log_type: Tail
+  # invocation_type: Event
+  flags:
+  - name: key1
+    default: foo
+  payload:
+  - name: key1
+    value: "{{.key1}}"
+  - name: key2
+    value: zoo
+  - name: key3
+    value: bar
 ```
 
 ## Contributing

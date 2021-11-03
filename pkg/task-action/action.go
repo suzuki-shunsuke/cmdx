@@ -65,6 +65,10 @@ func NewCommandAction(
 			quiet = *task.Quiet
 		}
 
+		if task.Type == "lambda" {
+			return lambdaAction(c.Context, &task, vars)
+		}
+
 		exc := execute.New()
 
 		return exc.Run(

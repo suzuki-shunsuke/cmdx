@@ -94,3 +94,20 @@ tasks:
   require:
     exec:
     - yamllint
+- name: lambda-hello
+  description: lambda hello
+  type: lambda
+  function_name: hello
+  region: ap-northeast-1
+  log_type: Tail
+  # invocation_type: Event
+  flags:
+  - name: key1
+    default: foo
+  payload:
+  - name: key1
+    value: "{{.key1}}"
+  - name: key2
+    value: zoo
+  - name: key3
+    value: bar
