@@ -233,7 +233,8 @@ validate.enum | []string | enum | false |
 ### script
 
 `task.script` is the task command.
-This is parsed by Golang's [text/template](https://golang.org/pkg/text/template/) package.
+This is parsed by Go's [text/template](https://golang.org/pkg/text/template/) package.
+[sprig](http://masterminds.github.io/sprig/) functions can be used.
 The value of the flag and positional argument can be referred by the argument name.
 
 For example,
