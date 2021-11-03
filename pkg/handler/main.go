@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
-	"github.com/suzuki-shunsuke/cmdx/pkg/signal"
 	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
 	"github.com/suzuki-shunsuke/cmdx/pkg/util"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
@@ -54,10 +56,9 @@ func Main(flags *LDFlags, args []string) error {
 	app.Action = mainAction(flags, args)
 
 	app.CustomAppHelpTemplate = rootHelp
-	c, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go signal.Handle(cancel)
-	return app.RunContext(c, args)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return app.RunContext(ctx, args)
 }
 
 func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
