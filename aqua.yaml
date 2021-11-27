@@ -2,7 +2,7 @@
 # https://github.com/suzuki-shunsuke/aqua
 registries:
 - type: standard
-  ref: v0.10.8 # renovate: depName=suzuki-shunsuke/aqua-registry
+  ref: v0.10.9 # renovate: depName=suzuki-shunsuke/aqua-registry
 
 packages:
 - name: golangci/golangci-lint@v1.30.0
