@@ -24,14 +24,7 @@ const (
 	rootHelp = `cmdx - task runner
 https://github.com/suzuki-shunsuke/cmdx
 
-Configuration file isn't found.
-First of all, let's create a configuration file.
-
-$ cmdx --init
-
-Or if the configuration file already exists but the file path is unusual, please specify the path by --config (-c) option.
-
-$ cmdx -c <YOUR_CONFIGURATION_FILE_PATH> <COMMAND> ...
+Please run "cmdx help" to show help.
 `
 
 	appUsage = "task runner"
@@ -50,7 +43,7 @@ func (flags *LDFlags) AppVersion() string {
 func Main(flags *LDFlags, args []string) error {
 	app := cli.NewApp()
 	setupApp(app, flags)
-	app.HideHelp = true
+	// app.HideHelp = true
 	app.BashComplete = rootBashCompletion(flags, args)
 
 	app.Action = mainAction(flags, args)
