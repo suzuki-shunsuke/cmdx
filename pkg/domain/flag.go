@@ -39,19 +39,6 @@ type Task struct {
 	Quiet       *bool
 	Shell       []string
 	Tasks       []Task
-
-	Type           string
-	FunctionName   string `yaml:"function_name"`
-	Region         string
-	Profile        string
-	LogType        string `yaml:"log_type"`
-	Payload        []PayloadParam
-	InvocationType string `yaml:"invocation_type"`
-}
-
-type PayloadParam struct {
-	Name  string
-	Value string
 }
 
 type Arg struct {

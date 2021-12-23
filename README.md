@@ -185,15 +185,6 @@ task.shell | []string | shell command to run the script | `["sh", "-c"]`
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
 task.tasks | []task | sub tasks | false | `[]`
-task.type | string | task type | false | ""
-task.payload | []payloadParam | AWS Lambda Function's Payload Parameter | false |
-payloadParam.name | string | Payload parameter name | true |
-payloadParam.value | template string | Payload parameter value | true |
-task.region | string | AWS Region | false |
-task.profile | string | AWS Profile | false |
-task.function_name | string | AWS Lambda Function Name | false |
-task.log_type | string | AWS Lambda Invoke Function's parameter | false |
-task.invocation_type | string | AWS Lambda Invoke Function's parameter | false |
 require.exec | []stringArray | required executable files | false | []
 require.environment | []stringArray | required environment variables | false | []
 stringArray | array whose element is string or array of string | |
@@ -641,30 +632,6 @@ tasks:
 $ cmdx hello
 please fix the configuration file: the task `hello` is invalid. when sub tasks are set, 'script' can't b
 e set
-```
-
-## Invoke Lambda Function
-
-e.g.
-
-```yaml
-- name: lambda-hello
-  description: lambda hello
-  type: lambda
-  function_name: hello
-  region: ap-northeast-1
-  log_type: Tail
-  # invocation_type: Event
-  flags:
-  - name: key1
-    default: foo
-  payload:
-  - name: key1
-    value: "{{.key1}}"
-  - name: key2
-    value: zoo
-  - name: key3
-    value: bar
 ```
 
 ## Contributing
