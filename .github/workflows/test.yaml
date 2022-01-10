@@ -17,7 +17,7 @@ jobs:
 
     - uses: aquaproj/aqua-installer@v0.6.0
       with:
-        aqua_version: v0.9.0
+        aqua_version: v0.10.0
 
     - run: golangci-lint run
     - run: go test -v ./... -race -covermode=atomic
