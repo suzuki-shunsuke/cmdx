@@ -19,7 +19,7 @@ jobs:
       with:
         aqua_version: v0.10.0
 
-    - uses: suzuki-shunsuke/github-action-golangci-lint@fix/set-nofilter
+    - uses: suzuki-shunsuke/github-action-golangci-lint@main
     - run: go test -v ./... -race -covermode=atomic
 
     - name: remove changes
