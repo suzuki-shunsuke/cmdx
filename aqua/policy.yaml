@@ -1,0 +1,7 @@
+---
+# aqua Policy
+registries:
+  - type: standard
+    ref: semver(">= 3.0.0")
+packages:
+  - registry: standard
