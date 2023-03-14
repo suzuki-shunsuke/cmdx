@@ -12,3 +12,13 @@ linters:
   - godox
   - nestif
   - nlreturn
+  - forbidigo
+  - cyclop
+  - exhaustivestruct
+  - paralleltest
+  - tagliatelle
+  - varnamelen
+  - wrapcheck
+  - gocritic
+  - ireturn
+  - gomnd

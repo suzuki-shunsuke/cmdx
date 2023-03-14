@@ -52,7 +52,6 @@ ARGUMENTS:
 * Timeout
 * Bash and Zsh completion
 * Nested tasks (Sub tasks)
-* Invoke AWS Lambda Function
 
 ## Install
 
