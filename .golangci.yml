@@ -19,3 +19,6 @@ linters:
   - tagliatelle
   - varnamelen
   - wrapcheck
+  - gocritic
+  - ireturn
+  - gomnd
