@@ -13,8 +13,11 @@ builds:
   - linux
   goarch:
   - amd64
+  - arm64
 release:
   prerelease: true
+  header: |
+    [Pull Requests](https://github.com/suzuki-shunsuke/cmdx/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/cmdx/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/cmdx/compare/{{.PreviousTag}}...{{.Tag}}
 brews:
 -
   # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
@@ -49,3 +52,21 @@ brews:
   # Default is empty.
   test: |
     system "#{bin}/cmdx --version"
+
+signs:
+- cmd: cosign
+  artifacts: checksum
+  signature: ${artifact}.sig
+  certificate: ${artifact}.pem
+  output: true
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  args:
+  - sign-blob
+  - --output-signature
+  - ${signature}
+  - --output-certificate
+  - ${certificate}
+  - --oidc-provider
+  - github
+  - ${artifact}
