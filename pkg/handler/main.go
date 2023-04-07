@@ -43,7 +43,22 @@ func (flags *LDFlags) AppVersion() string {
 func Main(flags *LDFlags, args []string) error {
 	app := cli.NewApp()
 	setupApp(app, flags)
-	// app.HideHelp = true
+
+	// Disable the builtin help command.
+	//
+	// If app.HideHelpCommand is false, help command doesn't work well because the default help command is run.
+	// $ go run ./cmd/cmdx help
+	// cmdx - task runner
+	// https://github.com/suzuki-shunsuke/cmdx
+	// Please run "cmdx help" to show help.
+	//
+	// If app.HideHelp is true, --help flag doesn't work well.
+	// $ go run ./cmd/cmdx --help
+	// Incorrect Usage: flag: help requested
+	// flag: help requested
+	//
+	app.HideHelpCommand = true
+
 	app.BashComplete = rootBashCompletion(flags, args)
 
 	app.Action = mainAction(flags, args)
