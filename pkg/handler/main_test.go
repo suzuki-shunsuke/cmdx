@@ -152,22 +152,7 @@ func Test_convertTaskToCommand(t *testing.T) {
 				Usage:       "usage",
 				Description: "description",
 				Flags:       []cli.Flag{},
-				CustomHelpTemplate: `NAME:
-   {{.HelpName}} - {{.Usage}}
-
-USAGE:
-   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}<foo>{{end}}{{end}}{{if .Category}}
-
-CATEGORY:
-   {{.Category}}{{end}}{{if .Description}}
-
-DESCRIPTION:
-   {{.Description}}{{end}}{{if .VisibleFlags}}
-
-OPTIONS:
-   {{range .VisibleFlags}}{{.}}
-   {{end}}{{end}}
-
+				CustomHelpTemplate: cli.CommandHelpTemplate + `
 ARGUMENTS:
    foo  usage`,
 			},
