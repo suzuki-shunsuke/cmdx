@@ -40,9 +40,10 @@ func Test_newFlag(t *testing.T) {
 				Type:      "bool",
 			},
 			exp: &cli.BoolFlag{
-				Name:    "foo, f",
+				Name:    "foo",
 				Usage:   "usage",
 				EnvVars: []string{"FOO"},
+				Aliases: []string{"f"},
 			},
 		},
 		{

@@ -203,24 +203,28 @@ func setupApp(app *cli.App, flags *LDFlags) {
 }
 
 func newFlag(flag domain.Flag) cli.Flag {
-	name := flag.Name
-	if flag.Short != "" {
-		name += ", " + flag.Short
-	}
 	switch flag.Type {
 	case boolFlagType:
-		return &cli.BoolFlag{
-			Name:    name,
+		f := &cli.BoolFlag{
+			Name:    flag.Name,
 			Usage:   flag.Usage,
 			EnvVars: flag.InputEnvs,
 		}
+		if flag.Short != "" {
+			f.Aliases = []string{flag.Short}
+		}
+		return f
 	default:
-		return &cli.StringFlag{
-			Name:    name,
+		f := &cli.StringFlag{
+			Name:    flag.Name,
 			Usage:   flag.Usage,
 			Value:   flag.Default,
 			EnvVars: flag.InputEnvs,
 		}
+		if flag.Short != "" {
+			f.Aliases = []string{flag.Short}
+		}
+		return f
 	}
 }
 
