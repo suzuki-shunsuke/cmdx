@@ -146,7 +146,7 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
-		return app.Run(args)
+		return app.RunContext(c.Context, args)
 	}
 }
 
