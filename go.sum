@@ -38,7 +38,6 @@ github.com/mitchellh/copystructure v1.0.0 h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMK
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
 github.com/mitchellh/reflectwalk v1.0.0 h1:9D+8oIskB4VJBN5SFlmc27fSlIBZaov1Wpk/IfikLNY=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk=
@@ -62,8 +61,6 @@ github.com/suzuki-shunsuke/go-cliutil v0.3.0 h1:nDMHCFT3LNShus5DxZ8FcHhnIrdqRH00
 github.com/suzuki-shunsuke/go-cliutil v0.3.0/go.mod h1:XdMIFYBkqjjXzLcAga1iKTbFKj4DunDXXmEqegz2HnY=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0 h1:oVXrrYNGBq4POyITQNWKzwsYz7B2nUcqtDbeX4BfeEc=
 github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0/go.mod h1:kDFtLeftDiIUUHXGI3xq5eJ+uAOi50FPrxPENTHktJ0=
-github.com/suzuki-shunsuke/go-timeout v1.0.0 h1:SWiJc8HuLWK4N01x76XUg75rbbwDiHiFoyPbwHcNI4Q=
-github.com/suzuki-shunsuke/go-timeout v1.0.0/go.mod h1:ZX3QIig4tvTVXnZUJE3ivC9qy5TJy9Uk5sIcvwjwSNE=
 github.com/urfave/cli v1.20.0 h1:fDqGv3UG/4jbVl/QkFwEdddtEDjh/5Ov6X+0B/3bPaw=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli/v2 v2.25.7 h1:VAzn5oq403l5pHjc4OhD54+XGO9cdKVL/7lDjF+iKUs=
