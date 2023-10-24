@@ -155,7 +155,8 @@ func Test_convertTaskToCommand(t *testing.T) {
 				Flags:       []cli.Flag{},
 				CustomHelpTemplate: cli.CommandHelpTemplate + `
 ARGUMENTS:
-   foo  usage`,
+   foo  usage
+`,
 			},
 		},
 	}
