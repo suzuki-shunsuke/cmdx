@@ -9,6 +9,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/suzuki-shunsuke/go-cliutil v0.3.0
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.0
 	gopkg.in/yaml.v2 v2.4.0
 )
