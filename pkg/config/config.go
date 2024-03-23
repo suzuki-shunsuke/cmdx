@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const configurationFileTemplate = `---
