@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/suzuki-shunsuke/go-cliutil"
@@ -60,7 +60,7 @@ func (client *Client) Read(cfgFilePath string, cfg interface{}) error {
 		return fmt.Errorf("failed to open the configuration file %s: %w", cfgFilePath, err)
 	}
 	defer f.Close()
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return fmt.Errorf("failed to read the configuration file %s: %w", cfgFilePath, err)
 	}
@@ -75,7 +75,7 @@ func (client *Client) Create(p string) error {
 		// If the configuration file already exists, do nothing.
 		return nil
 	}
-	if err := ioutil.WriteFile(p, []byte(configurationFileTemplate), 0o644); err != nil { //nolint:gosec
+	if err := os.WriteFile(p, []byte(configurationFileTemplate), 0o644); err != nil { //nolint:gosec
 		return fmt.Errorf("failed to create the configuration file %s: %w", p, err)
 	}
 	return nil

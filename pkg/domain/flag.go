@@ -86,5 +86,5 @@ type Validate struct {
 }
 
 type HasIsSet interface {
-	IsSet(string) bool
+	IsSet(k string) bool
 }

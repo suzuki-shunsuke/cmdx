@@ -46,7 +46,6 @@ func Test_vUniqueName(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			f := vUniqueName(d.name, d.names)
 			if d.exp {
@@ -132,7 +131,6 @@ func TestConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := Config(d.cfg)
 			if err == nil {
@@ -142,7 +140,7 @@ func TestConfig(t *testing.T) {
 			if d.isErr {
 				return
 			}
-			assert.NotNil(t, err)
+			assert.Error(t, err)
 		})
 	}
 }
@@ -204,7 +202,6 @@ func Test_vFlag(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.names == nil {
 				d.names = map[string]struct{}{}
@@ -220,7 +217,7 @@ func Test_vFlag(t *testing.T) {
 			if d.isErr {
 				return
 			}
-			assert.NotNil(t, err)
+			assert.Error(t, err)
 		})
 	}
 }
@@ -254,7 +251,6 @@ func Test_vArg(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.names == nil {
 				d.names = map[string]struct{}{}
@@ -267,7 +263,7 @@ func Test_vArg(t *testing.T) {
 			if d.isErr {
 				return
 			}
-			assert.NotNil(t, err)
+			assert.Error(t, err)
 		})
 	}
 }
@@ -310,7 +306,6 @@ func Test_vTask(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := vTask(d.task)
 			if err == nil {
@@ -320,7 +315,7 @@ func Test_vTask(t *testing.T) {
 			if d.isErr {
 				return
 			}
-			assert.NotNil(t, err)
+			assert.Error(t, err)
 		})
 	}
 }
