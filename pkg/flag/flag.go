@@ -22,7 +22,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 		default:
 			s := c.String(flag.Name)
 			if err := validate.ValueWithValidates(s, flag.Validate); err != nil {
-				return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
+				return nil, fmt.Errorf("%s is invalid: %w", flag.Name, err)
 			}
 			return s, nil
 		}
@@ -33,7 +33,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 		if err == nil {
 			if s, ok := val.(string); ok {
 				if err := validate.ValueWithValidates(s, flag.Validate); err != nil {
-					return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
+					return nil, fmt.Errorf("%s is invalid: %w", flag.Name, err)
 				}
 			}
 			return val, nil
@@ -48,7 +48,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 	default:
 		if v := c.String(flag.Name); v != "" {
 			if err := validate.ValueWithValidates(v, flag.Validate); err != nil {
-				return nil, fmt.Errorf(flag.Name+" is invalid: %w", err)
+				return nil, fmt.Errorf("%s is invalid: %w", flag.Name, err)
 			}
 			return v, nil
 		}

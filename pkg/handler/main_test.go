@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/urfave/cli/v2"
 )
@@ -77,7 +78,6 @@ func Test_newFlag(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			assert.Equal(t, d.exp, newFlag(d.flag))
 		})
@@ -161,7 +161,6 @@ ARGUMENTS:
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			cmd := convertTaskToCommand(d.task, &domain.GlobalFlags{})
 			assert.Equal(t, d.exp.Name, cmd.Name)
@@ -176,7 +175,7 @@ ARGUMENTS:
 
 func Test_setupEnvs(t *testing.T) {
 	envs, err := setupEnvs([]string{"{{.name}}-zoo"}, "foo")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []string{"FOO_ZOO"}, envs)
 }
 
@@ -268,14 +267,13 @@ func Test_setupTask(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := setupTask(d.task, d.base)
 			if err != nil {
 				if d.isErr {
 					return
 				}
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
 			assert.False(t, d.isErr)
@@ -316,14 +314,13 @@ func Test_setupConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := setupConfig(d.cfg)
 			if err != nil {
 				if d.isErr {
 					return
 				}
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
 			assert.False(t, d.isErr)
@@ -350,8 +347,7 @@ func Test_updateAppWithConfig(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
-		t.Run(d.title, func(t *testing.T) {
+		t.Run(d.title, func(_ *testing.T) {
 			app := cli.NewApp()
 			updateAppWithConfig(app, d.cfg, &domain.GlobalFlags{WorkingDir: "/tmp"})
 		})

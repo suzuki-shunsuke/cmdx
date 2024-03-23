@@ -93,7 +93,7 @@ func updateVarsByArgs(
 			val := cArgs[i]
 			vars[arg.Name] = val
 			if err := validate.ValueWithValidates(val, arg.Validate); err != nil {
-				return fmt.Errorf(arg.Name+" is invalid: %w", err)
+				return fmt.Errorf("%s is invalid: %w", arg.Name, err)
 			}
 			continue
 		}
@@ -104,7 +104,7 @@ func updateVarsByArgs(
 				isBoundEnv = true
 				vars[arg.Name] = v
 				if err := validate.ValueWithValidates(v, arg.Validate); err != nil {
-					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+					return fmt.Errorf("%s is invalid: %w", arg.Name, err)
 				}
 				break
 			}
@@ -124,7 +124,7 @@ func updateVarsByArgs(
 			}
 			if v, ok := val.(string); ok {
 				if err := validate.ValueWithValidates(v, arg.Validate); err != nil {
-					return fmt.Errorf(arg.Name+" is invalid: %w", err)
+					return fmt.Errorf("%s is invalid: %w", arg.Name, err)
 				}
 			}
 			vars[arg.Name] = val

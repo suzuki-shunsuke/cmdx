@@ -22,14 +22,13 @@ func TestRenderTemplate(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			s, err := RenderTemplate(d.base, d.data)
 			if err != nil {
 				if d.isErr {
 					return
 				}
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
 			assert.Equal(t, d.exp, s)

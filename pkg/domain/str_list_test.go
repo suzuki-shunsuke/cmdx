@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,10 +35,10 @@ func TestStrList_UnmarshalYAML(t *testing.T) {
 		list := StrList{}
 		err := yaml.Unmarshal([]byte(d.src), &list)
 		if d.isErr {
-			assert.NotNil(t, err)
+			assert.Error(t, err)
 			return
 		}
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, d.exp, list)
 	}
 }
