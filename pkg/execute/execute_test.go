@@ -40,17 +40,16 @@ func TestExecutor_Run(t *testing.T) {
 	ctx := context.Background()
 	exc := New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := exc.Run(ctx, d.params)
 			if err != nil {
 				if d.isErr {
 					return
 				}
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		})
 	}
 }

@@ -190,14 +190,13 @@ func Test_value(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := value(d.val, d.validate)
 			if d.isErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		})
 	}
 }

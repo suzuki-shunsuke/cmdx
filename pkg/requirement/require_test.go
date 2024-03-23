@@ -21,14 +21,13 @@ func TestChecker_Exec(t *testing.T) {
 	}
 	checker := New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			err := checker.Exec(d.execs)
 			if d.isErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		})
 	}
 }
@@ -71,7 +70,6 @@ func TestChecker_Env(t *testing.T) {
 	defer os.Clearenv()
 	checker := New()
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			os.Clearenv()
 			for k, v := range d.setEnvs {
@@ -79,10 +77,10 @@ func TestChecker_Env(t *testing.T) {
 			}
 			err := checker.Env(d.envs)
 			if d.isErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		})
 	}
 }

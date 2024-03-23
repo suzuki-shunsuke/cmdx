@@ -66,7 +66,6 @@ func Test_updateVarsByArgs(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			if d.vars == nil {
 				d.vars = map[string]interface{}{}
@@ -82,7 +81,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 				if d.isErr {
 					return
 				}
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				return
 			}
 			assert.False(t, d.isErr)

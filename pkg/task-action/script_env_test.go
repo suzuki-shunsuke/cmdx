@@ -39,7 +39,6 @@ func Test_bindScriptEnvs(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			assert.ElementsMatch(t, d.exp, bindScriptEnvs(d.envs, d.vars, d.scriptEnvs))
 		})

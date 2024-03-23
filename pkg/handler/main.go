@@ -446,8 +446,7 @@ func setupTask(task, base *domain.Task) error {
 
 	if len(task.Tasks) != 0 {
 		for i, t := range task.Tasks {
-			t := t
-			if err := setupTask(&t, task); err != nil {
+			if err := setupTask(&t, task); err != nil { //nolint:gosec
 				return err
 			}
 			task.Tasks[i] = t
@@ -467,8 +466,7 @@ func setupConfig(cfg *domain.Config) error {
 		Timeout:     cfg.Timeout,
 	}
 	for i, task := range cfg.Tasks {
-		task := task
-		if err := setupTask(&task, base); err != nil {
+		if err := setupTask(&task, base); err != nil { //nolint:gosec
 			return err
 		}
 		cfg.Tasks[i] = task
