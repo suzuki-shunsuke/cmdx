@@ -146,7 +146,7 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
-		return app.Run(args)
+		return app.RunContext(c.Context, args)
 	}
 }
 
@@ -281,6 +281,9 @@ REQUIRED ENVIRONMENT VARIABLES:
 
 func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Command {
 	help := getHelp(cli.CommandHelpTemplate, task)
+	if !strings.HasSuffix(help, "\n") {
+		help += "\n"
+	}
 
 	if len(task.Tasks) != 0 {
 		tasks := make([]*cli.Command, len(task.Tasks))
