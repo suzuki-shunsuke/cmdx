@@ -37,7 +37,7 @@ func setCancel(cmd *exec.Cmd, waitDelay time.Duration) *exec.Cmd {
 		return cmd.Process.Signal(os.Interrupt) //nolint:wrapcheck
 	}
 	if waitDelay == 0 {
-		waitDelay = 1000 * time.Hour
+		waitDelay = 1000 * time.Hour //nolint:mnd
 	}
 	cmd.WaitDelay = waitDelay
 	return cmd
