@@ -55,11 +55,27 @@ ARGUMENTS:
 
 ## Install
 
-Download the binary from the [release page](https://github.com/suzuki-shunsuke/cmdx/releases).
-you can install cmdx with [Homebrew](https://brew.sh/) too.
+`cmdx` is a single binary written in Go.
+So you only need to put the executable binary into `$PATH`.
 
-```console
-$ brew install suzuki-shunsuke/cmdx/cmdx
+1. [Homebrew](https://brew.sh/)
+
+```sh
+brew install suzuki-shunsuke/cmdx/cmdx
+```
+
+2. [aqua](https://aquaproj.github.io/)
+
+```sh
+aqua g -i suzuki-shunsuke/cmdx
+```
+
+3. Download a prebuilt binary from [GitHub Releases](https://github.com/suzuki-shunsuke/cmdx/releases) and install it into `$PATH`
+
+4. Go
+
+```sh
+go install github.com/suzuki-shunsuke/cmdx/cmd/cmdx@latest
 ```
 
 ## Getting Started
