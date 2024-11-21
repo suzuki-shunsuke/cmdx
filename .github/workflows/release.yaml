@@ -12,8 +12,8 @@ jobs:
     with:
       homebrew: true
       aqua_policy_config: aqua/policy.yaml
-      aqua_version: v2.34.0
-      go-version: 1.23.1
+      aqua_version: v2.38.0
+      go-version: 1.23.3
       attestations: write
     secrets:
       gh_app_id: ${{ secrets.APP_ID }}
