@@ -6,7 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/suzuki-shunsuke/go-cliutil v0.3.0
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
 	github.com/urfave/cli/v2 v2.27.5
