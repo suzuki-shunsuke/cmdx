@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/suzuki-shunsuke/cmdx/pkg/domain/config",
+  "$ref": "#/$defs/Config",
+  "$defs": {
+    "Arg": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "usage": {
+          "type": "string"
+        },
+        "default": {
+          "type": "string"
+        },
+        "input_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "script_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "prompt": {
+          "$ref": "#/$defs/Prompt"
+        },
+        "validate": {
+          "items": {
+            "$ref": "#/$defs/Validate"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "Config": {
+      "properties": {
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task"
+          },
+          "type": "array"
+        },
+        "input_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "script_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "environment": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "timeout": {
+          "$ref": "#/$defs/Timeout"
+        },
+        "quiet": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tasks"
+      ]
+    },
+    "Flag": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string"
+        },
+        "usage": {
+          "type": "string"
+        },
+        "default": {
+          "type": "string"
+        },
+        "input_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "script_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "prompt": {
+          "$ref": "#/$defs/Prompt"
+        },
+        "validate": {
+          "items": {
+            "$ref": "#/$defs/Validate"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "Prompt": {
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Message": {
+          "type": "string"
+        },
+        "Help": {
+          "type": "string"
+        },
+        "Options": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "Type",
+        "Message",
+        "Help",
+        "Options"
+      ]
+    },
+    "Require": {
+      "properties": {
+        "exec": {
+          "items": {
+            "$ref": "#/$defs/StrList"
+          },
+          "type": "array"
+        },
+        "environment": {
+          "items": {
+            "$ref": "#/$defs/StrList"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "StrList": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "Task": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "usage": {
+          "type": "string"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/Flag"
+          },
+          "type": "array"
+        },
+        "args": {
+          "items": {
+            "$ref": "#/$defs/Arg"
+          },
+          "type": "array"
+        },
+        "input_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "script_envs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "environment": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "script": {
+          "type": "string"
+        },
+        "timeout": {
+          "$ref": "#/$defs/Timeout"
+        },
+        "require": {
+          "$ref": "#/$defs/Require"
+        },
+        "quiet": {
+          "type": "boolean"
+        },
+        "shell": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "script"
+      ]
+    },
+    "Timeout": {
+      "properties": {
+        "duration": {
+          "type": "integer"
+        },
+        "kill_after": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Validate": {
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "regexp": {
+          "type": "string"
+        },
+        "min_length": {
+          "type": "integer"
+        },
+        "max_length": {
+          "type": "integer"
+        },
+        "prefix": {
+          "type": "string"
+        },
+        "suffix": {
+          "type": "string"
+        },
+        "contain": {
+          "type": "string"
+        },
+        "enum": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "min": {
+          "type": "integer"
+        },
+        "max": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    }
+  }
+}

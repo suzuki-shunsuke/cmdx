@@ -11,78 +11,78 @@ type GlobalFlags struct {
 }
 
 type Flag struct {
-	Name       string
-	Short      string
-	Usage      string
-	Default    string
-	InputEnvs  []string `yaml:"input_envs"`
-	ScriptEnvs []string `yaml:"script_envs"`
-	Type       string
-	Required   bool
-	Prompt     prompt.Prompt
-	Validate   []Validate
+	Name       string        `json:"name"`
+	Short      string        `json:"short,omitempty"`
+	Usage      string        `json:"usage,omitempty"`
+	Default    string        `json:"default,omitempty"`
+	InputEnvs  []string      `json:"input_envs,omitempty" yaml:"input_envs"`
+	ScriptEnvs []string      `json:"script_envs,omitempty" yaml:"script_envs"`
+	Type       string        `json:"type,omitempty"`
+	Required   bool          `json:"required,omitempty"`
+	Prompt     prompt.Prompt `json:"prompt,omitempty"`
+	Validate   []Validate    `json:"validate,omitempty"`
 }
 
 type Task struct {
-	Name        string
-	Short       string
-	Description string
-	Usage       string
-	Flags       []Flag
-	Args        []Arg
-	InputEnvs   []string `yaml:"input_envs"`
-	ScriptEnvs  []string `yaml:"script_envs"`
-	Environment map[string]string
-	Script      string
-	Timeout     Timeout
-	Require     Require
-	Quiet       *bool
-	Shell       []string
-	Tasks       []Task
+	Name        string            `json:"name"`
+	Short       string            `json:"short,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Usage       string            `json:"usage,omitempty"`
+	Flags       []Flag            `json:"flags,omitempty"`
+	Args        []Arg             `json:"args,omitempty"`
+	InputEnvs   []string          `json:"input_envs,omitempty" yaml:"input_envs"`
+	ScriptEnvs  []string          `json:"script_envs,omitempty" yaml:"script_envs"`
+	Environment map[string]string `json:"environment,omitempty"`
+	Script      string            `json:"script"`
+	Timeout     Timeout           `json:"timeout,omitempty"`
+	Require     Require           `json:"require,omitempty"`
+	Quiet       *bool             `json:"quiet,omitempty"`
+	Shell       []string          `json:"shell,omitempty"`
+	Tasks       []Task            `json:"tasks,omitempty"`
 }
 
 type Arg struct {
-	Name       string
-	Usage      string
-	Default    string
-	InputEnvs  []string `yaml:"input_envs"`
-	ScriptEnvs []string `yaml:"script_envs"`
-	Required   bool
-	Prompt     prompt.Prompt
-	Validate   []Validate
+	Name       string        `json:"name"`
+	Usage      string        `json:"usage,omitempty"`
+	Default    string        `json:"default,omitempty"`
+	InputEnvs  []string      `json:"input_envs,omitempty" yaml:"input_envs"`
+	ScriptEnvs []string      `json:"script_envs,omitempty" yaml:"script_envs"`
+	Required   bool          `json:"required,omitempty"`
+	Prompt     prompt.Prompt `json:"prompt,omitempty"`
+	Validate   []Validate    `json:"validate,omitempty"`
 }
 
 type Require struct {
-	Exec        []StrList
-	Environment []StrList
+	Exec        []StrList `json:"exec,omitempty"`
+	Environment []StrList `json:"environment,omitempty"`
 }
 
 type Timeout struct {
-	Duration  int
-	KillAfter int `yaml:"kill_after"`
+	Duration  int `json:"duration,omitempty"`
+	KillAfter int `json:"kill_after,omitempty" yaml:"kill_after"`
 }
 
 type Config struct {
-	Tasks       []Task
-	InputEnvs   []string `yaml:"input_envs"`
-	ScriptEnvs  []string `yaml:"script_envs"`
-	Environment map[string]string
-	Timeout     Timeout
-	Quiet       *bool
+	Tasks       []Task            `json:"tasks"`
+	InputEnvs   []string          `json:"input_envs,omitempty" yaml:"input_envs"`
+	ScriptEnvs  []string          `json:"script_envs,omitempty" yaml:"script_envs"`
+	Environment map[string]string `json:"environment,omitempty"`
+	Timeout     Timeout           `json:"timeout,omitempty"`
+	Quiet       *bool             `json:"quiet,omitempty"`
 }
 
 type Validate struct {
-	Type      string
-	RegExp    string `yaml:"regexp"`
-	MinLength int    `yaml:"min_length"`
-	MaxLength int    `yaml:"max_length"`
-	Prefix    string
-	Suffix    string
-	Contain   string
-	Enum      []string
+	Type      string   `json:"type"`
+	RegExp    string   `json:"regexp,omitempty" yaml:"regexp"`
+	MinLength int      `json:"min_length,omitempty" yaml:"min_length"`
+	MaxLength int      `json:"max_length,omitempty" yaml:"max_length"`
+	Prefix    string   `json:"prefix,omitempty"`
+	Suffix    string   `json:"suffix,omitempty"`
+	Contain   string   `json:"contain,omitempty"`
+	Enum      []string `json:"enum,omitempty"`
 
-	Min int
-	Max int
+	Min int `json:"min,omitempty"`
+	Max int `json:"max,omitempty"`
 }
 
 type HasIsSet interface {
