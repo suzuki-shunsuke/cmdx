@@ -10,7 +10,6 @@ jobs:
       homebrew: true
       aqua_version: v2.40.0
       go-version-file: go.mod
-      attestations: write
     secrets:
       gh_app_id: ${{ secrets.APP_ID }}
       gh_app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -18,3 +17,4 @@ jobs:
       contents: write
       id-token: write
       actions: read
+      attestations: write
