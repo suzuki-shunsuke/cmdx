@@ -175,10 +175,17 @@
       "type": "object"
     },
     "StrList": {
-      "items": {
-        "type": "string"
-      },
-      "type": "array"
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
     },
     "Task": {
       "properties": {
