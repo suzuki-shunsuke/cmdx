@@ -1,8 +1,28 @@
 package domain
 
-import "fmt"
+import (
+	"fmt"
 
-type StrList []string
+	"github.com/invopop/jsonschema"
+)
+
+type StrList []string //nolint:recvcheck
+
+func (StrList) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Type: "string",
+			},
+			{
+				Type: "array",
+				Items: &jsonschema.Schema{
+					Type: "string",
+				},
+			},
+		},
+	}
+}
 
 func (list *StrList) UnmarshalYAML(unmarshal func(any) error) error {
 	var val any

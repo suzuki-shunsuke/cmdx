@@ -72,7 +72,7 @@ type Config struct {
 }
 
 type Validate struct {
-	Type      string   `json:"type"`
+	Type      string   `json:"type,omitempty"`
 	RegExp    string   `json:"regexp,omitempty" yaml:"regexp"`
 	MinLength int      `json:"min_length,omitempty" yaml:"min_length"`
 	MaxLength int      `json:"max_length,omitempty" yaml:"max_length"`
