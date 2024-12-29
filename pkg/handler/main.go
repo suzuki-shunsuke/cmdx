@@ -21,8 +21,8 @@ const (
 	boolFlagType   = "bool"
 	defaultTimeout = 36000 // default 10H
 
-	rootHelp = `cmdx - task runner
-https://github.com/suzuki-shunsuke/cmdx
+	rootHelp = `# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/refs/heads/main/json-schema/cmdx.json
+cmdx - task runner https://github.com/suzuki-shunsuke/cmdx
 
 Please run "cmdx help" to show help.
 `

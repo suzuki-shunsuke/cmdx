@@ -236,6 +236,23 @@ validate.suffix | string | the suffix | false |
 validate.contain | string | the string which the value should contain | false |
 validate.enum | []string | enum | false |
 
+### JSON Schema
+
+- [cmdx.json](json-schema/cmdx.json)
+- https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/refs/heads/main/json-schema/cmdx.json
+
+If you look for a CLI tool to validate configuration with JSON Schema, [ajv-cli](https://ajv.js.org/packages/ajv-cli.html) is useful.
+
+```sh
+ajv --spec=draft2020 -s json-schema/cmdx.json -d cmdx.yaml
+```
+
+#### Input Complementation by YAML Language Server
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/refs/heads/main/json-schema/cmdx.json
+```
+
 ### script
 
 `task.script` is the task command.
