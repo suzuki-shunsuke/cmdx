@@ -1,9 +1,6 @@
 # cmdx
 
-[![Build Status](https://cloud.drone.io/api/badges/suzuki-shunsuke/cmdx/status.svg)](https://cloud.drone.io/suzuki-shunsuke/cmdx)
-[![Go Report Card](https://goreportcard.com/badge/github.com/suzuki-shunsuke/cmdx)](https://goreportcard.com/report/github.com/suzuki-shunsuke/cmdx)
-[![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/cmdx.svg)](https://github.com/suzuki-shunsuke/cmdx)
-[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/main/LICENSE)
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/main/LICENSE) | [Install](INSTALL.md)
 
 Task runner. It provides useful help messages and supports interactive prompts.
 
@@ -43,40 +40,15 @@ ARGUMENTS:
 
 ## Features
 
-* Easy to install (one binary)
-* Parse the flag and positional arguments
-* Useful help messages
-* Interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
-* Validate requirements
-* Validate flag and positional arguments
-* Timeout
-* Bash and Zsh completion
-* Nested tasks (Sub tasks)
-
-## Install
-
-`cmdx` is a single binary written in Go.
-So you only need to put the executable binary into `$PATH`.
-
-1. [Homebrew](https://brew.sh/)
-
-```sh
-brew install suzuki-shunsuke/cmdx/cmdx
-```
-
-2. [aqua](https://aquaproj.github.io/)
-
-```sh
-aqua g -i suzuki-shunsuke/cmdx
-```
-
-3. Download a prebuilt binary from [GitHub Releases](https://github.com/suzuki-shunsuke/cmdx/releases) and install it into `$PATH`
-
-4. Go
-
-```sh
-go install github.com/suzuki-shunsuke/cmdx/cmd/cmdx@latest
-```
+- Easy to install (one binary)
+- Parse the flag and positional arguments
+- Useful help messages
+- Interactive prompt by [AlecAivazis/survey](https://github.com/AlecAivazis/survey)
+- Validate requirements
+- Validate flag and positional arguments
+- Timeout
+- Bash and Zsh completion
+- Nested tasks (Sub tasks)
 
 ## Getting Started
 
