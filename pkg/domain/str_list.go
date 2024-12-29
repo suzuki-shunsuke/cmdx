@@ -6,7 +6,7 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
-type StrList []string
+type StrList []string //nolint:recvcheck
 
 func (StrList) JSONSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{
