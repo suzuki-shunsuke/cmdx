@@ -317,9 +317,14 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 		}
 	}
 
+	var aliases []string
+	if task.Short != "" {
+		aliases = []string{task.Short}
+	}
+
 	return &cli.Command{
 		Name:               task.Name,
-		Aliases:            []string{task.Short},
+		Aliases:            aliases,
 		Usage:              task.Usage,
 		Description:        task.Description,
 		Flags:              flags,
