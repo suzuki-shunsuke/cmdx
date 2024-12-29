@@ -34,7 +34,7 @@ func NewCommandAction(
 			}
 		}
 
-		vars := map[string]interface{}{}
+		vars := map[string]any{}
 
 		// get flag values and set them to vars
 		if err := flag.SetValues(c, task.Flags, vars); err != nil {
@@ -84,7 +84,7 @@ func NewCommandAction(
 }
 
 func updateVarsByArgs(
-	args []domain.Arg, cArgs []string, vars map[string]interface{},
+	args []domain.Arg, cArgs []string, vars map[string]any,
 ) error {
 	n := len(cArgs)
 
@@ -148,7 +148,7 @@ func updateVarsByArgs(
 		extraArgs = append(extraArgs, arg)
 	}
 
-	vars["_builtin"] = map[string]interface{}{
+	vars["_builtin"] = map[string]any{
 		"args":            extraArgs,
 		"args_string":     strings.Join(extraArgs, " "),
 		"all_args":        cArgs,

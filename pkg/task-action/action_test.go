@@ -12,14 +12,14 @@ func Test_updateVarsByArgs(t *testing.T) {
 		title   string
 		args    []domain.Arg
 		cArgs   []string
-		vars    map[string]interface{}
+		vars    map[string]any
 		isErr   bool
-		expVars map[string]interface{}
+		expVars map[string]any
 	}{
 		{
 			title: "args and cArgs is empty",
-			expVars: map[string]interface{}{
-				"_builtin": map[string]interface{}{
+			expVars: map[string]any{
+				"_builtin": map[string]any{
 					"args":            []string{},
 					"args_string":     "",
 					"all_args":        []string{},
@@ -43,10 +43,10 @@ func Test_updateVarsByArgs(t *testing.T) {
 			cArgs: []string{
 				"foo-value",
 			},
-			expVars: map[string]interface{}{
+			expVars: map[string]any{
 				"foo": "foo-value",
 				"bar": "bar-value",
-				"_builtin": map[string]interface{}{
+				"_builtin": map[string]any{
 					"args":            []string{},
 					"args_string":     "",
 					"all_args":        []string{"foo-value"},
@@ -68,7 +68,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
 			if d.vars == nil {
-				d.vars = map[string]interface{}{}
+				d.vars = map[string]any{}
 			}
 			if d.args == nil {
 				d.args = []domain.Arg{}

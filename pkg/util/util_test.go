@@ -10,7 +10,7 @@ func TestRenderTemplate(t *testing.T) {
 	data := []struct {
 		title string
 		base  string
-		data  interface{}
+		data  any
 		isErr bool
 		exp   string
 	}{

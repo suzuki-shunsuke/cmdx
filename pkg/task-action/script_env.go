@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func bindScriptEnvs(envs []string, vars map[string]interface{}, scriptEnvs map[string][]string) []string {
+func bindScriptEnvs(envs []string, vars map[string]any, scriptEnvs map[string][]string) []string {
 	// vars: variable name -> value
 	// envs: "FOO=value"
 	// scriptEnvs: variable name -> bound environment variable names

@@ -54,7 +54,7 @@ func New() *Client {
 	return &Client{}
 }
 
-func (client *Client) Read(cfgFilePath string, cfg interface{}) error {
+func (client *Client) Read(cfgFilePath string, cfg any) error {
 	f, err := os.Open(cfgFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open the configuration file %s: %w", cfgFilePath, err)
