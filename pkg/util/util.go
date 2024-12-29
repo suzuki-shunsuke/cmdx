@@ -7,7 +7,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
-func RenderTemplate(base string, data interface{}) (string, error) {
+func RenderTemplate(base string, data any) (string, error) {
 	tmpl, err := template.New("command").Funcs(sprig.TxtFuncMap()).Parse(base)
 	if err != nil {
 		return "", err

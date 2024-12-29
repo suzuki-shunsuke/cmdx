@@ -10,7 +10,7 @@ func Test_bindScriptEnvs(t *testing.T) {
 	data := []struct {
 		title      string
 		envs       []string
-		vars       map[string]interface{}
+		vars       map[string]any
 		scriptEnvs map[string][]string
 		exp        []string
 	}{
@@ -20,7 +20,7 @@ func Test_bindScriptEnvs(t *testing.T) {
 		{
 			title: "nil",
 			envs:  []string{"FOO=foo"},
-			vars: map[string]interface{}{
+			vars: map[string]any{
 				"man":  true,
 				"age":  "10",
 				"list": []string{"foo", "bar"},

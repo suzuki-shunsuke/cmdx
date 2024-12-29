@@ -14,7 +14,7 @@ const (
 	boolFlagType = "bool"
 )
 
-func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
+func getFlagValue(c *cli.Context, flag domain.Flag) (any, error) {
 	if c.IsSet(flag.Name) {
 		switch flag.Type {
 		case boolFlagType:
@@ -59,7 +59,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (interface{}, error) {
 	}
 }
 
-func SetValues(c *cli.Context, flags []domain.Flag, vars map[string]interface{}) error {
+func SetValues(c *cli.Context, flags []domain.Flag, vars map[string]any) error {
 	for _, flag := range flags {
 		val, err := getFlagValue(c, flag)
 		if err != nil {

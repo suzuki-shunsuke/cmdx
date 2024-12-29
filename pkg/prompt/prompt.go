@@ -62,7 +62,7 @@ func Create(prompt Prompt) survey.Prompt {
 	return nil
 }
 
-func GetValue(prompt survey.Prompt, typ string) (interface{}, error) {
+func GetValue(prompt survey.Prompt, typ string) (any, error) {
 	switch typ {
 	case confirmPromptType:
 		ans := false
