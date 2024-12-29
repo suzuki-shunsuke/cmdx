@@ -9,10 +9,10 @@ const (
 )
 
 type Prompt struct {
-	Type    string
-	Message string
-	Help    string
-	Options []string
+	Type    string   `json:"type"`
+	Message string   `json:"message,omitempty"`
+	Help    string   `json:"help,omitempty"`
+	Options []string `json:"options,omitempty"`
 }
 
 func Create(prompt Prompt) survey.Prompt {

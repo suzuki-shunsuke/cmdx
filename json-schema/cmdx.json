@@ -134,16 +134,16 @@
     },
     "Prompt": {
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Message": {
+        "message": {
           "type": "string"
         },
-        "Help": {
+        "help": {
           "type": "string"
         },
-        "Options": {
+        "options": {
           "items": {
             "type": "string"
           },
@@ -153,10 +153,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "Type",
-        "Message",
-        "Help",
-        "Options"
+        "type"
       ]
     },
     "Require": {
