@@ -221,8 +221,18 @@ ajv --spec=draft2020 -s json-schema/cmdx.json -d cmdx.yaml
 
 #### Input Complementation by YAML Language Server
 
+[Please see the comment too.](https://github.com/szksh-lab/.github/issues/67#issuecomment-2564960491)
+
+Version: `main`
+
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/refs/heads/main/json-schema/cmdx.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/main/json-schema/cmdx.json
+```
+
+Or pinning version:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/cmdx/v1.7.6/json-schema/cmdx.json
 ```
 
 ### script
