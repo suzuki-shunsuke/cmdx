@@ -259,8 +259,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "script"
+        "name"
       ]
     },
     "Timeout": {
