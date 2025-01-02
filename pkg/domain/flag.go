@@ -33,7 +33,7 @@ type Task struct {
 	InputEnvs   []string          `json:"input_envs,omitempty" yaml:"input_envs"`
 	ScriptEnvs  []string          `json:"script_envs,omitempty" yaml:"script_envs"`
 	Environment map[string]string `json:"environment,omitempty"`
-	Script      string            `json:"script"`
+	Script      string            `json:"script,omitempty"`
 	Timeout     Timeout           `json:"timeout,omitempty"`
 	Require     Require           `json:"require,omitempty"`
 	Quiet       *bool             `json:"quiet,omitempty"`
