@@ -23,5 +23,4 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(ecerror.GetExitCode(err))
 	}
-
 }
