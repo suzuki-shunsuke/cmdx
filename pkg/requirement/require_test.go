@@ -1,7 +1,6 @@
 package requirement
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,11 +66,9 @@ func TestChecker_Env(t *testing.T) {
 			isErr:   true,
 		},
 	}
-	defer os.Clearenv()
 	checker := New()
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			os.Clearenv()
 			for k, v := range d.setEnvs {
 				t.Setenv(k, v)
 			}
