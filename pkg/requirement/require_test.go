@@ -73,7 +73,7 @@ func TestChecker_Env(t *testing.T) {
 		t.Run(d.title, func(t *testing.T) {
 			os.Clearenv()
 			for k, v := range d.setEnvs {
-				os.Setenv(k, v)
+				t.Setenv(k, v)
 			}
 			err := checker.Env(d.envs)
 			if d.isErr {
