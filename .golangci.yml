@@ -23,4 +23,4 @@ linters:
     - exhaustruct
     - depguard
     - tagalign
-    - tenv # WARN The linter 'tenv' is deprecated (since v1.64.0) due to: Duplicate feature another linter. Replaced by usetesting. 
+    - tenv # WARN The linter 'tenv' is deprecated (since v1.64.0) due to: Duplicate feature another linter. Replaced by usetesting.
