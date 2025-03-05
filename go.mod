@@ -11,7 +11,7 @@ require (
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
 	github.com/suzuki-shunsuke/go-cliutil v0.3.0
 	github.com/suzuki-shunsuke/go-error-with-exit-code v1.0.0
-	github.com/urfave/cli/v2 v2.27.5
+	github.com/urfave/cli/v2 v2.27.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
