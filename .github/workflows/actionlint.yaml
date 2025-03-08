@@ -1,18 +1,19 @@
 ---
-# Separate the workflow for actionlint to other workflows, because if a workflow for actionlint is broken actionlint isn't run
 name: actionlint
-on:
-  pull_request:
-    paths:
-      - .github/workflows/*.yaml
-      - aqua/imports/actionlint.yaml
-      - aqua/imports/reviewdog.yaml
+on: pull_request
 permissions: {}
 jobs:
   actionlint:
-    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@932d2dbef166b2f6f7e11790954e8245289ffd0d # v1.2.1
-    with:
-      aqua_version: v2.45.0
+    runs-on: ubuntu-24.04
+    if: failure()
+    timeout-minutes: 10
+    permissions: {}
+    needs:
+      - main
+    steps:
+      - run: exit 1
+  main:
+    uses: suzuki-shunsuke/actionlint-workflow/.github/workflows/actionlint.yaml@4dbd707916194ff8ccc8bee121331138a4c2daba # v2.0.0-2
     permissions:
       pull-requests: write
       contents: read
