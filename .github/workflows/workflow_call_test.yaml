@@ -24,4 +24,3 @@ jobs:
           go-version-file: go.mod
       - run: go install ./cmd/cmdx
       - run: cmdx help
-
