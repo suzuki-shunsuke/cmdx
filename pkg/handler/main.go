@@ -354,7 +354,7 @@ func setupEnvs(envs []string, name string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		arr[i] = strings.ToUpper(strings.Replace(e, "-", "_", -1))
+		arr[i] = strings.ToUpper(strings.ReplaceAll(e, "-", "_"))
 	}
 	return arr, nil
 }

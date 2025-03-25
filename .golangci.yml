@@ -1,26 +1,48 @@
----
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - wsl
-    - testpackage
-    - godot
+    - cyclop
+    - depguard
     - err113
-    - lll
+    - exhaustruct
+    - forbidigo
     - funlen
     - gocognit
+    - gocritic
+    - godot
     - godox
+    - ireturn
+    - lll
     - nestif
     - nlreturn
-    - forbidigo
-    - cyclop
     - paralleltest
+    - tagalign
     - tagliatelle
+    - testpackage
     - varnamelen
     - wrapcheck
-    - gocritic
-    - ireturn
-    - exhaustruct
-    - depguard
-    - tagalign
-    - tenv # WARN The linter 'tenv' is deprecated (since v1.64.0) due to: Duplicate feature another linter. Replaced by usetesting.
+    - wsl
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
