@@ -168,7 +168,7 @@ task.script_envs | []string | task level environment variable binding | false | 
 task.environment | map[string]string | the task's environment variables | false | {}
 task.script | string | the task command. This is run by `task.shell` | true |
 task.quiet | bool | task level default configuration whether the content of script is outputted | false |
-task.shell | []string | shell command to run the script | `["bash", "-c"]` (falls back to `["sh", "-c"]` if bash isn't available)
+task.shell | []string | shell command to run the script | `["bash", "-euo", "pipefail", "-c"]` (falls back to `["sh", "-c"]` if bash isn't available)
 task.timeout | timeout | the task command timeout | false |
 task.require | require | requirement of task | false | {}
 task.tasks | []task | sub tasks | false | `[]`
@@ -528,7 +528,7 @@ About prompt type, please see [AlecAivazis/survey's document](https://github.com
 
 **This is an advanced feature.**
 
-By default task's `script` is run by the command `bash -c` (or `sh -c` if bash isn't available).
+By default task's `script` is run by the command `bash -euo pipefail -c` (or `sh -c` if bash isn't available).
 You can change the command by the `shell` option.
 
 For example, you can run Python script.
