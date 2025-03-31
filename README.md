@@ -166,7 +166,7 @@ task.args | []arg | the task positional arguments | false | []
 task.input_envs | []string | task level environment variable binding | false | []
 task.script_envs | []string | task level environment variable binding | false | []
 task.environment | map[string]string | the task's environment variables | false | {}
-task.script | string | the task command. This is run by `bash -c` (or `sh -c` if bash isn't available) | true |
+task.script | string | the task command. This is run by `task.shell` | true |
 task.quiet | bool | task level default configuration whether the content of script is outputted | false |
 task.shell | []string | shell command to run the script | `["bash", "-c"]` (falls back to `["sh", "-c"]` if bash isn't available)
 task.timeout | timeout | the task command timeout | false |
