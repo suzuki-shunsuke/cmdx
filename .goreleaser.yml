@@ -3,6 +3,10 @@ version: 2
 project_name: cmdx
 archives:
 - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+  format_overrides:
+  - goos: windows
+    formats:
+    - zip
 builds:
 - binary: cmdx
   main: cmd/cmdx/main.go
