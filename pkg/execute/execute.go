@@ -46,7 +46,13 @@ func setCancel(cmd *exec.Cmd, waitDelay time.Duration) *exec.Cmd {
 func (exc *Executor) Run(ctx context.Context, params *Params) error {
 	shell := params.Shell
 	if len(shell) == 0 {
-		shell = []string{"sh", "-c"}
+		// Try to use bash with safer options, fall back to sh if bash isn't available
+		if _, err := exec.LookPath("bash"); err != nil {
+			shell = []string{"sh", "-c"}
+		} else {
+			// Use bash with safer options by default
+			shell = []string{"bash", "-euo", "pipefail", "-c"}
+		}
 	}
 	cmd := exec.CommandContext(ctx, shell[0], append(shell[1:], params.Script)...) //nolint:gosec
 	cmd.Stdout = os.Stdout
