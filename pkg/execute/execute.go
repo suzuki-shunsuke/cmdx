@@ -50,8 +50,11 @@ func (exc *Executor) Run(ctx context.Context, params *Params) error {
 		shellCmd := "bash"
 		if _, err := exec.LookPath(shellCmd); err != nil {
 			shellCmd = "sh"
+			shell = []string{shellCmd, "-c"}
+		} else {
+			// Use bash with safer options by default
+			shell = []string{shellCmd, "-euo", "pipefail", "-c"}
 		}
-		shell = []string{shellCmd, "-c"}
 	}
 	cmd := exec.CommandContext(ctx, shell[0], append(shell[1:], params.Script)...) //nolint:gosec
 	cmd.Stdout = os.Stdout
