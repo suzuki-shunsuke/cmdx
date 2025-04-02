@@ -10,7 +10,7 @@ import (
 )
 
 func Test_setupApp(t *testing.T) {
-	app := cli.NewApp()
+	app := &cli.Command{}
 	flags := &LDFlags{
 		Version: "v1.6.0",
 	}
@@ -18,7 +18,7 @@ func Test_setupApp(t *testing.T) {
 	assert.Equal(t, "cmdx", app.Name)
 	assert.Equal(t, appUsage, app.Usage)
 	assert.Equal(t, flags.AppVersion(), app.Version)
-	assert.Equal(t, []*cli.Author{
+	assert.Equal(t, []any{
 		{
 			Name: "Shunsuke Suzuki",
 		},
@@ -43,7 +43,7 @@ func Test_newFlag(t *testing.T) {
 			exp: &cli.BoolFlag{
 				Name:    "foo",
 				Usage:   "usage",
-				EnvVars: []string{"FOO"},
+				Sources: cli.EnvVars("FOO"),
 				Aliases: []string{"f"},
 			},
 		},
@@ -59,7 +59,7 @@ func Test_newFlag(t *testing.T) {
 				Name:    "foo",
 				Usage:   "usage",
 				Value:   "default value",
-				EnvVars: []string{"FOO"},
+				Sources: cli.EnvVars("FOO"),
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func Test_newFlag(t *testing.T) {
 			exp: &cli.StringFlag{
 				Name:    "foo",
 				Usage:   "usage",
-				EnvVars: []string{"FOO"},
+				Sources: cli.EnvVars("FOO"),
 			},
 		},
 	}
@@ -348,7 +348,7 @@ func Test_updateAppWithConfig(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.title, func(_ *testing.T) {
-			app := cli.NewApp()
+			app := &cli.Command{}
 			updateAppWithConfig(app, d.cfg, &domain.GlobalFlags{WorkingDir: "/tmp"})
 		})
 	}

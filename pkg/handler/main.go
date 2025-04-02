@@ -41,7 +41,7 @@ func (flags *LDFlags) AppVersion() string {
 }
 
 func Main(flags *LDFlags, args []string) error {
-	app := cli.NewApp()
+	app := &cli.Command{}
 	setupApp(app, flags)
 
 	// Disable the builtin help command.
@@ -63,14 +63,14 @@ func Main(flags *LDFlags, args []string) error {
 
 	app.Action = mainAction(flags, args)
 
-	app.CustomAppHelpTemplate = rootHelp
+	app.CustomRootCommandHelpTemplate = rootHelp
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return app.RunContext(ctx, args)
+	return app.Run(ctx, args)
 }
 
-func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
-	return func(c *cli.Context) error {
+func mainAction(flags *LDFlags, args []string) func(context.Context, *cli.Command) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
@@ -131,7 +131,7 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			return nil
 		}
 
-		app := cli.NewApp()
+		app := &cli.Command{}
 		setupApp(app, flags)
 		if workingDirFlag == "" {
 			workingDirFlag = filepath.Dir(cfgFilePath)
@@ -146,27 +146,27 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
-		return app.RunContext(c.Context, args)
+		return app.Run(c.Context, args)
 	}
 }
 
-func setupApp(app *cli.App, flags *LDFlags) {
+func setupApp(app *cli.Command, flags *LDFlags) {
 	app.Name = "cmdx"
 	app.Version = flags.AppVersion()
-	app.Authors = []*cli.Author{
+	app.Authors = []any{
 		{
 			Name: "Shunsuke Suzuki",
 		},
 	}
 	app.Usage = appUsage
-	app.EnableBashCompletion = true
+	app.EnableShellCompletion = true
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:    "config",
 			Aliases: []string{"c"},
 			Usage:   "configuration file path",
-			EnvVars: []string{"CMDX_CONFIG_PATH"},
+			Sources: cli.EnvVars("CMDX_CONFIG_PATH"),
 		},
 		&cli.StringFlag{
 			Name:    "name",
@@ -177,7 +177,7 @@ func setupApp(app *cli.App, flags *LDFlags) {
 			Name:    "working-dir",
 			Aliases: []string{"w"},
 			Usage:   "The working directory path. By default, the task is run on the directory where the configuration file is found",
-			EnvVars: []string{"CMDX_WORKING_DIR"},
+			Sources: cli.EnvVars("CMDX_WORKING_DIR"),
 		},
 		&cli.BoolFlag{
 			Name:    "init",
@@ -299,7 +299,7 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 			Aliases:            aliases,
 			Usage:              task.Usage,
 			Description:        task.Description,
-			Subcommands:        tasks,
+			Commands:        tasks,
 			CustomHelpTemplate: help,
 		}
 	}
@@ -337,7 +337,7 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 	}
 }
 
-func updateAppWithConfig(app *cli.App, cfg *domain.Config, gFlags *domain.GlobalFlags) {
+func updateAppWithConfig(app *cli.Command, cfg *domain.Config, gFlags *domain.GlobalFlags) {
 	cmds := make([]*cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
 		cmds[i] = convertTaskToCommand(task, gFlags)

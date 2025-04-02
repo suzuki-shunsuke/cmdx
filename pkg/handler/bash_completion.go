@@ -9,8 +9,8 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func rootBashCompletion(flags *LDFlags, args []string) func(c *cli.Context) {
-	return func(c *cli.Context) {
+func rootBashCompletion(flags *LDFlags, args []string) func(c context.Context) {
+	return func(c context.Context) {
 		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
@@ -58,7 +58,7 @@ func rootBashCompletion(flags *LDFlags, args []string) func(c *cli.Context) {
 			return
 		}
 
-		app := cli.NewApp()
+		app := &cli.Command{}
 		setupApp(app, flags)
 		updateAppWithConfig(app, &cfg, &domain.GlobalFlags{})
 		if err := app.Run(args); err != nil {

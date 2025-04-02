@@ -19,7 +19,7 @@ import (
 func NewCommandAction(
 	task domain.Task, gFlags *domain.GlobalFlags, scriptEnvs map[string][]string,
 ) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		// create vars and envs
 		// run command
 		requireChecker := requirement.New()
