@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -41,8 +42,8 @@ func (flags *LDFlags) AppVersion() string {
 }
 
 func Main(flags *LDFlags, args []string) error {
-	app := &cli.Command{}
-	setupApp(app, flags)
+	cmd := &cli.Command{}
+	setupApp(cmd, flags)
 
 	// Disable the builtin help command.
 	//
@@ -57,16 +58,16 @@ func Main(flags *LDFlags, args []string) error {
 	// Incorrect Usage: flag: help requested
 	// flag: help requested
 	//
-	app.HideHelpCommand = true
+	cmd.HideHelpCommand = true
 
-	app.BashComplete = rootBashCompletion(flags, args)
+	cmd.ShellComplete = rootBashCompletion(flags, args)
 
-	app.Action = mainAction(flags, args)
+	cmd.Action = mainAction(flags, args)
 
-	app.CustomRootCommandHelpTemplate = rootHelp
+	cmd.CustomRootCommandHelpTemplate = rootHelp
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return app.Run(ctx, args)
+	return cmd.Run(ctx, args)
 }
 
 func mainAction(flags *LDFlags, args []string) func(context.Context, *cli.Command) error {
@@ -146,7 +147,7 @@ func mainAction(flags *LDFlags, args []string) func(context.Context, *cli.Comman
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
-		return app.Run(c.Context, args)
+		return app.Run(ctx, args)
 	}
 }
 
@@ -154,9 +155,7 @@ func setupApp(app *cli.Command, flags *LDFlags) {
 	app.Name = "cmdx"
 	app.Version = flags.AppVersion()
 	app.Authors = []any{
-		{
-			Name: "Shunsuke Suzuki",
-		},
+		&mail.Address{Name: "Shunsuke Suzuki", Address: ""},
 	}
 	app.Usage = appUsage
 	app.EnableShellCompletion = true
@@ -208,7 +207,7 @@ func newFlag(flag domain.Flag) cli.Flag {
 		f := &cli.BoolFlag{
 			Name:    flag.Name,
 			Usage:   flag.Usage,
-			EnvVars: flag.InputEnvs,
+			Sources: cli.EnvVars(flag.InputEnvs...),
 		}
 		if flag.Short != "" {
 			f.Aliases = []string{flag.Short}
@@ -219,7 +218,7 @@ func newFlag(flag domain.Flag) cli.Flag {
 			Name:    flag.Name,
 			Usage:   flag.Usage,
 			Value:   flag.Default,
-			EnvVars: flag.InputEnvs,
+			Sources: cli.EnvVars(flag.InputEnvs...),
 		}
 		if flag.Short != "" {
 			f.Aliases = []string{flag.Short}
@@ -299,7 +298,7 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 			Aliases:            aliases,
 			Usage:              task.Usage,
 			Description:        task.Description,
-			Commands:        tasks,
+			Commands:           tasks,
 			CustomHelpTemplate: help,
 		}
 	}

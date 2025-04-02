@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/mail"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,9 +20,7 @@ func Test_setupApp(t *testing.T) {
 	assert.Equal(t, appUsage, app.Usage)
 	assert.Equal(t, flags.AppVersion(), app.Version)
 	assert.Equal(t, []any{
-		{
-			Name: "Shunsuke Suzuki",
-		},
+		&mail.Address{Name: "Shunsuke Suzuki", Address: ""},
 	}, app.Authors)
 }
 

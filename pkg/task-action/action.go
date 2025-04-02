@@ -1,6 +1,7 @@
 package action
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -68,7 +69,7 @@ func NewCommandAction(
 		exc := execute.New()
 
 		return exc.Run(
-			c.Context, &execute.Params{
+			ctx, &execute.Params{
 				Shell:      task.Shell,
 				Script:     scr,
 				WorkingDir: gFlags.WorkingDir,

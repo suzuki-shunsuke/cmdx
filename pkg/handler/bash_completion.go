@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
@@ -9,15 +10,15 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func rootBashCompletion(flags *LDFlags, args []string) func(c context.Context) {
-	return func(c context.Context) {
+func rootBashCompletion(flags *LDFlags, args []string) func(ctx context.Context, c *cli.Command) {
+	return func(ctx context.Context, c *cli.Command) {
 		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
 		helpFlag := c.Bool("help")
 		cfgFileName := c.String("name")
 		if initFlag {
-			cli.DefaultAppComplete(c)
+			cli.DefaultAppComplete(ctx, c)
 			return
 		}
 
@@ -28,15 +29,15 @@ func rootBashCompletion(flags *LDFlags, args []string) func(c context.Context) {
 			cfgFilePath, err = cfgClient.GetFilePath(cfgFileName)
 			if err != nil {
 				if helpFlag && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
+					cli.DefaultAppComplete(ctx, c)
 					return
 				}
 				if c.NArg() == 1 && c.Args().First() == "help" && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
+					cli.DefaultAppComplete(ctx, c)
 					return
 				}
 				if c.NArg() == 1 && c.Args().First() == "version" && cfgFileName == "" {
-					cli.DefaultAppComplete(c)
+					cli.DefaultAppComplete(ctx, c)
 					return
 				}
 				fmt.Println(err)
@@ -61,7 +62,7 @@ func rootBashCompletion(flags *LDFlags, args []string) func(c context.Context) {
 		app := &cli.Command{}
 		setupApp(app, flags)
 		updateAppWithConfig(app, &cfg, &domain.GlobalFlags{})
-		if err := app.Run(args); err != nil {
+		if err := app.Run(ctx, args); err != nil {
 			fmt.Println(err)
 			return
 		}
