@@ -2,23 +2,23 @@
 version: 2
 project_name: cmdx
 archives:
-- name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
-  format_overrides:
-  - goos: windows
-    formats:
-    - zip
+  - name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
 builds:
-- binary: cmdx
-  main: cmd/cmdx/main.go
-  env:
-  - CGO_ENABLED=0
-  goos:
-  - windows
-  - darwin
-  - linux
-  goarch:
-  - amd64
-  - arm64
+  - binary: cmdx
+    main: cmd/cmdx/main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
 release:
   prerelease: true
   header: |
@@ -51,7 +51,7 @@ brews:
   # If set to auto, the release will not be uploaded to the homebrew tap
   # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
   # Default is false.
-  skip_upload: auto
+  skip_upload: true
 
   # So you can `brew test` your formula.
   # Default is empty.
@@ -59,18 +59,18 @@ brews:
     system "#{bin}/cmdx --version"
 
 signs:
-- cmd: cosign
-  artifacts: checksum
-  signature: ${artifact}.sig
-  certificate: ${artifact}.pem
-  output: true
-  args:
-  - sign-blob
-  - "-y"
-  - --output-signature
-  - ${signature}
-  - --output-certificate
-  - ${certificate}
-  - --oidc-provider
-  - github
-  - ${artifact}
+  - cmd: cosign
+    artifacts: checksum
+    signature: ${artifact}.sig
+    certificate: ${artifact}.pem
+    output: true
+    args:
+    - sign-blob
+    - "-y"
+    - --output-signature
+    - ${signature}
+    - --output-certificate
+    - ${certificate}
+    - --oidc-provider
+    - github
+    - ${artifact}
