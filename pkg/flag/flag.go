@@ -7,14 +7,14 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
 	boolFlagType = "bool"
 )
 
-func getFlagValue(c *cli.Context, flag domain.Flag) (any, error) {
+func getFlagValue(c *cli.Command, flag domain.Flag) (any, error) {
 	if c.IsSet(flag.Name) {
 		switch flag.Type {
 		case boolFlagType:
@@ -59,7 +59,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (any, error) {
 	}
 }
 
-func SetValues(c *cli.Context, flags []domain.Flag, vars map[string]any) error {
+func SetValues(c *cli.Command, flags []domain.Flag, vars map[string]any) error {
 	for _, flag := range flags {
 		val, err := getFlagValue(c, flag)
 		if err != nil {
