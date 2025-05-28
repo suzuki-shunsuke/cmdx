@@ -1,6 +1,7 @@
 package action
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -13,13 +14,13 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/util"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func NewCommandAction(
 	task domain.Task, gFlags *domain.GlobalFlags, scriptEnvs map[string][]string,
 ) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		// create vars and envs
 		// run command
 		requireChecker := requirement.New()
@@ -68,7 +69,7 @@ func NewCommandAction(
 		exc := execute.New()
 
 		return exc.Run(
-			c.Context, &execute.Params{
+			ctx, &execute.Params{
 				Shell:      task.Shell,
 				Script:     scr,
 				WorkingDir: gFlags.WorkingDir,
