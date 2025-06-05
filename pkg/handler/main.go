@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -14,7 +15,7 @@ import (
 	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
 	"github.com/suzuki-shunsuke/cmdx/pkg/util"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -41,8 +42,8 @@ func (flags *LDFlags) AppVersion() string {
 }
 
 func Main(flags *LDFlags, args []string) error {
-	app := cli.NewApp()
-	setupApp(app, flags)
+	cmd := &cli.Command{}
+	setupApp(cmd, flags)
 
 	// Disable the builtin help command.
 	//
@@ -57,20 +58,20 @@ func Main(flags *LDFlags, args []string) error {
 	// Incorrect Usage: flag: help requested
 	// flag: help requested
 	//
-	app.HideHelpCommand = true
+	cmd.HideHelpCommand = true
 
-	app.BashComplete = rootBashCompletion(flags, args)
+	cmd.ShellComplete = rootBashCompletion(flags, args)
 
-	app.Action = mainAction(flags, args)
+	cmd.Action = mainAction(flags, args)
 
-	app.CustomAppHelpTemplate = rootHelp
+	cmd.CustomRootCommandHelpTemplate = rootHelp
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return app.RunContext(ctx, args)
+	return cmd.Run(ctx, args)
 }
 
-func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
-	return func(c *cli.Context) error {
+func mainAction(flags *LDFlags, args []string) func(context.Context, *cli.Command) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		cfg := domain.Config{}
 		cfgFilePath := c.String("config")
 		initFlag := c.Bool("init")
@@ -131,7 +132,7 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			return nil
 		}
 
-		app := cli.NewApp()
+		app := &cli.Command{}
 		setupApp(app, flags)
 		if workingDirFlag == "" {
 			workingDirFlag = filepath.Dir(cfgFilePath)
@@ -146,27 +147,25 @@ func mainAction(flags *LDFlags, args []string) func(*cli.Context) error {
 			Quiet:      quiet,
 			WorkingDir: workingDirFlag,
 		})
-		return app.RunContext(c.Context, args)
+		return app.Run(ctx, args)
 	}
 }
 
-func setupApp(app *cli.App, flags *LDFlags) {
+func setupApp(app *cli.Command, flags *LDFlags) {
 	app.Name = "cmdx"
 	app.Version = flags.AppVersion()
-	app.Authors = []*cli.Author{
-		{
-			Name: "Shunsuke Suzuki",
-		},
+	app.Authors = []any{
+		&mail.Address{Name: "Shunsuke Suzuki", Address: ""},
 	}
 	app.Usage = appUsage
-	app.EnableBashCompletion = true
+	app.EnableShellCompletion = true
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:    "config",
 			Aliases: []string{"c"},
 			Usage:   "configuration file path",
-			EnvVars: []string{"CMDX_CONFIG_PATH"},
+			Sources: cli.EnvVars("CMDX_CONFIG_PATH"),
 		},
 		&cli.StringFlag{
 			Name:    "name",
@@ -177,7 +176,7 @@ func setupApp(app *cli.App, flags *LDFlags) {
 			Name:    "working-dir",
 			Aliases: []string{"w"},
 			Usage:   "The working directory path. By default, the task is run on the directory where the configuration file is found",
-			EnvVars: []string{"CMDX_WORKING_DIR"},
+			Sources: cli.EnvVars("CMDX_WORKING_DIR"),
 		},
 		&cli.BoolFlag{
 			Name:    "init",
@@ -208,7 +207,7 @@ func newFlag(flag domain.Flag) cli.Flag {
 		f := &cli.BoolFlag{
 			Name:    flag.Name,
 			Usage:   flag.Usage,
-			EnvVars: flag.InputEnvs,
+			Sources: cli.EnvVars(flag.InputEnvs...),
 		}
 		if flag.Short != "" {
 			f.Aliases = []string{flag.Short}
@@ -219,7 +218,7 @@ func newFlag(flag domain.Flag) cli.Flag {
 			Name:    flag.Name,
 			Usage:   flag.Usage,
 			Value:   flag.Default,
-			EnvVars: flag.InputEnvs,
+			Sources: cli.EnvVars(flag.InputEnvs...),
 		}
 		if flag.Short != "" {
 			f.Aliases = []string{flag.Short}
@@ -299,7 +298,7 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 			Aliases:            aliases,
 			Usage:              task.Usage,
 			Description:        task.Description,
-			Subcommands:        tasks,
+			Commands:           tasks,
 			CustomHelpTemplate: help,
 		}
 	}
@@ -337,7 +336,7 @@ func convertTaskToCommand(task domain.Task, gFlags *domain.GlobalFlags) *cli.Com
 	}
 }
 
-func updateAppWithConfig(app *cli.App, cfg *domain.Config, gFlags *domain.GlobalFlags) {
+func updateAppWithConfig(app *cli.Command, cfg *domain.Config, gFlags *domain.GlobalFlags) {
 	cmds := make([]*cli.Command, len(cfg.Tasks))
 	for i, task := range cfg.Tasks {
 		cmds[i] = convertTaskToCommand(task, gFlags)
