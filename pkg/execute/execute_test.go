@@ -1,13 +1,13 @@
 package execute
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExecutor_Run(t *testing.T) {
+	t.Parallel()
 	data := []struct {
 		title  string
 		params *Params
@@ -37,11 +37,11 @@ func TestExecutor_Run(t *testing.T) {
 			},
 		},
 	}
-	ctx := context.Background()
 	exc := New()
 	for _, d := range data {
 		t.Run(d.title, func(t *testing.T) {
-			err := exc.Run(ctx, d.params)
+			t.Parallel()
+			err := exc.Run(t.Context(), d.params)
 			if err != nil {
 				if d.isErr {
 					return
