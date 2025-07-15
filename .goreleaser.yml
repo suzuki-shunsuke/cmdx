@@ -7,6 +7,10 @@ archives:
       - goos: windows
         formats:
           - zip
+    files:
+      - LICENSE
+      - README.md
+      - third_party_licenses/**/*
 builds:
   - binary: cmdx
     main: cmd/cmdx/main.go
@@ -20,10 +24,10 @@ builds:
       - amd64
       - arm64
 release:
-  prerelease: true
+  prerelease: "true"
   header: |
     [Pull Requests](https://github.com/suzuki-shunsuke/cmdx/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/cmdx/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/cmdx/compare/{{.PreviousTag}}...{{.Tag}}
-brews:
+homebrew_casks:
 -
   # NOTE: make sure the url_template, the token and given repo (github or gitlab) owner and name are from the
   # same kind. We will probably unify this in the next major version like it is done with scoop.
@@ -53,11 +57,9 @@ brews:
   # Default is false.
   skip_upload: true
 
-  # So you can `brew test` your formula.
-  # Default is empty.
-  test: |
-    system "#{bin}/cmdx --version"
-
+sboms:
+  - id: default
+    disable: false
 signs:
   - cmd: cosign
     artifacts: checksum
