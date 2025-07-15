@@ -7,6 +7,10 @@ archives:
       - goos: windows
         formats:
           - zip
+    files:
+      - LICENSE
+      - README.md
+      - third_party_licenses/**/*
 builds:
   - binary: cmdx
     main: cmd/cmdx/main.go
