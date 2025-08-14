@@ -42,7 +42,7 @@ func getFlagValue(c *cli.Context, flag domain.Flag) (any, error) {
 
 	switch flag.Type {
 	case boolFlagType:
-		// don't ues c.Generic if flag.Type == "bool"
+		// don't use c.Generic if flag.Type == "bool"
 		// the value in the template is treated as false
 		return c.Bool(flag.Name), nil
 	default:

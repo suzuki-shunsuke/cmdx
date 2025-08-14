@@ -388,7 +388,7 @@ one of the following is required: curl, wget
 #### require.environment
 
 `require.environment` is the required environment variables.
-Note that if the value of the environment variable is an emtpy string, the environment variable is treated as unset.
+Note that if the value of the environment variable is an empty string, the environment variable is treated as unset.
 
 ```yaml
 tasks:
