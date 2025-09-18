@@ -11,7 +11,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/flag"
 	"github.com/suzuki-shunsuke/cmdx/pkg/prompt"
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
-	"github.com/suzuki-shunsuke/cmdx/pkg/util"
+	"github.com/suzuki-shunsuke/cmdx/pkg/tmpl"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 	"github.com/urfave/cli/v2"
 )
@@ -53,7 +53,7 @@ func NewCommandAction(
 			envs = append(envs, k+"="+v)
 		}
 
-		scr, err := util.RenderTemplate(task.Script, vars)
+		scr, err := tmpl.RenderTemplate(task.Script, vars)
 		if err != nil {
 			return fmt.Errorf("failed to parse the script - %s: %w", task.Script, err)
 		}

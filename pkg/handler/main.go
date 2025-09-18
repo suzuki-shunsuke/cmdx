@@ -12,7 +12,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
-	"github.com/suzuki-shunsuke/cmdx/pkg/util"
+	"github.com/suzuki-shunsuke/cmdx/pkg/tmpl"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
 	"github.com/urfave/cli/v2"
 )
@@ -348,7 +348,7 @@ func updateAppWithConfig(app *cli.App, cfg *domain.Config, gFlags *domain.Global
 func setupEnvs(envs []string, name string) ([]string, error) {
 	arr := make([]string, len(envs))
 	for i, env := range envs {
-		e, err := util.RenderTemplate(env, map[string]string{
+		e, err := tmpl.RenderTemplate(env, map[string]string{
 			"name": name,
 		})
 		if err != nil {
