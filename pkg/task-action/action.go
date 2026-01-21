@@ -13,7 +13,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/requirement"
 	"github.com/suzuki-shunsuke/cmdx/pkg/tmpl"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func NewCommandAction(
