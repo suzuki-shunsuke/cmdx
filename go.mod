@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/asaskevich/govalidator/v11 v11.0.1
 	github.com/invopop/jsonschema v0.13.0
 	github.com/stretchr/testify v1.11.1
 	github.com/suzuki-shunsuke/gen-go-jsonschema v0.1.0
