@@ -19,7 +19,7 @@ type Flag struct {
 	ScriptEnvs []string      `json:"script_envs,omitempty" yaml:"script_envs"`
 	Type       string        `json:"type,omitempty"`
 	Required   bool          `json:"required,omitempty"`
-	Prompt     prompt.Prompt `json:"prompt,omitempty"`
+	Prompt     prompt.Prompt `json:"prompt,omitzero"`
 	Validate   []Validate    `json:"validate,omitempty"`
 }
 
@@ -34,8 +34,8 @@ type Task struct {
 	ScriptEnvs  []string          `json:"script_envs,omitempty" yaml:"script_envs"`
 	Environment map[string]string `json:"environment,omitempty"`
 	Script      string            `json:"script,omitempty"`
-	Timeout     Timeout           `json:"timeout,omitempty"`
-	Require     Require           `json:"require,omitempty"`
+	Timeout     Timeout           `json:"timeout,omitzero"`
+	Require     Require           `json:"require,omitzero"`
 	Quiet       *bool             `json:"quiet,omitempty"`
 	Shell       []string          `json:"shell,omitempty"`
 	Tasks       []Task            `json:"tasks,omitempty"`
@@ -48,7 +48,7 @@ type Arg struct {
 	InputEnvs  []string      `json:"input_envs,omitempty" yaml:"input_envs"`
 	ScriptEnvs []string      `json:"script_envs,omitempty" yaml:"script_envs"`
 	Required   bool          `json:"required,omitempty"`
-	Prompt     prompt.Prompt `json:"prompt,omitempty"`
+	Prompt     prompt.Prompt `json:"prompt,omitzero"`
 	Validate   []Validate    `json:"validate,omitempty"`
 }
 
@@ -67,7 +67,7 @@ type Config struct {
 	InputEnvs   []string          `json:"input_envs,omitempty" yaml:"input_envs"`
 	ScriptEnvs  []string          `json:"script_envs,omitempty" yaml:"script_envs"`
 	Environment map[string]string `json:"environment,omitempty"`
-	Timeout     Timeout           `json:"timeout,omitempty"`
+	Timeout     Timeout           `json:"timeout,omitzero"`
 	Quiet       *bool             `json:"quiet,omitempty"`
 }
 

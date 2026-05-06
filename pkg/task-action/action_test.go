@@ -7,6 +7,12 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
+const (
+	valFoo      = "foo"
+	valBar      = "bar"
+	valFooValue = "foo-value"
+)
+
 func Test_updateVarsByArgs(t *testing.T) {
 	data := []struct {
 		title   string
@@ -20,10 +26,10 @@ func Test_updateVarsByArgs(t *testing.T) {
 			title: "args and cArgs is empty",
 			expVars: map[string]any{
 				"_builtin": map[string]any{
-					"args":            []string{},
-					"args_string":     "",
-					"all_args":        []string{},
-					"all_args_string": "",
+					builtinKeyArgs:          []string{},
+					builtinKeyArgsString:    "",
+					builtinKeyAllArgs:       []string{},
+					builtinKeyAllArgsString: "",
 				},
 			},
 		},
@@ -31,26 +37,26 @@ func Test_updateVarsByArgs(t *testing.T) {
 			title: "normal",
 			args: []domain.Arg{
 				{
-					Name:       "foo",
+					Name:       valFoo,
 					ScriptEnvs: []string{"FOO"},
 				},
 				{
-					Name:       "bar",
+					Name:       valBar,
 					ScriptEnvs: []string{"BAR"},
 					Default:    "bar-value",
 				},
 			},
 			cArgs: []string{
-				"foo-value",
+				valFooValue,
 			},
 			expVars: map[string]any{
-				"foo": "foo-value",
-				"bar": "bar-value",
+				valFoo: valFooValue,
+				valBar: "bar-value",
 				"_builtin": map[string]any{
-					"args":            []string{},
-					"args_string":     "",
-					"all_args":        []string{"foo-value"},
-					"all_args_string": "foo-value",
+					builtinKeyArgs:          []string{},
+					builtinKeyArgsString:    "",
+					builtinKeyAllArgs:       []string{valFooValue},
+					builtinKeyAllArgsString: valFooValue,
 				},
 			},
 		},
@@ -58,7 +64,7 @@ func Test_updateVarsByArgs(t *testing.T) {
 			title: "required",
 			args: []domain.Arg{
 				{
-					Name:     "foo",
+					Name:     valFoo,
 					Required: true,
 				},
 			},

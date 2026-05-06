@@ -16,61 +16,61 @@ func Test_value(t *testing.T) {
 	}{
 		{
 			title:    "no validation",
-			val:      "foo",
+			val:      testValFoo,
 			validate: domain.Validate{},
 			isErr:    false,
 		},
 		{
-			title: "int",
+			title: validateTypeInt,
 			val:   "0",
 			validate: domain.Validate{
-				Type: "int",
+				Type: validateTypeInt,
 			},
 			isErr: false,
 		},
 		{
 			title: "int error",
-			val:   "foo",
+			val:   testValFoo,
 			validate: domain.Validate{
-				Type: "int",
+				Type: validateTypeInt,
 			},
 			isErr: true,
 		},
 		{
-			title: "url",
+			title: validateTypeURL,
 			val:   "http://example.com",
 			validate: domain.Validate{
-				Type: "url",
+				Type: validateTypeURL,
 			},
 			isErr: false,
 		},
 		{
 			title: "url error",
-			val:   "foo",
+			val:   testValFoo,
 			validate: domain.Validate{
-				Type: "url",
+				Type: validateTypeURL,
 			},
 			isErr: true,
 		},
 		{
-			title: "email",
+			title: validateTypeEmail,
 			val:   "foo@example.com",
 			validate: domain.Validate{
-				Type: "email",
+				Type: validateTypeEmail,
 			},
 			isErr: false,
 		},
 		{
 			title: "email error",
-			val:   "foo",
+			val:   testValFoo,
 			validate: domain.Validate{
-				Type: "email",
+				Type: validateTypeEmail,
 			},
 			isErr: true,
 		},
 		{
 			title: "contain",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				Contain: "lo",
 			},
@@ -78,15 +78,15 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "contain error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
-				Contain: "foo",
+				Contain: testValFoo,
 			},
 			isErr: true,
 		},
 		{
 			title: "prefix",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				Prefix: "hel",
 			},
@@ -94,7 +94,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "prefix error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				Prefix: "ell",
 			},
@@ -102,7 +102,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "suffix",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				Suffix: "lo",
 			},
@@ -110,7 +110,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "suffix error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				Suffix: "ll",
 			},
@@ -118,7 +118,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "min length",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				MinLength: 3,
 			},
@@ -126,7 +126,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "min length error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				MinLength: 6,
 			},
@@ -134,7 +134,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "max length",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				MaxLength: 5,
 			},
@@ -142,7 +142,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "max length error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				MaxLength: 4,
 			},
@@ -150,23 +150,23 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "enum",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
-				Enum: []string{"bar", "hello"},
+				Enum: []string{testValBar, testValHello},
 			},
 			isErr: false,
 		},
 		{
 			title: "enum error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
-				Enum: []string{"bar", "zoo"},
+				Enum: []string{testValBar, "zoo"},
 			},
 			isErr: true,
 		},
 		{
 			title: "regexp",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				RegExp: "^h.llo",
 			},
@@ -174,7 +174,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "regexp error",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				RegExp: "^ho",
 			},
@@ -182,7 +182,7 @@ func Test_value(t *testing.T) {
 		},
 		{
 			title: "invalid regexp",
-			val:   "hello",
+			val:   testValHello,
 			validate: domain.Validate{
 				RegExp: "(.",
 			},

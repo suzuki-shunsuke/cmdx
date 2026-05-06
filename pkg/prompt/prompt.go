@@ -5,7 +5,13 @@ import (
 )
 
 const (
-	confirmPromptType = "confirm"
+	inputPromptType       = "input"
+	multilinePromptType   = "multiline"
+	passwordPromptType    = "password"
+	confirmPromptType     = "confirm"
+	selectPromptType      = "select"
+	multiSelectPromptType = "multi_select"
+	editorPromptType      = "editor"
 )
 
 type Prompt struct {
@@ -19,39 +25,39 @@ func Create(prompt Prompt) survey.Prompt {
 	switch prompt.Type {
 	case "":
 		return nil
-	case "input":
+	case inputPromptType:
 		return &survey.Input{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 		}
-	case "multiline":
+	case multilinePromptType:
 		return &survey.Multiline{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 		}
-	case "password":
+	case passwordPromptType:
 		return &survey.Password{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 		}
-	case "confirm":
+	case confirmPromptType:
 		return &survey.Confirm{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 		}
-	case "select":
+	case selectPromptType:
 		return &survey.Select{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 			Options: prompt.Options,
 		}
-	case "multi_select":
+	case multiSelectPromptType:
 		return &survey.MultiSelect{
 			Message: prompt.Message,
 			Help:    prompt.Help,
 			Options: prompt.Options,
 		}
-	case "editor":
+	case editorPromptType:
 		return &survey.Editor{
 			Message:       prompt.Message,
 			Help:          prompt.Help,
@@ -68,13 +74,13 @@ func GetValue(prompt survey.Prompt, typ string) (any, error) {
 		ans := false
 		err := survey.AskOne(prompt, &ans)
 		return ans, err
-	case "select":
+	case selectPromptType:
 		ans := ""
 		if err := survey.AskOne(prompt, &ans); err != nil {
 			return nil, err
 		}
 		return ans, nil
-	case "multi_select":
+	case multiSelectPromptType:
 		ans := []string{}
 		if err := survey.AskOne(prompt, &ans); err != nil {
 			return nil, err

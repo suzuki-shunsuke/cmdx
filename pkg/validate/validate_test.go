@@ -7,6 +7,15 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 )
 
+const (
+	testValFoo            = "foo"
+	testValBar            = "bar"
+	testValHello          = "hello"
+	testValPwd            = "pwd"
+	testTitleNormal       = "normal"
+	testTitleNameRequired = "name is required"
+)
+
 func Test_vUniqueName(t *testing.T) {
 	data := []struct {
 		title    string
@@ -16,31 +25,31 @@ func Test_vUniqueName(t *testing.T) {
 		expNames map[string]struct{}
 	}{
 		{
-			title: "normal",
-			name:  "foo",
+			title: testTitleNormal,
+			name:  testValFoo,
 			names: map[string]struct{}{},
 			exp:   true,
 			expNames: map[string]struct{}{
-				"foo": {},
+				testValFoo: {},
 			},
 		},
 		{
 			title: "normal 2",
-			name:  "foo",
+			name:  testValFoo,
 			names: map[string]struct{}{
-				"bar": {},
+				testValBar: {},
 			},
 			exp: true,
 			expNames: map[string]struct{}{
-				"foo": {},
-				"bar": {},
+				testValFoo: {},
+				testValBar: {},
 			},
 		},
 		{
 			title: "false",
-			name:  "foo",
+			name:  testValFoo,
 			names: map[string]struct{}{
-				"foo": {},
+				testValFoo: {},
 			},
 			exp: false,
 		},
@@ -69,13 +78,13 @@ func TestConfig(t *testing.T) {
 			cfg:   &domain.Config{},
 		},
 		{
-			title: "normal",
+			title: testTitleNormal,
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
+						Name:   testValFoo,
 						Short:  "f",
-						Script: "pwd",
+						Script: testValPwd,
 					},
 				},
 			},
@@ -85,12 +94,12 @@ func TestConfig(t *testing.T) {
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
-						Script: "pwd",
+						Name:   testValFoo,
+						Script: testValPwd,
 					},
 					{
-						Name:   "foo",
-						Script: "pwd",
+						Name:   testValFoo,
+						Script: testValPwd,
 					},
 				},
 			},
@@ -101,14 +110,14 @@ func TestConfig(t *testing.T) {
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
+						Name:   testValFoo,
 						Short:  "f",
-						Script: "pwd",
+						Script: testValPwd,
 					},
 					{
-						Name:   "bar",
+						Name:   testValBar,
 						Short:  "f",
-						Script: "pwd",
+						Script: testValPwd,
 					},
 				},
 			},
@@ -119,7 +128,7 @@ func TestConfig(t *testing.T) {
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:  "foo",
+						Name:  testValFoo,
 						Short: "f",
 						Args: []domain.Arg{
 							{},
@@ -154,31 +163,31 @@ func Test_vFlag(t *testing.T) {
 		isErr      bool
 	}{
 		{
-			title: "name is required",
+			title: testTitleNameRequired,
 			isErr: true,
 		},
 		{
 			title: "short name is too long",
 			flag: domain.Flag{
-				Name:  "foo",
-				Short: "foo",
+				Name:  testValFoo,
+				Short: testValFoo,
 			},
 			isErr: true,
 		},
 		{
 			title: "flag name duplicates",
 			flag: domain.Flag{
-				Name: "foo",
+				Name: testValFoo,
 			},
 			names: map[string]struct{}{
-				"foo": {},
+				testValFoo: {},
 			},
 			isErr: true,
 		},
 		{
 			title: "flag short name duplicates",
 			flag: domain.Flag{
-				Name:  "foo",
+				Name:  testValFoo,
 				Short: "f",
 			},
 			shortNames: map[string]struct{}{
@@ -189,15 +198,15 @@ func Test_vFlag(t *testing.T) {
 		{
 			title: "invalid flag type",
 			flag: domain.Flag{
-				Name: "foo",
+				Name: testValFoo,
 				Type: "f",
 			},
 			isErr: true,
 		},
 		{
-			title: "normal",
+			title: testTitleNormal,
 			flag: domain.Flag{
-				Name: "foo",
+				Name: testValFoo,
 			},
 		},
 	}
@@ -230,23 +239,23 @@ func Test_vArg(t *testing.T) {
 		isErr bool
 	}{
 		{
-			title: "name is required",
+			title: testTitleNameRequired,
 			isErr: true,
 		},
 		{
 			title: "arg name duplicates",
 			arg: domain.Arg{
-				Name: "foo",
+				Name: testValFoo,
 			},
 			names: map[string]struct{}{
-				"foo": {},
+				testValFoo: {},
 			},
 			isErr: true,
 		},
 		{
-			title: "normal",
+			title: testTitleNormal,
 			arg: domain.Arg{
-				Name: "foo",
+				Name: testValFoo,
 			},
 		},
 	}
@@ -275,13 +284,13 @@ func Test_vTask(t *testing.T) {
 		isErr bool
 	}{
 		{
-			title: "name is required",
+			title: testTitleNameRequired,
 			isErr: true,
 		},
 		{
 			title: "invalid flag",
 			task: domain.Task{
-				Name: "foo",
+				Name: testValFoo,
 				Flags: []domain.Flag{
 					{},
 				},
@@ -291,7 +300,7 @@ func Test_vTask(t *testing.T) {
 		{
 			title: "invalid arg",
 			task: domain.Task{
-				Name: "foo",
+				Name: testValFoo,
 				Args: []domain.Arg{
 					{},
 				},
@@ -299,9 +308,9 @@ func Test_vTask(t *testing.T) {
 			isErr: true,
 		},
 		{
-			title: "normal",
+			title: testTitleNormal,
 			task: domain.Task{
-				Name: "foo",
+				Name: testValFoo,
 			},
 		},
 	}
