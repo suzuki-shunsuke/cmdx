@@ -23,7 +23,7 @@ func Test_bindScriptEnvs(t *testing.T) {
 			vars: map[string]any{
 				"man":  true,
 				"age":  "10",
-				"list": []string{"foo", "bar"},
+				"list": []string{valFoo, valBar},
 			},
 			scriptEnvs: map[string][]string{
 				"age":  {"AGE", "ZOO"},

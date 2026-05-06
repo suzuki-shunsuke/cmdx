@@ -9,6 +9,19 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	envFOO         = "FOO"
+	envBAR         = "BAR"
+	valBar         = "bar"
+	valFoo         = "foo"
+	valUsage       = "usage"
+	valTest        = "test"
+	valDescription = "description"
+	titleNormal    = "normal"
+	valHello       = "hello"
+	valEnv         = "env"
+)
+
 func Test_setupApp(t *testing.T) {
 	app := cli.NewApp()
 	flags := &LDFlags{
@@ -34,46 +47,46 @@ func Test_newFlag(t *testing.T) {
 		{
 			title: "bool",
 			flag: domain.Flag{
-				Name:      "foo",
+				Name:      valFoo,
 				Short:     "f",
-				Usage:     "usage",
-				InputEnvs: []string{"FOO"},
+				Usage:     valUsage,
+				InputEnvs: []string{envFOO},
 				Type:      "bool",
 			},
 			exp: &cli.BoolFlag{
-				Name:    "foo",
-				Usage:   "usage",
-				EnvVars: []string{"FOO"},
+				Name:    valFoo,
+				Usage:   valUsage,
+				EnvVars: []string{envFOO},
 				Aliases: []string{"f"},
 			},
 		},
 		{
 			title: "string",
 			flag: domain.Flag{
-				Name:      "foo",
-				Usage:     "usage",
+				Name:      valFoo,
+				Usage:     valUsage,
 				Default:   "default value",
-				InputEnvs: []string{"FOO"},
+				InputEnvs: []string{envFOO},
 			},
 			exp: &cli.StringFlag{
-				Name:    "foo",
-				Usage:   "usage",
+				Name:    valFoo,
+				Usage:   valUsage,
 				Value:   "default value",
-				EnvVars: []string{"FOO"},
+				EnvVars: []string{envFOO},
 			},
 		},
 		{
 			title: "required",
 			flag: domain.Flag{
-				Name:      "foo",
-				Usage:     "usage",
-				InputEnvs: []string{"FOO"},
+				Name:      valFoo,
+				Usage:     valUsage,
+				InputEnvs: []string{envFOO},
 				Required:  true,
 			},
 			exp: &cli.StringFlag{
-				Name:    "foo",
-				Usage:   "usage",
-				EnvVars: []string{"FOO"},
+				Name:    valFoo,
+				Usage:   valUsage,
+				EnvVars: []string{envFOO},
 			},
 		},
 	}
@@ -93,16 +106,16 @@ func Test_convertTaskToCommand(t *testing.T) {
 		{
 			title: "no flag",
 			task: domain.Task{
-				Name:        "test",
+				Name:        valTest,
 				Short:       "t",
-				Usage:       "usage",
-				Description: "description",
+				Usage:       valUsage,
+				Description: valDescription,
 			},
 			exp: cli.Command{
-				Name:               "test",
+				Name:               valTest,
 				Aliases:            []string{"t"},
-				Usage:              "usage",
-				Description:        "description",
+				Usage:              valUsage,
+				Description:        valDescription,
 				CustomHelpTemplate: cli.CommandHelpTemplate,
 				Flags:              []cli.Flag{},
 			},
@@ -110,25 +123,25 @@ func Test_convertTaskToCommand(t *testing.T) {
 		{
 			title: "flag",
 			task: domain.Task{
-				Name:        "test",
+				Name:        valTest,
 				Short:       "t",
-				Usage:       "usage",
-				Description: "description",
+				Usage:       valUsage,
+				Description: valDescription,
 				Flags: []domain.Flag{
 					{
-						Name: "foo",
+						Name: valFoo,
 					},
 				},
 			},
 			exp: cli.Command{
-				Name:               "test",
+				Name:               valTest,
 				Aliases:            []string{"t"},
-				Usage:              "usage",
-				Description:        "description",
+				Usage:              valUsage,
+				Description:        valDescription,
 				CustomHelpTemplate: cli.CommandHelpTemplate,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name: "foo",
+						Name: valFoo,
 					},
 				},
 			},
@@ -136,22 +149,22 @@ func Test_convertTaskToCommand(t *testing.T) {
 		{
 			title: "args",
 			task: domain.Task{
-				Name:        "test",
+				Name:        valTest,
 				Short:       "t",
-				Usage:       "usage",
-				Description: "description",
+				Usage:       valUsage,
+				Description: valDescription,
 				Args: []domain.Arg{
 					{
-						Name:  "foo",
-						Usage: "usage",
+						Name:  valFoo,
+						Usage: valUsage,
 					},
 				},
 			},
 			exp: cli.Command{
-				Name:        "test",
+				Name:        valTest,
 				Aliases:     []string{"t"},
-				Usage:       "usage",
-				Description: "description",
+				Usage:       valUsage,
+				Description: valDescription,
 				Flags:       []cli.Flag{},
 				CustomHelpTemplate: cli.CommandHelpTemplate + `
 ARGUMENTS:
@@ -174,7 +187,7 @@ ARGUMENTS:
 }
 
 func Test_setupEnvs(t *testing.T) {
-	envs, err := setupEnvs([]string{"{{.name}}-zoo"}, "foo")
+	envs, err := setupEnvs([]string{"{{.name}}-zoo"}, valFoo)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"FOO_ZOO"}, envs)
 }
@@ -203,7 +216,7 @@ func Test_setupTask(t *testing.T) {
 			task:  &domain.Task{},
 			base: &domain.Task{
 				Environment: map[string]string{
-					"FOO": "foo",
+					envFOO: valFoo,
 				},
 			},
 			exp: &domain.Task{
@@ -211,33 +224,33 @@ func Test_setupTask(t *testing.T) {
 					Duration: defaultTimeout,
 				},
 				Environment: map[string]string{
-					"FOO": "foo",
+					envFOO: valFoo,
 				},
 			},
 		},
 		{
-			title: "normal",
+			title: titleNormal,
 			task: &domain.Task{
 				Flags: []domain.Flag{
 					{
-						Name: "foo",
+						Name: valFoo,
 					},
 				},
 				Args: []domain.Arg{
 					{
-						Name: "bar",
+						Name: valBar,
 					},
 				},
 				Environment: map[string]string{
-					"ZOO": "zoo",
-					"BAR": "bar",
+					"ZOO":  "zoo",
+					envBAR: valBar,
 				},
 			},
 			base: &domain.Task{
 				InputEnvs: []string{"{{.name}}"},
 				Environment: map[string]string{
-					"FOO": "foo",
-					"BAR": "hello",
+					envFOO: valFoo,
+					envBAR: valHello,
 				},
 			},
 			exp: &domain.Task{
@@ -246,22 +259,22 @@ func Test_setupTask(t *testing.T) {
 				},
 				Flags: []domain.Flag{
 					{
-						Name:       "foo",
-						InputEnvs:  []string{"FOO"},
+						Name:       valFoo,
+						InputEnvs:  []string{envFOO},
 						ScriptEnvs: []string{},
 					},
 				},
 				Args: []domain.Arg{
 					{
-						Name:       "bar",
-						InputEnvs:  []string{"BAR"},
+						Name:       valBar,
+						InputEnvs:  []string{envBAR},
 						ScriptEnvs: []string{},
 					},
 				},
 				Environment: map[string]string{
-					"FOO": "foo",
-					"BAR": "bar",
-					"ZOO": "zoo",
+					envFOO: valFoo,
+					envBAR: valBar,
+					"ZOO":  "zoo",
 				},
 			},
 		},
@@ -290,20 +303,20 @@ func Test_setupConfig(t *testing.T) {
 		isErr bool
 	}{
 		{
-			title: "normal",
+			title: titleNormal,
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
-						Script: "env",
+						Name:   valFoo,
+						Script: valEnv,
 					},
 				},
 			},
 			exp: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
-						Script: "env",
+						Name:   valFoo,
+						Script: valEnv,
 						Timeout: domain.Timeout{
 							Duration: defaultTimeout,
 						},
@@ -335,12 +348,12 @@ func Test_updateAppWithConfig(t *testing.T) {
 		cfg   *domain.Config
 	}{
 		{
-			title: "normal",
+			title: titleNormal,
 			cfg: &domain.Config{
 				Tasks: []domain.Task{
 					{
-						Name:   "foo",
-						Script: "env",
+						Name:   valFoo,
+						Script: valEnv,
 					},
 				},
 			},
@@ -363,8 +376,8 @@ func Test_getHelp(t *testing.T) {
 	}{
 		{
 			title: "not update",
-			txt:   "hello",
-			exp:   "hello",
+			txt:   valHello,
+			exp:   valHello,
 		},
 	}
 	for _, d := range data {

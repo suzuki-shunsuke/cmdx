@@ -8,16 +8,18 @@ import (
 
 type StrList []string //nolint:recvcheck
 
+const jsonSchemaTypeString = "string"
+
 func (StrList) JSONSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{
 		OneOf: []*jsonschema.Schema{
 			{
-				Type: "string",
+				Type: jsonSchemaTypeString,
 			},
 			{
 				Type: "array",
 				Items: &jsonschema.Schema{
-					Type: "string",
+					Type: jsonSchemaTypeString,
 				},
 			},
 		},

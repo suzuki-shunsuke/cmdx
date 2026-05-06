@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testMessage = "message"
+	testHelp    = "help"
+	testBlue    = "blue"
+	testGreen   = "green"
+)
+
 func Test_createPrompt(t *testing.T) {
 	data := []struct {
 		title  string
@@ -14,93 +21,93 @@ func Test_createPrompt(t *testing.T) {
 		exp    survey.Prompt
 	}{
 		{
-			title: "input",
+			title: inputPromptType,
 			prompt: Prompt{
-				Type:    "input",
-				Message: "message",
-				Help:    "help",
+				Type:    inputPromptType,
+				Message: testMessage,
+				Help:    testHelp,
 			},
 			exp: &survey.Input{
-				Message: "message",
-				Help:    "help",
+				Message: testMessage,
+				Help:    testHelp,
 			},
 		},
 		{
-			title: "multiline",
+			title: multilinePromptType,
 			prompt: Prompt{
-				Type:    "multiline",
-				Message: "message",
-				Help:    "help",
+				Type:    multilinePromptType,
+				Message: testMessage,
+				Help:    testHelp,
 			},
 			exp: &survey.Multiline{
-				Message: "message",
-				Help:    "help",
+				Message: testMessage,
+				Help:    testHelp,
 			},
 		},
 		{
-			title: "password",
+			title: passwordPromptType,
 			prompt: Prompt{
-				Type:    "password",
-				Message: "message",
-				Help:    "help",
+				Type:    passwordPromptType,
+				Message: testMessage,
+				Help:    testHelp,
 			},
 			exp: &survey.Password{
-				Message: "message",
-				Help:    "help",
+				Message: testMessage,
+				Help:    testHelp,
 			},
 		},
 		{
-			title: "confirm",
+			title: confirmPromptType,
 			prompt: Prompt{
-				Type:    "confirm",
-				Message: "message",
-				Help:    "help",
+				Type:    confirmPromptType,
+				Message: testMessage,
+				Help:    testHelp,
 			},
 			exp: &survey.Confirm{
-				Message: "message",
-				Help:    "help",
+				Message: testMessage,
+				Help:    testHelp,
 			},
 		},
 		{
-			title: "editor",
+			title: editorPromptType,
 			prompt: Prompt{
-				Type:    "editor",
-				Message: "message",
-				Help:    "help",
+				Type:    editorPromptType,
+				Message: testMessage,
+				Help:    testHelp,
 			},
 			exp: &survey.Editor{
-				Message:       "message",
-				Help:          "help",
+				Message:       testMessage,
+				Help:          testHelp,
 				HideDefault:   true,
 				AppendDefault: true,
 			},
 		},
 		{
-			title: "select",
+			title: selectPromptType,
 			prompt: Prompt{
-				Type:    "select",
-				Message: "message",
-				Help:    "help",
-				Options: []string{"blue", "green"},
+				Type:    selectPromptType,
+				Message: testMessage,
+				Help:    testHelp,
+				Options: []string{testBlue, testGreen},
 			},
 			exp: &survey.Select{
-				Message: "message",
-				Help:    "help",
-				Options: []string{"blue", "green"},
+				Message: testMessage,
+				Help:    testHelp,
+				Options: []string{testBlue, testGreen},
 			},
 		},
 		{
-			title: "multi_select",
+			title: multiSelectPromptType,
 			prompt: Prompt{
-				Type:    "multi_select",
-				Message: "message",
-				Help:    "help",
-				Options: []string{"blue", "green"},
+				Type:    multiSelectPromptType,
+				Message: testMessage,
+				Help:    testHelp,
+				Options: []string{testBlue, testGreen},
 			},
 			exp: &survey.MultiSelect{
-				Message: "message",
-				Help:    "help",
-				Options: []string{"blue", "green"},
+				Message: testMessage,
+				Help:    testHelp,
+				Options: []string{testBlue, testGreen},
 			},
 		},
 	}

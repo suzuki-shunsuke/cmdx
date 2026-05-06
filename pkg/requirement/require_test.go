@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	envFOO = "FOO"
+	envBAR = "BAR"
+)
+
 func TestChecker_Exec(t *testing.T) {
 	data := []struct {
 		title string
@@ -45,23 +50,23 @@ func TestChecker_Env(t *testing.T) {
 		},
 		{
 			title: "ok",
-			envs:  []string{"BAR", "ZOO"},
+			envs:  []string{envBAR, "ZOO"},
 			setEnvs: map[string]string{
-				"FOO": "foo",
-				"BAR": "bar",
-				"ZOO": "zoo",
+				envFOO: "foo",
+				envBAR: "bar",
+				"ZOO":  "zoo",
 			},
 			isErr: false,
 		},
 		{
 			title:   "FOO is required",
-			envs:    []string{"FOO"},
+			envs:    []string{envFOO},
 			setEnvs: nil,
 			isErr:   true,
 		},
 		{
 			title:   "FOO or BAR is required",
-			envs:    []string{"FOO", "BAR"},
+			envs:    []string{envFOO, envBAR},
 			setEnvs: nil,
 			isErr:   true,
 		},

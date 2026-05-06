@@ -16,6 +16,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	builtinKeyArgs          = "args"
+	builtinKeyArgsString    = "args_string"
+	builtinKeyAllArgs       = "all_args"
+	builtinKeyAllArgsString = "all_args_string"
+)
+
 func NewCommandAction(
 	task domain.Task, gFlags *domain.GlobalFlags, scriptEnvs map[string][]string,
 ) cli.ActionFunc {
@@ -149,10 +156,10 @@ func updateVarsByArgs(
 	}
 
 	vars["_builtin"] = map[string]any{
-		"args":            extraArgs,
-		"args_string":     strings.Join(extraArgs, " "),
-		"all_args":        cArgs,
-		"all_args_string": strings.Join(cArgs, " "),
+		builtinKeyArgs:          extraArgs,
+		builtinKeyArgsString:    strings.Join(extraArgs, " "),
+		builtinKeyAllArgs:       cArgs,
+		builtinKeyAllArgsString: strings.Join(cArgs, " "),
 	}
 	return nil
 }

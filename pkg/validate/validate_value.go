@@ -4,11 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
+)
+
+const (
+	validateTypeEmail = "email"
+	validateTypeURL   = "url"
+	validateTypeInt   = "int"
 )
 
 func ValueWithValidates(val string, validates []domain.Validate) error {
@@ -22,15 +29,15 @@ func ValueWithValidates(val string, validates []domain.Validate) error {
 
 func value(val string, validate domain.Validate) error {
 	switch validate.Type {
-	case "email":
+	case validateTypeEmail:
 		if !govalidator.IsEmail(val) {
 			return errors.New("must be email: " + val)
 		}
-	case "url":
+	case validateTypeURL:
 		if !govalidator.IsURL(val) {
 			return errors.New("must be url: " + val)
 		}
-	case "int":
+	case validateTypeInt:
 		if !govalidator.IsInt(val) {
 			return errors.New("must be int: " + val)
 		}
@@ -61,14 +68,7 @@ func value(val string, validate domain.Validate) error {
 		}
 	}
 	if len(validate.Enum) != 0 {
-		f := false
-		for _, a := range validate.Enum {
-			if val == a {
-				f = true
-				break
-			}
-		}
-		if !f {
+		if !slices.Contains(validate.Enum, val) {
 			return errors.New("enum (" + strings.Join(validate.Enum, ", ") + "): " + val)
 		}
 	}
