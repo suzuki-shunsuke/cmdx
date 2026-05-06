@@ -88,7 +88,7 @@ func Test_value(t *testing.T) {
 			title: "prefix",
 			val:   "hello",
 			validate: domain.Validate{
-				Prefix: "hel",
+				Prefix: "he",
 			},
 			isErr: false,
 		},

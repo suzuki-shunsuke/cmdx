@@ -27,7 +27,7 @@ func TestStrList_UnmarshalYAML(t *testing.T) {
 		},
 		{
 			title: "error",
-			src:   `"tru`,
+			src:   `"true`,
 			isErr: true,
 		},
 	}
