@@ -6,7 +6,7 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
-type StrList []string //nolint:recvcheck
+type StrList []string
 
 const jsonSchemaTypeString = "string"
 
