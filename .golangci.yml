@@ -13,6 +13,7 @@ linters:
     - gocritic
     - godot
     - godox
+    - gomodguard
     - ireturn
     - lll
     - nestif
