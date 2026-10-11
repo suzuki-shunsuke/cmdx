@@ -18,12 +18,22 @@ jobs:
       contents: read # To checkout private repository
       id-token: write
 
-  integration-test:
-    runs-on: ubuntu-26.04
-    timeout-minutes: 15
+  gomodule:
+    uses: suzuki-shunsuke/download-go-module-action/.github/workflows/download.yaml@63db944fc861c4f6a4def7af7b0303f221e8bb5e # v0.0.3
     permissions:
       contents: read
       id-token: write
+    with:
+      artifact_name: gomodule-integration-test
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+  integration-test:
+    runs-on: ubuntu-26.04
+    needs: [gomodule]
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,10 +41,12 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache: false
 
-      - uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+      - name: Restore Go modules
+        uses: suzuki-shunsuke/download-go-module-action/restore@63db944fc861c4f6a4def7af7b0303f221e8bb5e # v0.0.3
         with:
-          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+          artifact_name: gomodule-integration-test
 
       - run: go install ./cmd/cmdx
       - run: cmdx help
