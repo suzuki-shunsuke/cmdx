@@ -6,7 +6,7 @@ import (
 	"github.com/suzuki-shunsuke/cmdx/pkg/config"
 	"github.com/suzuki-shunsuke/cmdx/pkg/domain"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func rootBashCompletion(flags *LDFlags, args []string) func(c *cli.Context) {
