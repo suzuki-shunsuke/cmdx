@@ -14,7 +14,7 @@ import (
 	action "github.com/suzuki-shunsuke/cmdx/pkg/task-action"
 	"github.com/suzuki-shunsuke/cmdx/pkg/tmpl"
 	"github.com/suzuki-shunsuke/cmdx/pkg/validate"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
